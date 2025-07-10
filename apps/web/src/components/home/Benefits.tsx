@@ -9,7 +9,7 @@ const benefits = [
   {
     title: "Seamless Sync",
     description:
-      "Access your notes anytime, anywhere, with seamless cloud synchronization.",
+      "Access your essential apps with a clean, distraction-free interface.",
     image: "/images/cloudSync.png",
   },
   {
@@ -41,7 +41,7 @@ const Benefits = () => {
           Benefits
         </p>
         <h3 className=" text-black text-3xl sm:text-[57px] not-italic font-medium leading-[90.3%] tracking-[-1.425px] font-montserrat text-center pb-[46px] sm:pb-[87px]">
-          Why Choose UseNotes
+          Why Choose Dumbphone
         </h3>
 
         <div className="relative">

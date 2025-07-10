@@ -4,7 +4,7 @@ import { RFValue } from "react-native-responsive-fontsize";
 import { useOAuth, useUser, useAuth } from "@clerk/clerk-expo";
 import { AntDesign } from "@expo/vector-icons";
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = ({ navigation }: { navigation: any }) => {
   const { isLoaded: userLoaded, user } = useUser();
   const { isLoaded: authLoaded, isSignedIn } = useAuth();
   
@@ -17,7 +17,7 @@ const LoginScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (isSignedIn) {
-      navigation.navigate("NotesDashboardScreen");
+      navigation.navigate("HomeScreen");
     }
   }, [userLoaded, authLoaded, isSignedIn, user]);
 
@@ -30,7 +30,7 @@ const LoginScreen = ({ navigation }) => {
         
         if (createdSessionId) {
           await setActive({ session: createdSessionId });
-          navigation.navigate("NotesDashboardScreen");
+          navigation.navigate("HomeScreen");
         } else {
           // Handle sign-up flow for new users
           if (signUp && signUp.status === "missing_requirements") {
@@ -45,11 +45,11 @@ const LoginScreen = ({ navigation }) => {
                   phoneNumber: "+1234567890" // Dummy number - you should handle this properly
                 });
                 
-                const { createdSessionId: newSessionId } = await signUp.create();
+                const { createdSessionId: newSessionId } = await signUp.create({});
                 
                 if (newSessionId) {
                   await setActive({ session: newSessionId });
-                  navigation.navigate("NotesDashboardScreen");
+                  navigation.navigate("HomeScreen");
                 }
               } catch (updateError) {
                 Alert.alert(
@@ -61,11 +61,11 @@ const LoginScreen = ({ navigation }) => {
             } else {
               // Phone is optional, just create the user
               try {
-                const { createdSessionId: newSessionId } = await signUp.create();
+                const { createdSessionId: newSessionId } = await signUp.create({});
                 
                 if (newSessionId) {
                   await setActive({ session: newSessionId });
-                  navigation.navigate("NotesDashboardScreen");
+                  navigation.navigate("HomeScreen");
                 }
               } catch (signUpError) {
                 // Sign-up error handled silently
@@ -86,7 +86,7 @@ const LoginScreen = ({ navigation }) => {
         
         if (createdSessionId) {
           await setActive({ session: createdSessionId });
-          navigation.navigate("NotesDashboardScreen");
+          navigation.navigate("HomeScreen");
         }
       }
     } catch (err) {

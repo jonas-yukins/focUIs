@@ -1,139 +1,176 @@
 "use client";
 
-import { Disclosure, DisclosureButton, DisclosurePanel } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import Logo from "./common/Logo";
+import { useState } from "react";
 import Link from "next/link";
-import { useUser } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { UserNav } from "./common/UserNav";
-import { usePathname } from "next/navigation";
 
-type NavigationItem = {
-  name: string;
-  href: string;
-  current: boolean;
-};
 
-const navigation: NavigationItem[] = [
-  { name: "Benefits", href: "#Benefits", current: true },
-  { name: "Reviews", href: "#reviews", current: false },
-];
-
-export default function Header() {
+const Header = () => {
+  const { isSignedIn } = useAuth();
   const { user } = useUser();
-  const pathname = usePathname();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <Disclosure as="nav" className=" ">
-      {({ open }) => (
-        <>
-          <div className="flex items-center bg-white h-16 sm:h-20">
-            <div className="container px-2 sm:px-0">
-              <div className="relative flex h-16 items-center justify-between">
-                <div className="flex sm:hidden shrink-0 items-center">
-                  <Logo isMobile={true} />
-                </div>
-                <div className="sm:flex hidden shrink-0 items-center">
-                  <Logo />
-                </div>
-                {pathname === "/" && (
-                  <div className="flex flex-1 items-center justify-center ">
-                    <div className="hidden sm:ml-6 sm:block">
-                      <ul className="flex space-x-28">
-                        {navigation.map((item) => (
-                          <li key={item.name}>
-                            <Link
-                              href={item.href}
-                              className="text-[#2D2D2D] text-center text-xl not-italic font-normal leading-[normal]"
-                              aria-current={item.current ? "page" : undefined}
-                            >
-                              {item.name}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                )}
-                {user ? (
-                  <div className="hidden sm:flex absolute inset-y-0 right-0 gap-6 items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                    <Link href="/notes">
-                      <button
-                        type="button"
-                        className=" text-white text-center text-xl not-italic font-normal leading-[normal] font-montserrat px-[22px] py-[11px] button"
-                      >
-                        See your Notes
-                      </button>
-                    </Link>
-                    <UserNav
-                      image={user?.imageUrl}
-                      name={user?.fullName!}
-                      email={user?.primaryEmailAddress?.emailAddress!}
-                    />
-                  </div>
-                ) : (
-                  <div className="hidden sm:flex absolute inset-y-0 right-0 gap-6 items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                    <Link
-                      href="/notes"
-                      className="border rounded-lg border-solid border-[#2D2D2D] text-[#2D2D2D] text-center text-xl not-italic font-normal leading-[normal] font-montserrat px-[22px] py-2.5"
-                    >
-                      Sign in
-                    </Link>
-                    <Link
-                      href="/notes"
-                      className=" text-white text-center text-xl not-italic font-normal leading-[normal] font-montserrat px-[22px] py-[11px] button"
-                    >
-                      Get Started
-                    </Link>
-                  </div>
-                )}
-                <div className="block sm:hidden">
-                  {/* Mobile menu button*/}
-                  <DisclosureButton className="relative inline-flex  items-center justify-center rounded-md p-2 text-gray-400 focus:outline-hidden focus:ring-2 focus:ring-inset focus:ring-white">
-                    <span className="absolute -inset-0.5" />
-                    <span className="sr-only">Open main menu</span>
-                    {open ? (
-                      <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
-                    ) : (
-                      <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
-                    )}
-                  </DisclosureButton>
-                </div>
-              </div>
+    <header className="bg-white border-b border-[#E1E1E1] sticky top-0 z-50">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-[#172F50] rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">D</span>
             </div>
-          </div>
+            <span className="text-xl font-bold text-[#172F50]">Dumbphone</span>
+          </Link>
 
-          <DisclosurePanel className="sm:hidden">
-            <div className="space-y-1 px-2 pb-3 pt-2 flex flex-col gap-3 items-start">
-              {navigation.map((item) => (
-                <DisclosureButton
-                  key={item.name}
-                  as={Link}
-                  href={item.href}
-                  className="text-[#2D2D2D] text-center text-xl not-italic font-normal leading-[normal]"
-                  aria-current={item.current ? "page" : undefined}
-                >
-                  {item.name}
-                </DisclosureButton>
-              ))}
-              <div className="flex gap-6 items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            <Link
+              href="/#features"
+              className="text-[#7A7A7A] hover:text-[#172F50] transition-colors"
+            >
+              Features
+            </Link>
+            <Link
+              href="/#how-it-works"
+              className="text-[#7A7A7A] hover:text-[#172F50] transition-colors"
+            >
+              How It Works
+            </Link>
+            <Link
+              href="/#download"
+              className="text-[#7A7A7A] hover:text-[#172F50] transition-colors"
+            >
+              Download
+            </Link>
+            <Link
+              href="/privacy"
+              className="text-[#7A7A7A] hover:text-[#172F50] transition-colors"
+            >
+              Privacy
+            </Link>
+          </nav>
+
+          {/* CTA Buttons */}
+          <div className="hidden md:flex items-center space-x-4">
+            {isSignedIn ? (
+              <UserNav
+                image={user?.imageUrl || ""}
+                name={user?.fullName || ""}
+                email={user?.primaryEmailAddress?.emailAddress || ""}
+              />
+            ) : (
+              <>
                 <Link
-                  href="/notes"
-                  className="border rounded-lg border-solid border-[#2D2D2D] text-[#2D2D2D] text-center text-xl not-italic font-normal leading-[normal] font-montserrat px-5 py-[5px]"
+                  href="/sign-in"
+                  className="text-[#172F50] hover:text-[#0F1E35] transition-colors"
                 >
-                  Sign in
+                  Sign In
                 </Link>
                 <Link
-                  href="/notes"
-                  className=" text-white text-center text-xl not-italic font-normal leading-[normal] font-montserrat px-5 py-1.5 button"
+                  href="/sign-up"
+                  className="bg-[#172F50] text-white px-6 py-2 rounded-lg hover:bg-[#0F1E35] transition-colors"
                 >
                   Get Started
                 </Link>
-              </div>
-            </div>
-          </DisclosurePanel>
-        </>
-      )}
-    </Disclosure>
+              </>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden p-2"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            <svg
+              className="w-6 h-6 text-[#172F50]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              {isMenuOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden py-4 border-t border-[#E1E1E1]">
+            <nav className="flex flex-col space-y-4">
+              <Link
+                href="/#features"
+                className="text-[#7A7A7A] hover:text-[#172F50] transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Features
+              </Link>
+              <Link
+                href="/#how-it-works"
+                className="text-[#7A7A7A] hover:text-[#172F50] transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                How It Works
+              </Link>
+              <Link
+                href="/#download"
+                className="text-[#7A7A7A] hover:text-[#172F50] transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Download
+              </Link>
+              <Link
+                href="/privacy"
+                className="text-[#7A7A7A] hover:text-[#172F50] transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Privacy
+              </Link>
+              {isSignedIn ? (
+                <div className="pt-4 border-t border-[#E1E1E1]">
+                  <UserNav
+                    image={user?.imageUrl || ""}
+                    name={user?.fullName || ""}
+                    email={user?.primaryEmailAddress?.emailAddress || ""}
+                  />
+                </div>
+              ) : (
+                <div className="pt-4 border-t border-[#E1E1E1] space-y-2">
+                  <Link
+                    href="/sign-in"
+                    className="block text-[#172F50] hover:text-[#0F1E35] transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/sign-up"
+                    className="block bg-[#172F50] text-white px-6 py-2 rounded-lg hover:bg-[#0F1E35] transition-colors text-center"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Get Started
+                  </Link>
+                </div>
+              )}
+            </nav>
+          </div>
+        )}
+      </div>
+    </header>
   );
-}
+};
+
+export default Header;

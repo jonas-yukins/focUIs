@@ -8,6 +8,16 @@
   --breakpoint-xl: 1440px;
 
   --color-primary: #0d87e1;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
 
   --font-inter: Inter, sans-serif;
   --font-lato: Lato, sans-serif;
@@ -22,6 +32,32 @@
 
 @utility container {
   margin-inline: auto;
+  padding-inline: 1rem;
+  max-width: 1200px;
+}
+
+@utility container-sm {
+  margin-inline: auto;
+  padding-inline: 1rem;
+  max-width: 640px;
+}
+
+@utility container-md {
+  margin-inline: auto;
+  padding-inline: 1rem;
+  max-width: 768px;
+}
+
+@utility container-lg {
+  margin-inline: auto;
+  padding-inline: 1rem;
+  max-width: 1024px;
+}
+
+@utility container-xl {
+  margin-inline: auto;
+  padding-inline: 1rem;
+  max-width: 1280px;
 }
 
 /*
@@ -39,6 +75,15 @@
   ::backdrop,
   ::file-selector-button {
     border-color: var(--color-gray-200, currentcolor);
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    font-family: var(--font-inter);
+    line-height: 1.6;
   }
 }
 
@@ -63,6 +108,7 @@
     url("/images/background.png"),
     lightgray 0% 0% / 261.2499952316284px 261.2499952316284px repeat;
 }
+
 .button {
   border-radius: 8px;
   background: linear-gradient(

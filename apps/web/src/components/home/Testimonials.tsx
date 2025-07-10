@@ -14,7 +14,7 @@ const TestimonialsData = [
   {
     rating: 5,
     review:
-      "Really like the clean design of UseNotes. The AI-driven search is impressively accurate, adding a personal dimension to my notes. Fast and very easy to use.",
+      "Really like the clean design of Dumbphone. The minimalist interface helps me stay focused and reduces distractions. Fast and very easy to use.",
     name: "John Collins",
     designation: "Engineer & Author",
     profile: "/images/profile.png",
@@ -22,7 +22,7 @@ const TestimonialsData = [
   },
   {
     rating: 5,
-    review: "Simply brilliant! UseNotes has elevated my productivity.",
+    review: "Simply brilliant! Dumbphone has elevated my productivity.",
     name: "Moe Partuj",
     designation: "Student",
     profile: "/images/Moe-Partuj.jpeg",
