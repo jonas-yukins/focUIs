@@ -2,9 +2,10 @@ import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LoginScreen from "../screens/LoginScreen";
-import NotesDashboardScreen from "../screens/NotesDashboardScreen";
-import InsideNoteScreen from "../screens/InsideNoteScreen";
-import CreateNoteScreen from "../screens/CreateNoteScreen";
+import HomeScreen from "../screens/HomeScreen";
+import AppSelectionScreen from "../screens/AppSelectionScreen";
+import SettingsScreen from "../screens/SettingsScreen";
+import InstalledAppsScreen from "../screens/InstalledAppsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -17,12 +18,10 @@ const Navigation = () => {
         screenOptions={{ headerShown: false }}
       >
         <Stack.Screen name="LoginScreen" component={LoginScreen} />
-        <Stack.Screen
-          name="NotesDashboardScreen"
-          component={NotesDashboardScreen}
-        />
-        <Stack.Screen name="InsideNoteScreen" component={InsideNoteScreen} />
-        <Stack.Screen name="CreateNoteScreen" component={CreateNoteScreen} />
+        <Stack.Screen name="HomeScreen" component={HomeScreen} />
+        <Stack.Screen name="AppSelectionScreen" component={AppSelectionScreen} />
+        <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
+        <Stack.Screen name="InstalledAppsScreen" component={InstalledAppsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

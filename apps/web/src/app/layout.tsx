@@ -4,13 +4,28 @@ import { cn } from "@/lib/utils";
 import "./globals.css";
 import ConvexClientProvider from "./ConvexClientProvider";
 
-const inter = Inter({ subsets: ["latin"] });
-const montserrat = Montserrat({ subsets: ["latin"] });
-const lato = Lato({ weight: "400", subsets: ["latin"] });
+const inter = Inter({ 
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const montserrat = Montserrat({ 
+  subsets: ["latin"],
+  variable: "--font-montserrat",
+  display: "swap",
+});
+
+const lato = Lato({ 
+  weight: "400", 
+  subsets: ["latin"],
+  variable: "--font-lato",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Notes App",
-  description: "This is an app to take notes.",
+  title: "Dumbphone - Transform Your Smartphone",
+  description: "Transform your smartphone into a minimalist device. Reduce screen time with our dumbphone app that replaces colorful icons with simple text.",
 };
 
 export default function RootLayout({
@@ -19,8 +34,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={cn(inter.className, montserrat.className, lato.className)}>
+    <html lang="en" className={cn(inter.variable, montserrat.variable, lato.variable)}>
+      <body className={cn(inter.className, "antialiased")}>
         <ConvexClientProvider>{children}</ConvexClientProvider>
       </body>
     </html>
