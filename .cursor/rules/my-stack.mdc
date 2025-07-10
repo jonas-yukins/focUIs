@@ -1,0 +1,38 @@
+---
+alwaysApply: true
+---
+
+# Technical stack
+
+Core Language
+
+- TypeScript: The entire project, including frontend, backend, and shared
+    packages, is written in TypeScript.
+
+Monorepo Management
+
+- Turborepo: Used for managing the monorepo, running tasks, and optimizing
+    builds.
+- pnpm: The package manager used for the workspace.
+
+Backend & Services
+
+- Convex: The primary backend platform. It provides the database, serverless
+    functions (queries, mutations, actions), and real-time data synchronization.
+- Clerk: Used for user authentication across both web and native applications.
+- OpenAI API: Integrated for AI-powered features like text summarization.
+
+Web Application (apps/web)
+
+- Framework: Next.js 15 (using the App Router).
+- UI Library: React 19.
+- Styling: Tailwind CSS v4.
+- UI Components: A combination of custom components, Radix UI primitives
+    (e.g., Avatar, DropdownMenu), and Headless UI.
+
+Native Application (apps/native)
+
+- Framework: React Native managed with Expo.
+- UI Library: React 19.
+- Navigation: React Navigation (for stack and tab navigation).
+- Styling: Standard React Native styling, likely with some utility libraries.
