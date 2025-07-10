@@ -81,6 +81,12 @@ const HomeScreen = ({ navigation }) => {
         <Text style={styles.headerTitle}>Dumbphone</Text>
         <View style={styles.headerButtons}>
           <TouchableOpacity
+            onPress={() => navigation.navigate("DumbphoneScreen")}
+            style={styles.headerButton}
+          >
+            <Ionicons name="phone-portrait-outline" size={24} color="#172F50" />
+          </TouchableOpacity>
+          <TouchableOpacity
             onPress={() => navigation.navigate("InstalledAppsScreen")}
             style={styles.headerButton}
           >
@@ -97,6 +103,27 @@ const HomeScreen = ({ navigation }) => {
             style={styles.headerButton}
           >
             <Ionicons name="log-out-outline" size={24} color="#172F50" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Quick Access Section */}
+      <View style={styles.quickAccessContainer}>
+        <Text style={styles.quickAccessTitle}>Quick Access</Text>
+        <View style={styles.quickAccessButtons}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("DumbphoneScreen")}
+            style={styles.quickAccessButton}
+          >
+            <Ionicons name="phone-portrait" size={24} color="#172F50" />
+            <Text style={styles.quickAccessButtonText}>Dumbphone Mode</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("InstalledAppsScreen")}
+            style={styles.quickAccessButton}
+          >
+            <Ionicons name="list" size={24} color="#172F50" />
+            <Text style={styles.quickAccessButtonText}>All Apps</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -158,6 +185,41 @@ const styles = StyleSheet.create({
   },
   headerButton: {
     padding: 8,
+  },
+  quickAccessContainer: {
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E1E1E1",
+  },
+  quickAccessTitle: {
+    fontSize: RFValue(18),
+    fontFamily: "MSemiBold",
+    color: "#172F50",
+    marginBottom: 12,
+  },
+  quickAccessButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  quickAccessButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "#F8F9FA",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E9ECEF",
+  },
+  quickAccessButtonText: {
+    fontSize: RFValue(14),
+    fontFamily: "MMedium",
+    color: "#172F50",
+    marginLeft: 8,
   },
   content: {
     flex: 1,

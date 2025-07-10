@@ -1,0 +1,484 @@
+[
+  {
+    "id": "whatsapp",
+    "name": "WhatsApp",
+    "urlScheme": "whatsapp://",
+    "appStoreUrl": "https://apps.apple.com/app/whatsapp-messenger/id310633997",
+    "category": "messaging",
+    "isThirdParty": true
+  },
+  {
+    "id": "whatsapp-business",
+    "name": "WhatsApp Business",
+    "urlScheme": "whatsapp-business://",
+    "appStoreUrl": "https://apps.apple.com/app/whatsapp-business/id1121437202",
+    "category": "messaging",
+    "isThirdParty": true
+  },
+  {
+    "id": "telegram",
+    "name": "Telegram",
+    "urlScheme": "telegram://",
+    "appStoreUrl": "https://apps.apple.com/app/telegram-messenger/id686449807",
+    "category": "messaging",
+    "isThirdParty": true
+  },
+  {
+    "id": "instagram",
+    "name": "Instagram",
+    "urlScheme": "instagram://",
+    "appStoreUrl": "https://apps.apple.com/app/instagram/id389801252",
+    "category": "social",
+    "isThirdParty": true
+  },
+  {
+    "id": "instagram-alt",
+    "name": "Instagram (Alternative)",
+    "urlScheme": "instagram-stories://",
+    "appStoreUrl": "https://apps.apple.com/app/instagram/id389801252",
+    "category": "social",
+    "isThirdParty": true
+  },
+  {
+    "id": "facebook",
+    "name": "Facebook",
+    "urlScheme": "fb://",
+    "appStoreUrl": "https://apps.apple.com/app/facebook/id284882215",
+    "category": "social",
+    "isThirdParty": true
+  },
+  {
+    "id": "facebook-alt",
+    "name": "Facebook (Alternative)",
+    "urlScheme": "facebook://",
+    "appStoreUrl": "https://apps.apple.com/app/facebook/id284882215",
+    "category": "social",
+    "isThirdParty": true
+  },
+  {
+    "id": "twitter",
+    "name": "Twitter",
+    "urlScheme": "twitter://",
+    "appStoreUrl": "https://apps.apple.com/app/twitter/id333903271",
+    "category": "social",
+    "isThirdParty": true
+  },
+  {
+    "id": "spotify",
+    "name": "Spotify",
+    "urlScheme": "spotify://",
+    "appStoreUrl": "https://apps.apple.com/app/spotify-music/id324684580",
+    "category": "music",
+    "isThirdParty": true
+  },
+  {
+    "id": "youtube",
+    "name": "YouTube",
+    "urlScheme": "youtube://",
+    "appStoreUrl": "https://apps.apple.com/app/youtube/id544007664",
+    "category": "video",
+    "isThirdParty": true
+  },
+  {
+    "id": "netflix",
+    "name": "Netflix",
+    "urlScheme": "netflix://",
+    "appStoreUrl": "https://apps.apple.com/app/netflix/id363590051",
+    "category": "video",
+    "isThirdParty": true
+  },
+  {
+    "id": "gmail",
+    "name": "Gmail",
+    "urlScheme": "googlegmail://",
+    "appStoreUrl": "https://apps.apple.com/app/gmail/id422689480",
+    "category": "productivity",
+    "isThirdParty": true
+  },
+  {
+    "id": "maps",
+    "name": "Maps",
+    "urlScheme": "maps://",
+    "appStoreUrl": "https://apps.apple.com/app/maps/id915056765",
+    "category": "navigation"
+  },
+  {
+    "id": "google-maps",
+    "name": "Google Maps",
+    "urlScheme": "comgooglemaps://",
+    "appStoreUrl": "https://apps.apple.com/app/google-maps/id585027354",
+    "category": "navigation",
+    "isThirdParty": true
+  },
+  {
+    "id": "waze",
+    "name": "Waze",
+    "urlScheme": "waze://",
+    "appStoreUrl": "https://apps.apple.com/app/waze-navigation/id323229106",
+    "category": "navigation",
+    "isThirdParty": true
+  },
+  {
+    "id": "uber",
+    "name": "Uber",
+    "urlScheme": "uber://",
+    "appStoreUrl": "https://apps.apple.com/app/uber/id368677368",
+    "category": "transportation",
+    "isThirdParty": true
+  },
+  {
+    "id": "lyft",
+    "name": "Lyft",
+    "urlScheme": "lyft://",
+    "appStoreUrl": "https://apps.apple.com/app/lyft/id529379082",
+    "category": "transportation",
+    "isThirdParty": true
+  },
+  {
+    "id": "amazon",
+    "name": "Amazon",
+    "urlScheme": "amzn://",
+    "appStoreUrl": "https://apps.apple.com/app/amazon-shopping/id297606951",
+    "category": "shopping",
+    "isThirdParty": true
+  },
+  {
+    "id": "ebay",
+    "name": "eBay",
+    "urlScheme": "ebay://",
+    "appStoreUrl": "https://apps.apple.com/app/ebay/id282614216",
+    "category": "shopping",
+    "isThirdParty": true
+  },
+  {
+    "id": "linkedin",
+    "name": "LinkedIn",
+    "urlScheme": "linkedin://",
+    "appStoreUrl": "https://apps.apple.com/app/linkedin/id288429040",
+    "category": "social",
+    "isThirdParty": true
+  },
+  {
+    "id": "reddit",
+    "name": "Reddit",
+    "urlScheme": "reddit://",
+    "appStoreUrl": "https://apps.apple.com/app/reddit/id1064216828",
+    "category": "social",
+    "isThirdParty": true
+  },
+  {
+    "id": "discord",
+    "name": "Discord",
+    "urlScheme": "discord://",
+    "appStoreUrl": "https://apps.apple.com/app/discord/id985746746",
+    "category": "social",
+    "isThirdParty": true
+  },
+  {
+    "id": "tiktok",
+    "name": "TikTok",
+    "urlScheme": "tiktok://",
+    "appStoreUrl": "https://apps.apple.com/app/tiktok/id835599320",
+    "category": "social",
+    "isThirdParty": true
+  },
+  {
+    "id": "snapchat",
+    "name": "Snapchat",
+    "urlScheme": "snapchat://",
+    "appStoreUrl": "https://apps.apple.com/app/snapchat/id447188370",
+    "category": "social",
+    "isThirdParty": true
+  },
+  {
+    "id": "pinterest",
+    "name": "Pinterest",
+    "urlScheme": "pinterest://",
+    "appStoreUrl": "https://apps.apple.com/app/pinterest/id429047995",
+    "category": "social",
+    "isThirdParty": true
+  },
+  {
+    "id": "zoom",
+    "name": "Zoom",
+    "urlScheme": "zoomus://",
+    "appStoreUrl": "https://apps.apple.com/app/zoom-cloud-meetings/id546505307",
+    "category": "productivity",
+    "isThirdParty": true
+  },
+  {
+    "id": "slack",
+    "name": "Slack",
+    "urlScheme": "slack://",
+    "appStoreUrl": "https://apps.apple.com/app/slack/id618783545",
+    "category": "productivity",
+    "isThirdParty": true
+  },
+  {
+    "id": "dropbox",
+    "name": "Dropbox",
+    "urlScheme": "dropbox://",
+    "appStoreUrl": "https://apps.apple.com/app/dropbox/id327630330",
+    "category": "productivity",
+    "isThirdParty": true
+  },
+  {
+    "id": "google-drive",
+    "name": "Google Drive",
+    "urlScheme": "googledrive://",
+    "appStoreUrl": "https://apps.apple.com/app/google-drive/id507874739",
+    "category": "productivity",
+    "isThirdParty": true
+  },
+  {
+    "id": "apple-music",
+    "name": "Apple Music",
+    "urlScheme": "music://",
+    "appStoreUrl": "https://apps.apple.com/app/apple-music/id1108187390",
+    "category": "music"
+  },
+  {
+    "id": "apple-music-alt",
+    "name": "Apple Music (Alternative)",
+    "urlScheme": "itms-music://",
+    "appStoreUrl": "https://apps.apple.com/app/apple-music/id1108187390",
+    "category": "music"
+  },
+  {
+    "id": "shazam",
+    "name": "Shazam",
+    "urlScheme": "shazam://",
+    "appStoreUrl": "https://apps.apple.com/app/shazam/id284993459",
+    "category": "music",
+    "isThirdParty": true
+  },
+  {
+    "id": "apple-tv",
+    "name": "Apple TV",
+    "urlScheme": "tv://",
+    "appStoreUrl": "https://apps.apple.com/app/apple-tv/id1174078549",
+    "category": "video"
+  },
+  {
+    "id": "disney-plus",
+    "name": "Disney+",
+    "urlScheme": "disneyplus://",
+    "appStoreUrl": "https://apps.apple.com/app/disney/id1446075923",
+    "category": "video",
+    "isThirdParty": true
+  },
+  {
+    "id": "hulu",
+    "name": "Hulu",
+    "urlScheme": "hulu://",
+    "appStoreUrl": "https://apps.apple.com/app/hulu/id376510438",
+    "category": "video",
+    "isThirdParty": true
+  },
+  {
+    "id": "twitch",
+    "name": "Twitch",
+    "urlScheme": "twitch://",
+    "appStoreUrl": "https://apps.apple.com/app/twitch/id460177396",
+    "category": "video",
+    "isThirdParty": true
+  },
+  {
+    "id": "doordash",
+    "name": "DoorDash",
+    "urlScheme": "doordash://",
+    "appStoreUrl": "https://apps.apple.com/app/doordash-food-delivery/id719972451",
+    "category": "food",
+    "isThirdParty": true
+  },
+  {
+    "id": "uber-eats",
+    "name": "Uber Eats",
+    "urlScheme": "uber-eats://",
+    "appStoreUrl": "https://apps.apple.com/app/uber-eats/id1058959277",
+    "category": "food",
+    "isThirdParty": true
+  },
+  {
+    "id": "grubhub",
+    "name": "Grubhub",
+    "urlScheme": "grubhub://",
+    "appStoreUrl": "https://apps.apple.com/app/grubhub-food-delivery/id302920553",
+    "category": "food",
+    "isThirdParty": true
+  },
+  {
+    "id": "starbucks",
+    "name": "Starbucks",
+    "urlScheme": "starbucks://",
+    "appStoreUrl": "https://apps.apple.com/app/starbucks/id331177714",
+    "category": "food",
+    "isThirdParty": true
+  },
+  {
+    "id": "mcdonalds",
+    "name": "McDonald's",
+    "urlScheme": "mcdonalds://",
+    "appStoreUrl": "https://apps.apple.com/app/mcdonalds/id922103212",
+    "category": "food",
+    "isThirdParty": true
+  },
+  {
+    "id": "paypal",
+    "name": "PayPal",
+    "urlScheme": "paypal://",
+    "appStoreUrl": "https://apps.apple.com/app/paypal/id283646709",
+    "category": "finance",
+    "isThirdParty": true
+  },
+  {
+    "id": "venmo",
+    "name": "Venmo",
+    "urlScheme": "venmo://",
+    "appStoreUrl": "https://apps.apple.com/app/venmo/id351727428",
+    "category": "finance",
+    "isThirdParty": true
+  },
+  {
+    "id": "robinhood",
+    "name": "Robinhood",
+    "urlScheme": "robinhood://",
+    "appStoreUrl": "https://apps.apple.com/app/robinhood-stock-market/id938003185",
+    "category": "finance",
+    "isThirdParty": true
+  },
+  {
+    "id": "coinbase",
+    "name": "Coinbase",
+    "urlScheme": "coinbase://",
+    "appStoreUrl": "https://apps.apple.com/app/coinbase-buy-sell-bitcoin/idcom.coinbase.Coinbase",
+    "category": "finance",
+    "isThirdParty": true
+  },
+  {
+    "id": "weather",
+    "name": "Weather",
+    "urlScheme": "weather://",
+    "appStoreUrl": "https://apps.apple.com/app/weather/id1069513131",
+    "category": "utilities"
+  },
+  {
+    "id": "calculator",
+    "name": "Calculator",
+    "urlScheme": "calculator://",
+    "appStoreUrl": "https://apps.apple.com/app/calculator/id1069511481",
+    "category": "utilities"
+  },
+  {
+    "id": "notes",
+    "name": "Notes",
+    "urlScheme": "mobilenotes://",
+    "appStoreUrl": "https://apps.apple.com/app/notes/id1110145109",
+    "category": "productivity"
+  },
+  {
+    "id": "reminders",
+    "name": "Reminders",
+    "urlScheme": "x-apple-reminder://",
+    "appStoreUrl": "https://apps.apple.com/app/reminders/id1108187390",
+    "category": "productivity"
+  },
+  {
+    "id": "calendar",
+    "name": "Calendar",
+    "urlScheme": "calshow://",
+    "appStoreUrl": "https://apps.apple.com/app/calendar/id1108187390",
+    "category": "productivity"
+  },
+  {
+    "id": "camera",
+    "name": "Camera",
+    "urlScheme": "camera://",
+    "appStoreUrl": "https://apps.apple.com/app/camera/id1108187390",
+    "category": "utilities"
+  },
+  {
+    "id": "photos",
+    "name": "Photos",
+    "urlScheme": "photos-redirect://",
+    "appStoreUrl": "https://apps.apple.com/app/photos/id1108187390",
+    "category": "utilities"
+  },
+  {
+    "id": "settings",
+    "name": "Settings",
+    "urlScheme": "App-Prefs://",
+    "appStoreUrl": "https://apps.apple.com/app/settings/id1108187390",
+    "category": "utilities"
+  },
+  {
+    "id": "phone",
+    "name": "Phone",
+    "urlScheme": "tel://",
+    "appStoreUrl": "https://apps.apple.com/app/phone/id1108187390",
+    "category": "utilities"
+  },
+  {
+    "id": "messages",
+    "name": "Messages",
+    "urlScheme": "sms://",
+    "appStoreUrl": "https://apps.apple.com/app/messages/id1108187390",
+    "category": "messaging"
+  },
+  {
+    "id": "mail",
+    "name": "Mail",
+    "urlScheme": "message://",
+    "appStoreUrl": "https://apps.apple.com/app/mail/id1108187390",
+    "category": "messaging"
+  },
+  {
+    "id": "safari",
+    "name": "Safari",
+    "urlScheme": "x-web-search://",
+    "appStoreUrl": "https://apps.apple.com/app/safari/id1108187390",
+    "category": "utilities"
+  },
+  {
+    "id": "app-store",
+    "name": "App Store",
+    "urlScheme": "itms-apps://",
+    "appStoreUrl": "https://apps.apple.com/app/app-store/id1108187390",
+    "category": "utilities"
+  },
+  {
+    "id": "safari",
+    "name": "Safari",
+    "urlScheme": "x-web-search://",
+    "appStoreUrl": "https://apps.apple.com/app/safari/id1108187390",
+    "category": "utilities"
+  },
+  {
+    "id": "safari-alt",
+    "name": "Safari (Alternative)",
+    "urlScheme": "http://",
+    "appStoreUrl": "https://apps.apple.com/app/safari/id1108187390",
+    "category": "utilities"
+  },
+  {
+    "id": "mail",
+    "name": "Mail",
+    "urlScheme": "mailto://",
+    "appStoreUrl": "https://apps.apple.com/app/mail/id1108187390",
+    "category": "messaging"
+  },
+  {
+    "id": "phone",
+    "name": "Phone",
+    "urlScheme": "tel://",
+    "appStoreUrl": "https://apps.apple.com/app/phone/id1108187390",
+    "category": "utilities"
+  },
+  {
+    "id": "messages",
+    "name": "Messages",
+    "urlScheme": "sms://",
+    "appStoreUrl": "https://apps.apple.com/app/messages/id1108187390",
+    "category": "messaging"
+  }
+] 

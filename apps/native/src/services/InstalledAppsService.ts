@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import * as Application from 'expo-application';
 import * as Device from 'expo-device';
+import useAvailableApps, { AvailableApp } from '../hooks/useAvailableApps';
 
 export interface InstalledApp {
   id: string;
@@ -150,6 +151,14 @@ class InstalledAppsService {
       return 'Showing current app and common installed applications. For full access, use Expo Development Build.';
     }
     return 'Platform not supported.';
+  }
+
+  /**
+   * Get available apps using the new platform-abstracted hook
+   * This method provides access to the unified API
+   */
+  getAvailableAppsHook() {
+    return useAvailableApps();
   }
 }
 
