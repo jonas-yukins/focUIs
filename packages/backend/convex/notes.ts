@@ -49,6 +49,9 @@ export const upsertApp = mutation({
     displayName: v.string(),
     isSelected: v.boolean(),
     order: v.number(),
+    urlScheme: v.optional(v.string()),
+    appStoreUrl: v.optional(v.string()),
+    isThirdParty: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const userId = await getUserId(ctx);
@@ -68,6 +71,9 @@ export const upsertApp = mutation({
         displayName: args.displayName,
         isSelected: args.isSelected,
         order: args.order,
+        urlScheme: args.urlScheme,
+        appStoreUrl: args.appStoreUrl,
+        isThirdParty: args.isThirdParty,
       });
       return existingApp._id;
     } else {
@@ -79,6 +85,9 @@ export const upsertApp = mutation({
         displayName: args.displayName,
         isSelected: args.isSelected,
         order: args.order,
+        urlScheme: args.urlScheme,
+        appStoreUrl: args.appStoreUrl,
+        isThirdParty: args.isThirdParty,
       });
     }
   },

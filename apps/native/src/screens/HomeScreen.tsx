@@ -9,6 +9,7 @@ import {
   Alert,
   Linking,
   Platform,
+  NativeModules,
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { useAuth, useUser } from "@clerk/clerk-expo";
@@ -25,30 +26,78 @@ const HomeScreen = ({ navigation }) => {
 
   const handleAppPress = async (app) => {
     try {
-      // Try to open the app using its package name
-      const url = Platform.OS === 'ios' 
-        ? `${app.packageName}://` 
-        : `intent://${app.packageName}#Intent;scheme=package;end`;
-      
-      const supported = await Linking.canOpenURL(url);
-      
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        // Fallback: try to open app settings
-        Alert.alert(
-          "App Not Found",
-          `Unable to open ${app.displayName}. The app may not be installed.`,
-          [
-            { text: "Cancel", style: "cancel" },
-            { 
-              text: "Settings", 
-              onPress: () => navigation.navigate("AppSelectionScreen") 
+      if (Platform.OS === 'android' && app.packageName) {
+        // For Android, use the native module
+        const { InstalledAppsModule } = NativeModules;
+        if (InstalledAppsModule) {
+          await InstalledAppsModule.launchApp(app.packageName);
+          return;
+        } else {
+          // Fallback to intent URL
+          const url = `intent://${app.packageName}#Intent;scheme=package;end`;
+          const supported = await Linking.canOpenURL(url);
+          if (supported) {
+            await Linking.openURL(url);
+            return;
+          }
+        }
+      } else if (Platform.OS === 'ios' && app.urlScheme) {
+        console.log(`Attempting to launch ${app.displayName} with scheme: ${app.urlScheme}`);
+        
+        // For third-party apps, try to launch directly without checking canOpenURL
+        // because iOS restrictions often make canOpenURL return false even for installed apps
+        if (app.isThirdParty) {
+          console.log(`${app.displayName} is a third-party app, attempting direct launch`);
+          try {
+            await Linking.openURL(app.urlScheme);
+            return;
+          } catch (launchError) {
+            console.log(`Failed to launch ${app.displayName} directly, trying App Store`);
+            if (app.appStoreUrl) {
+              await Linking.openURL(app.appStoreUrl);
+              return;
             }
-          ]
-        );
+          }
+        } else {
+          // For built-in apps, we can still check canOpenURL
+          const canOpen = await Linking.canOpenURL(app.urlScheme);
+          console.log(`Can open ${app.displayName}:`, canOpen);
+          
+          if (canOpen) {
+            try {
+              await Linking.openURL(app.urlScheme);
+              return;
+            } catch (launchError) {
+              console.log(`Failed to launch ${app.displayName} with scheme, trying App Store`);
+              if (app.appStoreUrl) {
+                await Linking.openURL(app.appStoreUrl);
+                return;
+              }
+            }
+          } else {
+            console.log(`${app.displayName} is not installed, falling back to App Store`);
+            if (app.appStoreUrl) {
+              await Linking.openURL(app.appStoreUrl);
+              return;
+            }
+          }
+        }
       }
+      
+      // If we get here, we couldn't launch the app
+      Alert.alert(
+        "App Not Found",
+        `Unable to open ${app.displayName}. The app may not be installed.`,
+        [
+          { text: "Cancel", style: "cancel" },
+          { 
+            text: "Settings", 
+            onPress: () => navigation.navigate("AppSelectionScreen") 
+          }
+        ]
+      );
     } catch (error) {
+      console.error('Error launching app:', error);
       Alert.alert(
         "Error",
         `Unable to open ${app.displayName}. Please check if the app is installed.`
@@ -81,18 +130,6 @@ const HomeScreen = ({ navigation }) => {
         <Text style={styles.headerTitle}>Dumbphone</Text>
         <View style={styles.headerButtons}>
           <TouchableOpacity
-            onPress={() => navigation.navigate("DumbphoneScreen")}
-            style={styles.headerButton}
-          >
-            <Ionicons name="phone-portrait-outline" size={24} color="#172F50" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("InstalledAppsScreen")}
-            style={styles.headerButton}
-          >
-            <Ionicons name="apps-outline" size={24} color="#172F50" />
-          </TouchableOpacity>
-          <TouchableOpacity
             onPress={() => navigation.navigate("AppSelectionScreen")}
             style={styles.headerButton}
           >
@@ -112,18 +149,11 @@ const HomeScreen = ({ navigation }) => {
         <Text style={styles.quickAccessTitle}>Quick Access</Text>
         <View style={styles.quickAccessButtons}>
           <TouchableOpacity
-            onPress={() => navigation.navigate("DumbphoneScreen")}
+            onPress={() => navigation.navigate("AppSelectionScreen")}
             style={styles.quickAccessButton}
           >
-            <Ionicons name="phone-portrait" size={24} color="#172F50" />
-            <Text style={styles.quickAccessButtonText}>Dumbphone Mode</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("InstalledAppsScreen")}
-            style={styles.quickAccessButton}
-          >
-            <Ionicons name="list" size={24} color="#172F50" />
-            <Text style={styles.quickAccessButtonText}>All Apps</Text>
+            <Ionicons name="settings-outline" size={24} color="#172F50" />
+            <Text style={styles.quickAccessButtonText}>Select Apps</Text>
           </TouchableOpacity>
         </View>
       </View>

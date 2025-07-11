@@ -447,38 +447,10 @@
     "category": "utilities"
   },
   {
-    "id": "safari",
-    "name": "Safari",
-    "urlScheme": "x-web-search://",
-    "appStoreUrl": "https://apps.apple.com/app/safari/id1108187390",
-    "category": "utilities"
-  },
-  {
     "id": "safari-alt",
     "name": "Safari (Alternative)",
     "urlScheme": "http://",
     "appStoreUrl": "https://apps.apple.com/app/safari/id1108187390",
     "category": "utilities"
-  },
-  {
-    "id": "mail",
-    "name": "Mail",
-    "urlScheme": "mailto://",
-    "appStoreUrl": "https://apps.apple.com/app/mail/id1108187390",
-    "category": "messaging"
-  },
-  {
-    "id": "phone",
-    "name": "Phone",
-    "urlScheme": "tel://",
-    "appStoreUrl": "https://apps.apple.com/app/phone/id1108187390",
-    "category": "utilities"
-  },
-  {
-    "id": "messages",
-    "name": "Messages",
-    "urlScheme": "sms://",
-    "appStoreUrl": "https://apps.apple.com/app/messages/id1108187390",
-    "category": "messaging"
   }
 ] 

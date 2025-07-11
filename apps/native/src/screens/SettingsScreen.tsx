@@ -202,11 +202,6 @@ const SettingsScreen = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>App Management</Text>
           {renderSettingItem({
-            title: "Installed Apps",
-            subtitle: "View all installed applications",
-            onPress: () => navigation.navigate("InstalledAppsScreen"),
-          })}
-          {renderSettingItem({
             title: "Select Apps",
             subtitle: "Choose which apps to display",
             onPress: () => navigation.navigate("AppSelectionScreen"),
