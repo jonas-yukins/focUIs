@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "a0aabe37-a1ac-43de-8d73-99a2eb24f150"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "app.jonasyukins.dumbphone",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

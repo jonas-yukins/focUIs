@@ -5,6 +5,8 @@ import LoginScreen from "../screens/LoginScreen";
 import HomeScreen from "../screens/HomeScreen";
 import AppSelectionScreen from "../screens/AppSelectionScreen";
 import SettingsScreen from "../screens/SettingsScreen";
+import WidgetSetupScreen from "../screens/WidgetSetupScreen";
+import WidgetConfigScreen from "../screens/WidgetConfigScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -20,6 +22,8 @@ const Navigation = () => {
         <Stack.Screen name="HomeScreen" component={HomeScreen} />
         <Stack.Screen name="AppSelectionScreen" component={AppSelectionScreen} />
         <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
+        <Stack.Screen name="WidgetSetupScreen" component={WidgetSetupScreen} />
+        <Stack.Screen name="WidgetConfigScreen" component={WidgetConfigScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -12,14 +12,36 @@
       "resizeMode": "contain",
       "backgroundColor": "#172F50"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
+        },
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "widgets": [
+        {
+          "name": "DumbphoneWidget",
+          "description": "Quick access to your selected apps",
+          "sizes": [
+            "medium"
+          ],
+          "target": "widget"
+        },
+        {
+          "name": "DumbphoneWidget",
+          "description": "Quick access to your selected apps",
+          "sizes": [
+            "medium"
+          ],
+          "target": "widget"
         }
-      }
+      ],
+      "bundleIdentifier": "com.jonasyukins.dumbphone"
     },
     "android": {
       "adaptiveIcon": {
@@ -29,11 +51,28 @@
       "permissions": [
         "QUERY_ALL_PACKAGES",
         "PACKAGE_USAGE_STATS"
+      ],
+      "widgets": [
+        {
+          "name": "DumbphoneWidget",
+          "description": "Quick access to your selected apps",
+          "sizes": [
+            "medium"
+          ],
+          "target": "widget"
+        }
       ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-font"]
+    "plugins": [
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "34d1aa6b-2e9e-4ff9-8865-25193682dfa1"
+      }
+    }
   }
 }

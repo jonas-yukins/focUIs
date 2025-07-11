@@ -20,4 +20,11 @@ export default defineSchema({
     fontSize: v.optional(v.number()),
     layout: v.optional(v.string()),
   }),
+
+  userWidgets: defineTable({
+    userId: v.string(),
+    widgetId: v.string(), // "widget_1", "widget_2", etc.
+    appIds: v.array(v.string()), // Array of app IDs that belong to this widget
+    order: v.number(), // Order of the widget
+  }),
 });
