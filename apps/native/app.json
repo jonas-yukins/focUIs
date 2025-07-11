@@ -1,8 +1,8 @@
 {
   "expo": {
     "newArchEnabled": true,
-    "name": "Dumbphone",
-    "slug": "dumbphone",
+      "name": "Plainphone",
+  "slug": "plainphone",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,7 +25,7 @@
       },
       "widgets": [
         {
-          "name": "DumbphoneWidget",
+          "name": "PlainphoneWidget",
           "description": "Quick access to your selected apps",
           "sizes": [
             "medium"
@@ -33,7 +33,7 @@
           "target": "widget"
         },
         {
-          "name": "DumbphoneWidget",
+          "name": "PlainphoneWidget",
           "description": "Quick access to your selected apps",
           "sizes": [
             "medium"
@@ -41,7 +41,7 @@
           "target": "widget"
         }
       ],
-      "bundleIdentifier": "com.jonasyukins.dumbphone"
+      "bundleIdentifier": "com.jonasyukins.plainphone"
     },
     "android": {
       "adaptiveIcon": {
@@ -54,7 +54,7 @@
       ],
       "widgets": [
         {
-          "name": "DumbphoneWidget",
+          "name": "PlainphoneWidget",
           "description": "Quick access to your selected apps",
           "sizes": [
             "medium"

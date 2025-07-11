@@ -1,4 +1,4 @@
-package com.narbhacks.dumbphone
+package com.narbhacks.plainphone
 
 import android.app.Application
 import com.facebook.react.PackageList

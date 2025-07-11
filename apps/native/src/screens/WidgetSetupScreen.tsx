@@ -35,7 +35,7 @@ const WidgetSetupScreen = ({ navigation }) => {
       </View>
       <View style={styles.stepContainer}>
         <Text style={styles.stepNumber}>3</Text>
-        <Text style={styles.stepText}>Search for "Dumbphone"</Text>
+                      <Text style={styles.stepText}>Search for "Plainphone"</Text>
       </View>
       <View style={styles.stepContainer}>
         <Text style={styles.stepNumber}>4</Text>
@@ -65,7 +65,7 @@ const WidgetSetupScreen = ({ navigation }) => {
       </View>
       <View style={styles.stepContainer}>
         <Text style={styles.stepNumber}>3</Text>
-        <Text style={styles.stepText}>Find "Dumbphone" in the widget list</Text>
+                      <Text style={styles.stepText}>Find "Plainphone" in the widget list</Text>
       </View>
       <View style={styles.stepContainer}>
         <Text style={styles.stepNumber}>4</Text>
@@ -102,7 +102,7 @@ const WidgetSetupScreen = ({ navigation }) => {
           <Ionicons name="phone-portrait-outline" size={48} color="#172F50" />
           <Text style={styles.introTitle}>Add Widget to Home Screen</Text>
           <Text style={styles.introText}>
-            Follow the instructions below to add a Dumbphone widget to your home screen. 
+            Follow the instructions below to add a Plainphone widget to your home screen. 
             The widget will display up to 6 of your selected apps for quick access.
           </Text>
         </View>

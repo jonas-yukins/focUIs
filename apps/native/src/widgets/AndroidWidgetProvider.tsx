@@ -26,19 +26,6 @@ const AndroidWidgetProvider: React.FC<AndroidWidgetProps> = ({ widgetId, apps })
 
   return (
     <View style={styles.container}>
-      {/* Widget Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Ionicons name="phone-portrait" size={16} color="#172F50" />
-          <Text style={styles.widgetTitle}>Dumbphone</Text>
-        </View>
-        <View style={styles.headerRight}>
-          {hasMoreApps && (
-            <Text style={styles.moreIndicator}>+{apps.length - 6}</Text>
-          )}
-        </View>
-      </View>
-
       {/* Apps Grid */}
       <View style={styles.appsGrid}>
         {displayApps.map((app, index) => (
@@ -53,7 +40,6 @@ const AndroidWidgetProvider: React.FC<AndroidWidgetProps> = ({ widgetId, apps })
             </Text>
           </TouchableOpacity>
         ))}
-        
         {/* Empty slots for visual consistency */}
         {Array.from({ length: Math.max(0, 6 - displayApps.length) }).map((_, index) => (
           <View key={`empty-${index}`} style={styles.emptySlot}>
@@ -80,35 +66,11 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  widgetTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#172F50',
-    marginLeft: 6,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  moreIndicator: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#172F50',
-  },
   appsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    justifyContent: 'center', // Center the grid
   },
   appItem: {
     width: '30%',

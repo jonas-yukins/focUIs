@@ -30,10 +30,17 @@ const HomeScreen = ({ navigation }) => {
   const reorganizeWidgets = useMutation(api.notes.reorganizeWidgets);
   const upsertWidget = useMutation(api.notes.upsertWidget);
 
-  // Auto-organize apps into widgets if no widgets exist
+  // Auto-organize apps into widgets if no widgets exist or if the number of selected apps has changed
   useEffect(() => {
-    if (selectedApps.length > 0 && userWidgets.length === 0) {
-      organizeAppsIntoWidgets();
+    if (selectedApps.length > 0) {
+      // Check if we need to reorganize widgets
+      const totalAppsInWidgets = userWidgets.reduce((total, widget) => total + widget.appIds.length, 0);
+      const needsReorganization = userWidgets.length === 0 || totalAppsInWidgets !== selectedApps.length;
+      
+      if (needsReorganization) {
+        console.log(`Reorganizing widgets: ${selectedApps.length} selected apps, ${userWidgets.length} existing widgets`);
+        organizeAppsIntoWidgets();
+      }
     }
   }, [selectedApps, userWidgets]);
 
@@ -52,6 +59,7 @@ const HomeScreen = ({ navigation }) => {
       });
     }
 
+    console.log(`Creating ${widgets.length} widgets with ${selectedApps.length} apps:`, widgets);
     if (widgets.length > 0) {
       reorganizeWidgets({ widgets });
     }
@@ -147,9 +155,13 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const getAppsForWidget = (widget) => {
-    return selectedApps.filter(app => 
+    const widgetApps = selectedApps.filter(app => 
       widget.appIds.includes(app._id)
     );
+    
+    // Sort apps by their order within the widget
+    // The order is determined by the global order of all apps
+    return widgetApps.sort((a, b) => a.order - b.order);
   };
 
   const renderWidgetItem = ({ item }) => {
@@ -162,6 +174,7 @@ const HomeScreen = ({ navigation }) => {
           apps={widgetApps}
           onAppPress={handleAppPress}
           isDragging={false}
+          showTitle={false}
         />
       </View>
     );
@@ -176,33 +189,19 @@ const HomeScreen = ({ navigation }) => {
     reorganizeWidgets({ widgets: updatedWidgets });
   };
 
-  const renderAppItem = ({ item, index }) => (
-    <TouchableOpacity
-      onPress={() => handleAppPress(item)}
-      style={styles.appItem}
-      activeOpacity={0.7}
-    >
-      <Text style={styles.appText}>{item.displayName}</Text>
-    </TouchableOpacity>
-  );
+
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Dumbphone</Text>
+                      <Text style={styles.headerTitle}>Plainphone</Text>
         <View style={styles.headerButtons}>
           <TouchableOpacity
-            onPress={() => navigation.navigate("AppSelectionScreen")}
+            onPress={() => navigation.navigate("SettingsScreen")}
             style={styles.headerButton}
           >
             <Ionicons name="settings-outline" size={24} color="#172F50" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleSignOut}
-            style={styles.headerButton}
-          >
-            <Ionicons name="log-out-outline" size={24} color="#172F50" />
           </TouchableOpacity>
         </View>
       </View>
@@ -215,7 +214,7 @@ const HomeScreen = ({ navigation }) => {
             onPress={() => navigation.navigate("AppSelectionScreen")}
             style={styles.quickAccessButton}
           >
-            <Ionicons name="settings-outline" size={24} color="#172F50" />
+            <Ionicons name="apps-outline" size={24} color="#172F50" />
             <Text style={styles.quickAccessButtonText}>Select Apps</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -223,14 +222,14 @@ const HomeScreen = ({ navigation }) => {
             style={styles.quickAccessButton}
           >
             <Ionicons name="phone-portrait-outline" size={24} color="#172F50" />
-            <Text style={styles.quickAccessButtonText}>Add Widget</Text>
+            <Text style={styles.quickAccessButtonText}>Setup Guide</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => navigation.navigate("WidgetConfigScreen")}
             style={styles.quickAccessButton}
           >
             <Ionicons name="grid-outline" size={24} color="#172F50" />
-            <Text style={styles.quickAccessButtonText}>Configure</Text>
+            <Text style={styles.quickAccessButtonText}>Edit Widget</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -257,9 +256,6 @@ const HomeScreen = ({ navigation }) => {
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>Widget Previews</Text>
-                  <Text style={styles.sectionSubtitle}>
-                    Long press to reorder widgets. Tap apps to launch them.
-                  </Text>
                 </View>
                 <FlatList
                   data={userWidgets}
@@ -271,24 +267,7 @@ const HomeScreen = ({ navigation }) => {
               </View>
             )}
 
-            {/* All Apps Section */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>All Selected Apps</Text>
-                <Text style={styles.sectionSubtitle}>
-                  Tap any app to launch it
-                </Text>
-              </View>
-              <FlatList
-                data={selectedApps}
-                renderItem={renderAppItem}
-                keyExtractor={(item) => item._id}
-                numColumns={2}
-                contentContainerStyle={styles.appsGrid}
-                showsVerticalScrollIndicator={false}
-                scrollEnabled={false}
-              />
-            </View>
+
           </>
         )}
       </ScrollView>
@@ -362,27 +341,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
-  },
-  appsGrid: {
-    paddingBottom: 20,
-  },
-  appItem: {
-    flex: 1,
-    margin: 8,
-    padding: 20,
-    backgroundColor: "#E1E1E1",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#B3B3B3",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 80,
-  },
-  appText: {
-    fontSize: RFValue(16),
-    fontFamily: "MRegular",
-    color: "#172F50",
-    textAlign: "center",
   },
   emptyState: {
     flex: 1,

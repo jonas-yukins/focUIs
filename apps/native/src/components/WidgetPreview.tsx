@@ -27,6 +27,7 @@ interface WidgetPreviewProps {
   onDragStart?: () => void;
   onDragEnd?: () => void;
   isDragging?: boolean;
+  showTitle?: boolean;
 }
 
 const WidgetPreview: React.FC<WidgetPreviewProps> = ({
@@ -36,25 +37,22 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
   onDragStart,
   onDragEnd,
   isDragging = false,
+  showTitle = true,
 }) => {
   const displayApps = apps.slice(0, 6); // Show max 6 apps
   const hasMoreApps = apps.length > 6;
 
   return (
     <View style={[styles.container, isDragging && styles.dragging]}>
-      {/* Widget Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Ionicons name="phone-portrait-outline" size={16} color="#172F50" />
-          <Text style={styles.widgetTitle}>{widgetId.replace('_', ' ').toUpperCase()}</Text>
+      {/* Widget Header - Only show if showTitle is true */}
+      {showTitle && (
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Ionicons name="phone-portrait-outline" size={16} color="#172F50" />
+            <Text style={styles.widgetTitle}>{widgetId.replace('_', ' ').toUpperCase()}</Text>
+          </View>
         </View>
-        <View style={styles.headerRight}>
-          <Text style={styles.appCount}>{apps.length} apps</Text>
-          {hasMoreApps && (
-            <Text style={styles.moreIndicator}>+{apps.length - 6}</Text>
-          )}
-        </View>
-      </View>
+      )}
 
       {/* Apps Grid */}
       <View style={styles.appsGrid}>
@@ -70,20 +68,12 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
             </Text>
           </TouchableOpacity>
         ))}
-        
         {/* Empty slots for visual consistency */}
         {Array.from({ length: Math.max(0, 6 - displayApps.length) }).map((_, index) => (
           <View key={`empty-${index}`} style={styles.emptySlot}>
             <Text style={styles.emptyText}>+</Text>
           </View>
         ))}
-      </View>
-
-      {/* Drag Handle */}
-      <View style={styles.dragHandle}>
-        <View style={styles.dragIndicator} />
-        <View style={styles.dragIndicator} />
-        <View style={styles.dragIndicator} />
       </View>
     </View>
   );
@@ -144,9 +134,10 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   appsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
+    justifyContent: 'center', // Center the grid
   },
   appItem: {
     width: (width - 80) / 3 - 8, // 3 columns with padding

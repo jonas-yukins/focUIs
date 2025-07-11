@@ -24,8 +24,8 @@ const lato = Lato({
 });
 
 export const metadata: Metadata = {
-  title: "Dumbphone - Transform Your Smartphone",
-  description: "Transform your smartphone into a minimalist device. Reduce screen time with our dumbphone app that replaces colorful icons with simple text.",
+      title: "Plainphone - Transform Your Smartphone",
+    description: "Transform your smartphone into a minimalist device. Reduce screen time with our plainphone app that replaces colorful icons with simple text.",
 };
 
 export default function RootLayout({

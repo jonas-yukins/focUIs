@@ -13,7 +13,7 @@ const Footer = () => {
               <div className="w-8 h-8 bg-[#172F50] rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">D</span>
               </div>
-              <span className="text-xl font-bold">Dumbphone</span>
+              <span className="text-xl font-bold">Plainphone</span>
             </div>
             <p className="text-[#C8D2E0] mb-6 max-w-md">
               Transform your smartphone into a minimalist device. Reduce screen time and digital distractions with our simple, effective app.
@@ -98,7 +98,7 @@ const Footer = () => {
         <div className="border-t border-[#172F50] mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-[#C8D2E0] text-sm">
-              © 2024 Dumbphone. All rights reserved.
+              © 2024 Plainphone. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link href="/privacy" className="text-[#C8D2E0] hover:text-white transition-colors text-sm">

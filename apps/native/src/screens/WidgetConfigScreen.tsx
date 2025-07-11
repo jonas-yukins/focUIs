@@ -4,7 +4,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ScrollView,
   Alert,
   Platform,
 } from "react-native";
@@ -12,71 +11,118 @@ import { RFValue } from "react-native-responsive-fontsize";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@packages/backend/convex/_generated/api";
-import { FlatList } from "react-native";
-import WidgetPreview from "../components/WidgetPreview";
+import DraggableFlatList, { 
+  RenderItemParams, 
+  ScaleDecorator 
+} from "react-native-draggable-flatlist";
 
 const WidgetConfigScreen = ({ navigation }) => {
   const selectedApps = useQuery(api.notes.getUserApps) || [];
   const userWidgets = useQuery(api.notes.getUserWidgets) || [];
   
   const reorganizeWidgets = useMutation(api.notes.reorganizeWidgets);
-  const upsertWidget = useMutation(api.notes.upsertWidget);
+  const updateAppOrders = useMutation(api.notes.updateAppOrders);
 
-  const [availableApps, setAvailableApps] = useState([]);
-  const [widgetConfigs, setWidgetConfigs] = useState([]);
+  const [draggableItems, setDraggableItems] = useState([]);
 
-  // Initialize widget configurations
+  // Initialize draggable items with widget headers and apps
   useEffect(() => {
     if (selectedApps.length > 0) {
-      const appsPerWidget = 6;
-      const widgets = [];
+      const items = [];
       
-      for (let i = 0; i < selectedApps.length; i += appsPerWidget) {
-        const widgetApps = selectedApps.slice(i, i + appsPerWidget);
-        const widgetId = `widget_${Math.floor(i / appsPerWidget) + 1}`;
+      if (userWidgets.length > 0) {
+        // Sort widgets by order
+        const sortedWidgets = [...userWidgets].sort((a, b) => a.order - b.order);
         
-        widgets.push({
-          widgetId,
-          appIds: widgetApps.map(app => app._id),
-          order: Math.floor(i / appsPerWidget),
+        sortedWidgets.forEach((widget, widgetIndex) => {
+          // Add widget header (unmovable)
+          items.push({
+            id: `header_${widget.widgetId}`,
+            type: 'header',
+            widgetId: widget.widgetId,
+            title: `Widget ${widgetIndex + 1}`,
+            order: widgetIndex,
+          });
+          
+          // Add apps for this widget
+          const widgetApps = selectedApps.filter(app => 
+            widget.appIds.includes(app._id)
+          );
+          
+          widgetApps.forEach((app, appIndex) => {
+            items.push({
+              id: app._id,
+              type: 'app',
+              app: app,
+              widgetId: widget.widgetId,
+              order: appIndex,
+            });
+          });
+        });
+      } else {
+        // If no widgets exist, create a default widget with all apps
+        items.push({
+          id: 'header_widget_1',
+          type: 'header',
+          widgetId: 'widget_1',
+          title: 'Widget 1',
+          order: 0,
+        });
+        
+        selectedApps.forEach((app, appIndex) => {
+          items.push({
+            id: app._id,
+            type: 'app',
+            app: app,
+            widgetId: 'widget_1',
+            order: appIndex,
+          });
         });
       }
-
-      setWidgetConfigs(widgets);
-      setAvailableApps(selectedApps);
+      
+      setDraggableItems(items);
     }
-  }, [selectedApps]);
+  }, [selectedApps, userWidgets]);
 
-  const getAppsForWidget = (widgetId) => {
-    const widget = widgetConfigs.find(w => w.widgetId === widgetId);
-    if (!widget) return [];
-    
-    return availableApps.filter(app => 
-      widget.appIds.includes(app._id)
-    );
-  };
-
-  const moveAppToWidget = (appId, fromWidgetId, toWidgetId) => {
-    const updatedConfigs = [...widgetConfigs];
-    
-    // Remove from source widget
-    const fromWidget = updatedConfigs.find(w => w.widgetId === fromWidgetId);
-    if (fromWidget) {
-      fromWidget.appIds = fromWidget.appIds.filter(id => id !== appId);
-    }
-    
-    // Add to target widget
-    const toWidget = updatedConfigs.find(w => w.widgetId === toWidgetId);
-    if (toWidget) {
-      toWidget.appIds.push(appId);
-    }
-    
-    setWidgetConfigs(updatedConfigs);
+  const handleDragEnd = ({ data, from, to }) => {
+    setDraggableItems(data);
   };
 
   const saveWidgetConfigurations = async () => {
     try {
-      await reorganizeWidgets({ widgets: widgetConfigs });
+      // Reorganize widgets based on current draggable items
+      const newWidgetConfigs = [];
+      let currentWidget = null;
+      
+      draggableItems.forEach((item) => {
+        if (item.type === 'header') {
+          // Start a new widget
+          currentWidget = {
+            widgetId: item.widgetId,
+            appIds: [],
+            order: item.order,
+          };
+          newWidgetConfigs.push(currentWidget);
+        } else if (item.type === 'app' && currentWidget) {
+          // Add app to current widget
+          currentWidget.appIds.push(item.app._id);
+        }
+      });
+      
+      await reorganizeWidgets({ widgets: newWidgetConfigs });
+      
+      // Update app orders in the database
+      const appOrders = draggableItems
+        .filter(item => item.type === 'app')
+        .map((item, index) => ({
+          appId: item.app._id,
+          newOrder: index,
+        }));
+      
+      if (appOrders.length > 0) {
+        await updateAppOrders({ appOrders });
+      }
+      
       Alert.alert("Success", "Widget configurations saved successfully!");
       navigation.goBack();
     } catch (error) {
@@ -85,59 +131,49 @@ const WidgetConfigScreen = ({ navigation }) => {
     }
   };
 
-  const renderWidgetItem = ({ item }) => {
-    const widgetApps = getAppsForWidget(item.widgetId);
-    
-    return (
-      <View style={styles.widgetContainer}>
-        <WidgetPreview
-          widgetId={item.widgetId}
-          apps={widgetApps}
-          onAppPress={() => {}} // No app launching in config mode
-          isDragging={false}
-        />
-      </View>
-    );
+  const renderItem = ({ item, drag }: RenderItemParams<any>) => {
+    if (item.type === 'header') {
+      // Calculate app count for this widget
+      const appCount = draggableItems.filter(i => i.type === 'app' && i.widgetId === item.widgetId).length;
+      
+      // Render unmovable widget header
+      return (
+        <View style={styles.headerItem}>
+          <View style={styles.headerContent}>
+            <Ionicons name="grid-outline" size={20} color="#172F50" />
+            <Text style={styles.headerText}>{item.title}</Text>
+          </View>
+          <View style={styles.headerBadge}>
+            <Text style={styles.headerBadgeText}>
+              {appCount} apps
+            </Text>
+          </View>
+        </View>
+      );
+    } else {
+      // Render draggable app item
+      return (
+        <ScaleDecorator>
+          <View
+            style={styles.appItem}
+          >
+            <View style={styles.appContent}>
+              <View style={styles.appIcon}>
+                <Ionicons name="phone-portrait-outline" size={24} color="#172F50" />
+              </View>
+              <Text style={styles.appText}>{item.app.displayName}</Text>
+            </View>
+            <TouchableOpacity
+              onPressIn={drag}
+              style={styles.dragHandle}
+            >
+              <Ionicons name="reorder-three" size={20} color="#666666" />
+            </TouchableOpacity>
+          </View>
+        </ScaleDecorator>
+      );
+    }
   };
-
-  const handleWidgetReorder = ({ data }: { data: any[] }) => {
-    const updatedWidgets = data.map((widget, index) => ({
-      ...widget,
-      order: index,
-    }));
-    
-    setWidgetConfigs(updatedWidgets);
-  };
-
-  const renderAvailableApp = ({ item }) => (
-    <TouchableOpacity
-      style={styles.availableAppItem}
-      onPress={() => {
-        // Show widget selection dialog
-        Alert.alert(
-          "Move App",
-          `Move "${item.displayName}" to which widget?`,
-          widgetConfigs.map(widget => ({
-            text: widget.widgetId.replace('_', ' ').toUpperCase(),
-            onPress: () => {
-              // Find current widget and move to new widget
-              const currentWidget = widgetConfigs.find(w => 
-                w.appIds.includes(item._id)
-              );
-              if (currentWidget) {
-                moveAppToWidget(item._id, currentWidget.widgetId, widget.widgetId);
-              }
-            }
-          })).concat([
-            { text: "Cancel", onPress: () => {} }
-          ])
-        );
-      }}
-    >
-      <Text style={styles.availableAppText}>{item.displayName}</Text>
-      <Ionicons name="arrow-forward" size={16} color="#666666" />
-    </TouchableOpacity>
-  );
 
   return (
     <View style={styles.container}>
@@ -158,44 +194,17 @@ const WidgetConfigScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Instructions */}
-        <View style={styles.instructionsSection}>
-          <Text style={styles.instructionsTitle}>How to configure widgets:</Text>
-          <Text style={styles.instructionsText}>
-            • Long press widgets to reorder them
-          </Text>
-          <Text style={styles.instructionsText}>
-            • Tap on apps in the "Available Apps" section to move them between widgets
-          </Text>
-          <Text style={styles.instructionsText}>
-            • Each widget can display up to 6 apps
-          </Text>
-        </View>
 
-        {/* Widget Previews */}
-        {widgetConfigs.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Widget Previews</Text>
-            <FlatList
-              data={widgetConfigs}
-              keyExtractor={(item) => item.widgetId}
-              renderItem={renderWidgetItem}
-              contentContainerStyle={styles.widgetsList}
-              scrollEnabled={false}
-            />
-          </View>
-        )}
 
-        {/* Available Apps */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Available Apps</Text>
-          <Text style={styles.sectionSubtitle}>
-            Tap an app to move it to a different widget
-          </Text>
-          {availableApps.map((app) => renderAvailableApp({ item: app }))}
-        </View>
-      </ScrollView>
+      {/* Draggable List */}
+      <DraggableFlatList
+        data={draggableItems}
+        onDragEnd={handleDragEnd}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+      />
     </View>
   );
 };
@@ -235,60 +244,16 @@ const styles = StyleSheet.create({
     fontFamily: "MSemiBold",
     color: "#FFFFFF",
   },
-  content: {
-    flex: 1,
+  listContainer: {
     paddingHorizontal: 20,
-  },
-  instructionsSection: {
-    backgroundColor: "#FFFFFF",
-    padding: 16,
-    borderRadius: 12,
-    marginVertical: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  instructionsTitle: {
-    fontSize: RFValue(16),
-    fontFamily: "MSemiBold",
-    color: "#172F50",
-    marginBottom: 8,
-  },
-  instructionsText: {
-    fontSize: RFValue(14),
-    fontFamily: "MRegular",
-    color: "#666666",
-    marginBottom: 4,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: RFValue(18),
-    fontFamily: "MSemiBold",
-    color: "#172F50",
-    marginBottom: 8,
-  },
-  sectionSubtitle: {
-    fontSize: RFValue(14),
-    fontFamily: "MRegular",
-    color: "#666666",
-    marginBottom: 12,
-  },
-  widgetsList: {
     paddingBottom: 20,
   },
-  widgetContainer: {
-    marginBottom: 10,
-  },
-  availableAppItem: {
+  headerItem: {
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 8,
     marginBottom: 8,
+    borderRadius: 8,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -298,10 +263,74 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  availableAppText: {
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerText: {
+    fontSize: RFValue(16),
+    fontFamily: "MSemiBold",
+    color: "#172F50",
+    marginLeft: 8,
+  },
+  headerBadge: {
+    backgroundColor: "#172F50",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  headerBadgeText: {
+    fontSize: RFValue(12),
+    fontFamily: "MSemiBold",
+    color: "#FFFFFF",
+  },
+  appItem: {
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 8,
+    borderRadius: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+
+  appContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  appIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: "#F0F0F0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  appText: {
     fontSize: RFValue(16),
     fontFamily: "MRegular",
     color: "#172F50",
+    flex: 1,
+  },
+  dragHandle: {
+    padding: 8,
+    borderRadius: 4,
+    backgroundColor: "#F0F0F0",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
 });
 

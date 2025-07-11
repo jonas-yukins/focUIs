@@ -111,6 +111,10 @@ const AppSelectionScreen = ({ navigation }) => {
         appStoreUrl: app.appStoreUrl,
         isThirdParty: app.isThirdParty,
       });
+
+      // Note: Widget reorganization will happen automatically when the user navigates back to HomeScreen
+      // The HomeScreen has logic to auto-organize apps into widgets when needed
+      console.log(`App ${app.name} ${isCurrentlySelected ? 'deselected' : 'selected'}. Widgets will be reorganized on navigation.`);
     } catch (err) {
       console.error('Failed to save app selection', err);
       // Revert local state on error
@@ -206,16 +210,7 @@ const AppSelectionScreen = ({ navigation }) => {
         )}
       </View>
 
-      {/* Info Text */}
-      <View style={styles.infoContainer}>
-        <Text style={styles.infoText}>
-          {Platform.OS === 'ios' 
-            ? "Note: iOS restrictions limit app detection. You may need to manually add apps."
-            : "Selected apps will appear on your home screen."
-          }
-        </Text>
-        {isPersisting && <Text style={styles.persistingText}>Saving...</Text>}
-      </View>
+
     </View>
   );
 };

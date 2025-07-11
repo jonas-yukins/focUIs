@@ -21,7 +21,7 @@ const Features = () => {
     },
     {
       title: "Cross-Platform",
-      description: "Works on both iOS and Android devices. Transform any smartphone into a dumbphone.",
+              description: "Works on both iOS and Android devices. Transform any smartphone into a plainphone.",
       icon: "🔄",
     },
     {
@@ -41,7 +41,7 @@ const Features = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-[#172F50] mb-4">
-            Why Choose Dumbphone?
+            Why Choose Plainphone?
           </h2>
           <p className="text-xl text-[#7A7A7A] max-w-3xl mx-auto">
             Transform your smartphone experience with our minimalist approach to digital wellness.

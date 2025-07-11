@@ -1,6 +1,7 @@
 import { View, StatusBar, Platform } from "react-native";
 import { useFonts } from "expo-font";
 import { LogBox } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Navigation from "./src/navigation/Navigation";
 import ConvexClientProvider from "./ConvexClientProvider";
 
@@ -28,17 +29,19 @@ export default function App() {
     Platform.OS === "ios" ? 50 : StatusBar.currentHeight;
 
   return (
-    <ConvexClientProvider>
-      <View style={{ flex: 1 }}>
-        <View style={{ height: STATUS_BAR_HEIGHT, backgroundColor: "#172F50" }}>
-          <StatusBar
-            translucent
-            backgroundColor={"#172F50"}
-            barStyle="light-content"
-          />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ConvexClientProvider>
+        <View style={{ flex: 1 }}>
+          <View style={{ height: STATUS_BAR_HEIGHT, backgroundColor: "#172F50" }}>
+            <StatusBar
+              translucent
+              backgroundColor={"#172F50"}
+              barStyle="light-content"
+            />
+          </View>
+          <Navigation />
         </View>
-        <Navigation />
-      </View>
-    </ConvexClientProvider>
+      </ConvexClientProvider>
+    </GestureHandlerRootView>
   );
 }

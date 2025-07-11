@@ -1,6 +1,6 @@
-# Widget Implementation for Dumbphone
+# Widget Implementation for Plainphone
 
-This document describes the widget implementation for the Dumbphone app, which allows users to display their selected apps on their device's home screen.
+This document describes the widget implementation for the Plainphone app, which allows users to display their selected apps on their device's home screen.
 
 ## Overview
 
@@ -57,7 +57,7 @@ userWidgets: defineTable({
 - Enables moving apps between widgets
 
 #### 4. Widget Components
-- **iOS**: `src/widgets/DumbphoneWidget.tsx`
+- **iOS**: `src/widgets/PlainphoneWidget.tsx`
 - **Android**: `src/widgets/AndroidWidgetProvider.tsx`
 
 ### Navigation

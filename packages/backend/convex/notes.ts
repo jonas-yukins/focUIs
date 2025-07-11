@@ -20,7 +20,8 @@ export const getUserApps = query({
       .order("asc")
       .collect();
 
-    return apps;
+    // Sort by order field since Convex doesn't support ordering by specific fields in this context
+    return apps.sort((a, b) => a.order - b.order);
   },
 });
 
@@ -136,6 +137,29 @@ export const updateAppOrder = mutation({
       await ctx.db.patch(app._id, {
         order: args.newOrder,
       });
+    }
+  },
+});
+
+// Update multiple app orders
+export const updateAppOrders = mutation({
+  args: {
+    appOrders: v.array(v.object({
+      appId: v.id("userApps"),
+      newOrder: v.number(),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx);
+    if (!userId) throw new Error("User not found");
+
+    for (const appOrder of args.appOrders) {
+      const app = await ctx.db.get(appOrder.appId);
+      if (app && app.userId === userId) {
+        await ctx.db.patch(appOrder.appId, {
+          order: appOrder.newOrder,
+        });
+      }
     }
   },
 });
