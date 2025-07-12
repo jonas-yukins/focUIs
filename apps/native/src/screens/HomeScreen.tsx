@@ -195,7 +195,12 @@ const HomeScreen = ({ navigation }) => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity
+          onPress={() => navigation.navigate("AppOrderScreen")}
+          style={styles.headerButton}
+        >
+          <Ionicons name="reorder-three" size={24} color="#172F50" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Plainphone</Text>
         <View style={styles.headerButtons}>
           <TouchableOpacity
@@ -302,9 +307,6 @@ const styles = StyleSheet.create({
   },
   headerButton: {
     padding: 8,
-  },
-  headerSpacer: {
-    width: 40, // Same width as the settings button to balance the layout
   },
   quickAccessContainer: {
     backgroundColor: "#F7F7F7",

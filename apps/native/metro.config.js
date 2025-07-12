@@ -19,6 +19,17 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, "node_modules"),
 ];
 
+// Add extraNodeModules to force Metro to resolve certain packages from the workspace root
+const extraNodeModules = {
+  'react-native-reanimated-dnd': path.resolve(workspaceRoot, 'node_modules/react-native-reanimated-dnd'),
+  'react-native-reanimated': path.resolve(workspaceRoot, 'node_modules/react-native-reanimated'),
+};
+
+config.resolver.extraNodeModules = {
+  ...(config.resolver.extraNodeModules || {}),
+  ...extraNodeModules,
+};
+
 // Use turborepo to restore the cache when possible
 config.cacheStores = [
   new FileStore({

@@ -10,8 +10,8 @@ import {
 import { RFValue } from "react-native-responsive-fontsize";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../packages/backend/convex/_generated/api";
-import { Id } from "../../../../packages/backend/convex/_generated/dataModel";
+import { api } from "@packages/backend/convex/_generated/api";
+import { Id } from "@packages/backend/convex/_generated/dataModel";
 import { Sortable, SortableItem, SortableRenderItemProps } from "react-native-reanimated-dnd";
 
 const { width, height } = Dimensions.get("window");
@@ -21,6 +21,7 @@ interface App {
   displayName: string;
   packageName?: string;
   urlScheme?: string;
+  order: number;
 }
 
 interface DraggableApp {
@@ -29,7 +30,7 @@ interface DraggableApp {
   order: number;
 }
 
-const WidgetConfigScreen = ({ navigation }) => {
+const AppOrderScreen = ({ navigation }) => {
   const selectedApps = useQuery(api.notes.getUserApps) || [];
   const updateAppOrders = useMutation(api.notes.updateAppOrders);
 
@@ -37,13 +38,16 @@ const WidgetConfigScreen = ({ navigation }) => {
 
   // Initialize apps list
   useEffect(() => {
-    console.log('Initializing apps:', { selectedApps: selectedApps.length });
+    console.log('Initializing apps for ordering:', { selectedApps: selectedApps.length });
     if (selectedApps.length > 0) {
-      const apps: DraggableApp[] = selectedApps.map((app, index) => ({
-        id: app._id,
-        app,
-        order: index,
-      }));
+      const apps: DraggableApp[] = selectedApps
+        .filter(app => app.isSelected)
+        .map((app, index) => ({
+          id: app._id,
+          app,
+          order: app.order || index,
+        }))
+        .sort((a, b) => a.order - b.order);
       setAllApps(apps);
     }
   }, [selectedApps]);
@@ -129,7 +133,7 @@ const WidgetConfigScreen = ({ navigation }) => {
         >
           <Ionicons name="arrow-back" size={24} color="#172F50" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Configure Apps</Text>
+        <Text style={styles.headerTitle}>App Order</Text>
         <TouchableOpacity
           onPress={saveAppOrder}
           style={styles.saveButton}
@@ -138,18 +142,36 @@ const WidgetConfigScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Drag and Drop List */}
-      <View style={styles.dragDropContainer}>
-        <Text style={styles.dragDropTitle}>Drag to reorder apps</Text>
-        <Sortable
-          data={allApps}
-          renderItem={renderAppItem}
-          itemHeight={68} // Updated to match actual item height (60 + 8 margin)
-          onDragEnd={handleDragEnd}
-          style={styles.sortableList}
-          contentContainerStyle={styles.sortableListContent}
-          itemKeyExtractor={(item) => item.id}
-        />
+      {/* Content */}
+      <View style={styles.content}>
+        {allApps.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateTitle}>No Apps Selected</Text>
+            <Text style={styles.emptyStateText}>
+              Select some apps first to reorder them
+            </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("AppSelectionScreen")}
+              style={styles.emptyStateButton}
+            >
+              <Text style={styles.emptyStateButtonText}>Select Apps</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            <Text style={styles.sectionTitle}>
+              Drag to reorder your apps ({allApps.length})
+            </Text>
+            <Sortable
+              data={allApps}
+              renderItem={renderAppItem}
+              itemKeyExtractor={(item) => item.id}
+              itemHeight={80}
+              onDragEnd={handleDragEnd}
+              style={styles.sortableContainer}
+            />
+          </>
+        )}
       </View>
     </View>
   );
@@ -175,7 +197,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   headerTitle: {
-    fontSize: RFValue(20),
+    fontSize: RFValue(24),
     fontFamily: "MBold",
     color: "#172F50",
   },
@@ -183,46 +205,41 @@ const styles = StyleSheet.create({
     backgroundColor: "#172F50",
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   saveButtonText: {
-    fontSize: RFValue(14),
-    fontFamily: "MSemiBold",
-    color: "#FFFFFF",
-  },
-  dragDropContainer: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-  },
-  dragDropTitle: {
     fontSize: RFValue(16),
+    fontFamily: "MMedium",
+    color: "#E1E1E1",
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  sectionTitle: {
+    fontSize: RFValue(18),
     fontFamily: "MSemiBold",
     color: "#172F50",
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  sortableList: {
+  sortableContainer: {
     flex: 1,
   },
-  sortableListContent: {
-    paddingBottom: 16,
-  },
   sortableItem: {
-    height: 68, // Updated to match itemHeight prop
-    backgroundColor: "transparent",
+    marginBottom: 8,
   },
   appItem: {
-    backgroundColor: "#F8F8F8",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    marginBottom: 8,
-    height: 60,
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   appContent: {
     flexDirection: "row",
@@ -230,25 +247,55 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   appIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
-    backgroundColor: "#E8E8E8",
-    justifyContent: "center",
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: "#F0F0F0",
     alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
   appText: {
-    fontSize: RFValue(14),
-    fontFamily: "MRegular",
+    fontSize: RFValue(16),
+    fontFamily: "MMedium",
     color: "#172F50",
     flex: 1,
   },
   dragHandle: {
-    padding: 4,
-    borderRadius: 4,
-    backgroundColor: "#F0F0F0",
+    padding: 8,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 40,
+  },
+  emptyStateTitle: {
+    fontSize: RFValue(24),
+    fontFamily: "MBold",
+    color: "#172F50",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  emptyStateText: {
+    fontSize: RFValue(16),
+    fontFamily: "MRegular",
+    color: "#7A7A7A",
+    textAlign: "center",
+    marginBottom: 30,
+    lineHeight: 24,
+  },
+  emptyStateButton: {
+    backgroundColor: "#172F50",
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 8,
+  },
+  emptyStateButtonText: {
+    fontSize: RFValue(16),
+    fontFamily: "MMedium",
+    color: "#E1E1E1",
   },
 });
 
-export default WidgetConfigScreen; 
+export default AppOrderScreen; 

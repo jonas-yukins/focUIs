@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    paddingTop: 60, // Add top padding for safe area
   },
   card: {
     backgroundColor: "#fff",
@@ -230,12 +231,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#FFF",
-    padding: 15,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#D0D5DD",
     width: "100%",
     marginBottom: 32,
+    height: 44,
   },
   signupContainer: {
     flexDirection: "row",
