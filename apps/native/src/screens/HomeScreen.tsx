@@ -218,7 +218,7 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.quickAccessButtonText}>Select Apps</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => navigation.navigate("WidgetSetupScreen")}
+            onPress={() => navigation.navigate("SetupScreen")}
             style={styles.quickAccessButton}
           >
             <Ionicons name="phone-portrait-outline" size={24} color="#172F50" />
