@@ -197,14 +197,16 @@ const WidgetConfigScreen = ({ navigation }) => {
 
 
       {/* Draggable List */}
-      <DraggableFlatList
-        data={draggableItems}
-        onDragEnd={handleDragEnd}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
+      <View style={styles.listWrapper}>
+        <DraggableFlatList
+          data={draggableItems}
+          onDragEnd={handleDragEnd}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
     </View>
   );
 };
@@ -243,6 +245,11 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     fontFamily: "MSemiBold",
     color: "#FFFFFF",
+  },
+  listWrapper: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   listContainer: {
     paddingHorizontal: 20,
