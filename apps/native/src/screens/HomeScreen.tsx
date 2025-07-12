@@ -195,7 +195,8 @@ const HomeScreen = ({ navigation }) => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-                      <Text style={styles.headerTitle}>Plainphone</Text>
+        <View style={styles.headerSpacer} />
+        <Text style={styles.headerTitle}>Plainphone</Text>
         <View style={styles.headerButtons}>
           <TouchableOpacity
             onPress={() => navigation.navigate("SettingsScreen")}
@@ -208,7 +209,6 @@ const HomeScreen = ({ navigation }) => {
 
       {/* Quick Access Section */}
       <View style={styles.quickAccessContainer}>
-        <Text style={styles.quickAccessTitle}>Quick Access</Text>
         <View style={styles.quickAccessButtons}>
           <TouchableOpacity
             onPress={() => navigation.navigate("AppSelectionScreen")}
@@ -303,12 +303,13 @@ const styles = StyleSheet.create({
   headerButton: {
     padding: 8,
   },
+  headerSpacer: {
+    width: 40, // Same width as the settings button to balance the layout
+  },
   quickAccessContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F7F7F7",
     paddingHorizontal: 20,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E1E1E1",
   },
   quickAccessTitle: {
     fontSize: RFValue(18),

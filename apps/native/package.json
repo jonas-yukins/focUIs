@@ -29,6 +29,7 @@
     "expo-device": "^7.1.4",
     "expo-file-system": "^18.1.11",
     "expo-font": "~13.3.1",
+    "expo-linear-gradient": "^14.1.5",
     "expo-media-library": "^17.1.7",
     "expo-modules-core": "~1.12.11",
     "expo-system-ui": "~5.0.9",
