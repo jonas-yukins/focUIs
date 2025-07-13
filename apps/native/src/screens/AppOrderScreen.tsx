@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   Dimensions,
+  ScrollView,
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { Ionicons } from "@expo/vector-icons";
@@ -34,11 +35,10 @@ const AppOrderScreen = ({ navigation }) => {
   const selectedApps = useQuery(api.notes.getUserApps) || [];
   const updateAppOrders = useMutation(api.notes.updateAppOrders);
 
-  const [allApps, setAllApps] = useState<DraggableApp[]>([]);
+  const [sections, setSections] = useState<DraggableApp[][]>([]);
 
   // Initialize apps list
   useEffect(() => {
-    console.log('Initializing apps for ordering:', { selectedApps: selectedApps.length });
     if (selectedApps.length > 0) {
       const apps: DraggableApp[] = selectedApps
         .filter(app => app.isSelected)
@@ -48,28 +48,39 @@ const AppOrderScreen = ({ navigation }) => {
           order: app.order || index,
         }))
         .sort((a, b) => a.order - b.order);
-      setAllApps(apps);
+
+      const chunkedApps = [];
+      const chunkSize = 6;
+      for (let i = 0; i < apps.length; i += chunkSize) {
+        chunkedApps.push(apps.slice(i, i + chunkSize));
+      }
+      setSections(chunkedApps);
     }
   }, [selectedApps]);
 
-  const handleDragEnd = useCallback(({ from, to }: { from: number; to: number }) => {
+  const handleDragEnd = useCallback((sectionIndex: number, { from, to }: { from: number; to: number }) => {
     if (from === to) return;
 
-    setAllApps(currentApps => {
-      const newApps = [...currentApps];
-      const [movedApp] = newApps.splice(from, 1);
-      newApps.splice(to, 0, movedApp);
+    setSections(currentSections => {
+      const newSections = [...currentSections];
+      const section = [...newSections[sectionIndex]];
+      const [movedApp] = section.splice(from, 1);
+      section.splice(to, 0, movedApp);
+      newSections[sectionIndex] = section;
 
-      // Update order values
-      return newApps.map((app, index) => ({
-        ...app,
-        order: index,
-      }));
+      // Update order for all apps across all sections
+      let order = 0;
+      return newSections.map(sec => {
+        return sec.map(app => {
+          return { ...app, order: order++ };
+        });
+      });
     });
   }, []);
 
   const saveAppOrder = async () => {
     try {
+      const allApps = sections.flat();
       const appOrders = allApps.map(app => ({
         appId: app.id as Id<"userApps">,
         newOrder: app.order,
@@ -144,7 +155,7 @@ const AppOrderScreen = ({ navigation }) => {
 
       {/* Content */}
       <View style={styles.content}>
-        {allApps.length === 0 ? (
+        {sections.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateTitle}>No Apps Selected</Text>
             <Text style={styles.emptyStateText}>
@@ -158,19 +169,23 @@ const AppOrderScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         ) : (
-          <>
-            <Text style={styles.sectionTitle}>
-              Drag to reorder your apps ({allApps.length})
-            </Text>
-            <Sortable
-              data={allApps}
-              renderItem={renderAppItem}
-              itemKeyExtractor={(item) => item.id}
-              itemHeight={80}
-              onDragEnd={handleDragEnd}
-              style={styles.sortableContainer}
-            />
-          </>
+          <ScrollView>
+            {sections.map((section, sectionIndex) => (
+              <View key={sectionIndex} style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>
+                  Screen {sectionIndex + 1}
+                </Text>
+                <Sortable
+                  data={section}
+                  renderItem={renderAppItem}
+                  itemKeyExtractor={(item) => item.id}
+                  itemHeight={80}
+                  onDragEnd={(result) => handleDragEnd(sectionIndex, result)}
+                  style={styles.sortableContainer}
+                />
+              </View>
+            ))}
+          </ScrollView>
         )}
       </View>
     </View>
@@ -215,6 +230,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
+  },
+  sectionContainer: {
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: RFValue(18),
@@ -298,4 +316,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AppOrderScreen; 
+export default AppOrderScreen;

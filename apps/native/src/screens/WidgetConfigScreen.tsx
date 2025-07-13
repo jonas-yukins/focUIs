@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   Dimensions,
+  ScrollView,
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { Ionicons } from "@expo/vector-icons";
@@ -33,39 +34,51 @@ const WidgetConfigScreen = ({ navigation }) => {
   const selectedApps = useQuery(api.notes.getUserApps) || [];
   const updateAppOrders = useMutation(api.notes.updateAppOrders);
 
-  const [allApps, setAllApps] = useState<DraggableApp[]>([]);
+  const [sections, setSections] = useState<DraggableApp[][]>([]);
 
   // Initialize apps list
   useEffect(() => {
-    console.log('Initializing apps:', { selectedApps: selectedApps.length });
     if (selectedApps.length > 0) {
-      const apps: DraggableApp[] = selectedApps.map((app, index) => ({
-        id: app._id,
-        app,
-        order: index,
-      }));
-      setAllApps(apps);
+      const apps: DraggableApp[] = selectedApps
+        .map((app, index) => ({
+          id: app._id,
+          app,
+          order: app.order || index,
+        }))
+        .sort((a, b) => a.order - b.order);
+
+      const chunkedApps = [];
+      const chunkSize = 6;
+      for (let i = 0; i < apps.length; i += chunkSize) {
+        chunkedApps.push(apps.slice(i, i + chunkSize));
+      }
+      setSections(chunkedApps);
     }
   }, [selectedApps]);
 
-  const handleDragEnd = useCallback(({ from, to }: { from: number; to: number }) => {
+  const handleDragEnd = useCallback((sectionIndex: number, { from, to }: { from: number; to: number }) => {
     if (from === to) return;
 
-    setAllApps(currentApps => {
-      const newApps = [...currentApps];
-      const [movedApp] = newApps.splice(from, 1);
-      newApps.splice(to, 0, movedApp);
+    setSections(currentSections => {
+      const newSections = [...currentSections];
+      const section = [...newSections[sectionIndex]];
+      const [movedApp] = section.splice(from, 1);
+      section.splice(to, 0, movedApp);
+      newSections[sectionIndex] = section;
 
-      // Update order values
-      return newApps.map((app, index) => ({
-        ...app,
-        order: index,
-      }));
+      // Update order for all apps across all sections
+      let order = 0;
+      return newSections.map(sec => {
+        return sec.map(app => {
+          return { ...app, order: order++ };
+        });
+      });
     });
   }, []);
 
   const saveAppOrder = async () => {
     try {
+      const allApps = sections.flat();
       const appOrders = allApps.map(app => ({
         appId: app.id as Id<"userApps">,
         newOrder: app.order,
@@ -140,16 +153,24 @@ const WidgetConfigScreen = ({ navigation }) => {
 
       {/* Drag and Drop List */}
       <View style={styles.dragDropContainer}>
-        <Text style={styles.dragDropTitle}>Drag to reorder apps</Text>
-        <Sortable
-          data={allApps}
-          renderItem={renderAppItem}
-          itemHeight={68} // Updated to match actual item height (60 + 8 margin)
-          onDragEnd={handleDragEnd}
-          style={styles.sortableList}
-          contentContainerStyle={styles.sortableListContent}
-          itemKeyExtractor={(item) => item.id}
-        />
+        <ScrollView>
+          {sections.map((section, sectionIndex) => (
+            <View key={sectionIndex} style={styles.sectionContainer}>
+              <Text style={styles.dragDropTitle}>
+                Screen {sectionIndex + 1}
+              </Text>
+              <Sortable
+                data={section}
+                renderItem={renderAppItem}
+                itemHeight={68} // Updated to match actual item height (60 + 8 margin)
+                onDragEnd={(result) => handleDragEnd(sectionIndex, result)}
+                style={styles.sortableList}
+                contentContainerStyle={styles.sortableListContent}
+                itemKeyExtractor={(item) => item.id}
+              />
+            </View>
+          ))}
+        </ScrollView>
       </View>
     </View>
   );
@@ -194,6 +215,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 16,
+  },
+  sectionContainer: {
+    marginBottom: 20,
   },
   dragDropTitle: {
     fontSize: RFValue(16),
@@ -251,4 +275,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default WidgetConfigScreen; 
+export default WidgetConfigScreen;
