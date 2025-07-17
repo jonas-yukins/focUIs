@@ -1,0 +1,47 @@
+---
+alwaysApply: true
+---
+
+# Dependency Management Workflow
+
+This project is a `pnpm` workspace monorepo. All dependencies must be installed using `pnpm` and targeted to the correct package (either `native` or `web`).
+
+### General Rule
+
+Never use `npm install` or `yarn add`. Always use `pnpm add`.
+
+### Installing a Dependency in a Specific App
+
+To add a dependency to a specific application, you must use the `--filter` (or `-F`) flag to specify the workspace.
+
+**1. For the Native App (`apps/native`):**
+
+The package name for the native app is `native-app` (as defined in `apps/native/package.json`).
+
+```bash
+pnpm -F native-app add <package-name>
+```
+
+**Example:**
+
+```bash
+pnpm -F native-app add react-native-pager-view
+```
+
+**2. For the Web App (`apps/web`):**
+
+The package name for the web app is `web-app` (as defined in `apps/web/package.json`).
+
+```bash
+pnpm -F web-app add <package-name>
+```
+
+**Example:**
+
+```bash
+pnpm -F web-app add zod
+```
+
+### Important for React Native
+
+After adding a new dependency to the `native-app`, especially one with native modules, you **must** restart the Metro development server for the changes to be recognized. Failure to do so is a common cause of "Unable to resolve..." errors.

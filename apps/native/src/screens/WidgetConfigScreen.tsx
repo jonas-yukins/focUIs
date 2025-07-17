@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   StyleSheet,
   View,
@@ -14,6 +14,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../packages/backend/convex/_generated/api";
 import { Id } from "../../../../packages/backend/convex/_generated/dataModel";
 import { Sortable, SortableItem, SortableRenderItemProps } from "react-native-reanimated-dnd";
+import PagerView from 'react-native-pager-view';
 
 const { width, height } = Dimensions.get("window");
 
@@ -35,6 +36,10 @@ const WidgetConfigScreen = ({ navigation }) => {
   const updateAppOrders = useMutation(api.notes.updateAppOrders);
 
   const [sections, setSections] = useState<DraggableApp[][]>([]);
+  const sectionsRef = useRef<DraggableApp[][]>([]);
+  sectionsRef.current = sections;
+
+  const [currentPage, setCurrentPage] = useState(0);
 
   // Initialize apps list
   useEffect(() => {
@@ -56,23 +61,22 @@ const WidgetConfigScreen = ({ navigation }) => {
     }
   }, [selectedApps]);
 
-  const handleDragEnd = useCallback((sectionIndex: number, { from, to }: { from: number; to: number }) => {
-    if (from === to) return;
-
+  // Handler to update order only on drop
+  const handleDrop = useCallback((sectionIndex: number, itemId: string, to: number) => {
     setSections(currentSections => {
       const newSections = [...currentSections];
       const section = [...newSections[sectionIndex]];
+      const from = section.findIndex(app => app.id === itemId);
+      if (from === -1 || from === to) return currentSections;
       const [movedApp] = section.splice(from, 1);
       section.splice(to, 0, movedApp);
       newSections[sectionIndex] = section;
-
       // Update order for all apps across all sections
       let order = 0;
-      return newSections.map(sec => {
-        return sec.map(app => {
-          return { ...app, order: order++ };
-        });
-      });
+      const updatedSections = newSections.map(sec =>
+        sec.map(app => ({ ...app, order: order++ }))
+      );
+      return updatedSections;
     });
   }, []);
 
@@ -83,9 +87,7 @@ const WidgetConfigScreen = ({ navigation }) => {
         appId: app.id as Id<"userApps">,
         newOrder: app.order,
       }));
-      
       await updateAppOrders({ appOrders });
-      
       Alert.alert("Success", "App order saved successfully!");
       navigation.goBack();
     } catch (error) {
@@ -94,7 +96,7 @@ const WidgetConfigScreen = ({ navigation }) => {
     }
   };
 
-  const renderAppItem = useCallback((props: SortableRenderItemProps<DraggableApp>) => {
+  const renderAppItem = useCallback((sectionIndex: number) => (props: SortableRenderItemProps<DraggableApp>) => {
     const {
       item,
       id,
@@ -104,7 +106,6 @@ const WidgetConfigScreen = ({ navigation }) => {
       itemsCount,
       itemHeight,
     } = props;
-
     return (
       <SortableItem
         key={id}
@@ -115,6 +116,7 @@ const WidgetConfigScreen = ({ navigation }) => {
         autoScrollDirection={autoScrollDirection}
         itemsCount={itemsCount}
         itemHeight={itemHeight}
+        onDrop={(_id, to) => handleDrop(sectionIndex, _id, to)}
         style={styles.sortableItem}
       >
         <View style={styles.appItem}>
@@ -130,7 +132,7 @@ const WidgetConfigScreen = ({ navigation }) => {
         </View>
       </SortableItem>
     );
-  }, []);
+  }, [handleDrop]);
 
   return (
     <View style={styles.container}>
@@ -151,26 +153,41 @@ const WidgetConfigScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Drag and Drop List */}
+      {/* Horizontal Pager for Sections */}
       <View style={styles.dragDropContainer}>
-        <ScrollView>
+        <PagerView
+          style={{ flex: 1 }}
+          initialPage={0}
+          onPageSelected={e => setCurrentPage(e.nativeEvent.position)}
+        >
           {sections.map((section, sectionIndex) => (
-            <View key={sectionIndex} style={styles.sectionContainer}>
+            <View key={sectionIndex} style={{ flex: 1 }}>
               <Text style={styles.dragDropTitle}>
                 Screen {sectionIndex + 1}
               </Text>
               <Sortable
                 data={section}
-                renderItem={renderAppItem}
-                itemHeight={68} // Updated to match actual item height (60 + 8 margin)
-                onDragEnd={(result) => handleDragEnd(sectionIndex, result)}
+                renderItem={renderAppItem(sectionIndex)}
+                itemHeight={68}
                 style={styles.sortableList}
                 contentContainerStyle={styles.sortableListContent}
                 itemKeyExtractor={(item) => item.id}
               />
             </View>
           ))}
-        </ScrollView>
+        </PagerView>
+        {/* Page Indicator Dots */}
+        <View style={styles.dotsContainer}>
+          {sections.map((_, idx) => (
+            <View
+              key={idx}
+              style={[
+                styles.dot,
+                currentPage === idx ? styles.activeDot : styles.inactiveDot,
+              ]}
+            />
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -272,6 +289,24 @@ const styles = StyleSheet.create({
     padding: 4,
     borderRadius: 4,
     backgroundColor: "#F0F0F0",
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 12,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  activeDot: {
+    backgroundColor: '#172F50',
+  },
+  inactiveDot: {
+    backgroundColor: '#B3B3B3',
   },
 });
 

@@ -1,319 +1,182 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useCallback, useRef, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-  Dimensions,
-  ScrollView,
-} from "react-native";
-import { RFValue } from "react-native-responsive-fontsize";
-import { Ionicons } from "@expo/vector-icons";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@packages/backend/convex/_generated/api";
-import { Id } from "@packages/backend/convex/_generated/dataModel";
-import { Sortable, SortableItem, SortableRenderItemProps } from "react-native-reanimated-dnd";
+  Sortable,
+  SortableItem,
+  SortableRenderItemProps,
+} from "react-native-reanimated-dnd";
 
-const { width, height } = Dimensions.get("window");
-
-interface App {
-  _id: string;
-  displayName: string;
-  packageName?: string;
-  urlScheme?: string;
-  order: number;
-}
-
-interface DraggableApp {
+interface Task {
   id: string;
-  app: App;
-  order: number;
+  title: string;
+  completed: boolean;
 }
 
-const AppOrderScreen = ({ navigation }) => {
-  const selectedApps = useQuery(api.notes.getUserApps) || [];
-  const updateAppOrders = useMutation(api.notes.updateAppOrders);
+export default function AppOrderScreen() {
+  const [tasks, setTasks] = useState<Task[]>([
+    { id: "1", title: "Learn React Native", completed: false },
+    { id: "2", title: "Build an app", completed: false },
+    { id: "3", title: "Deploy to store", completed: true },
+    { id: "4", title: "Celebrate success", completed: false },
+  ]);
 
-  const [sections, setSections] = useState<DraggableApp[][]>([]);
+  // Use a ref to hold the current order during drag
+  const tasksRef = useRef<Task[]>(tasks);
+  tasksRef.current = tasks;
 
-  // Initialize apps list
-  useEffect(() => {
-    if (selectedApps.length > 0) {
-      const apps: DraggableApp[] = selectedApps
-        .filter(app => app.isSelected)
-        .map((app, index) => ({
-          id: app._id,
-          app,
-          order: app.order || index,
-        }))
-        .sort((a, b) => a.order - b.order);
-
-      const chunkedApps = [];
-      const chunkSize = 6;
-      for (let i = 0; i < apps.length; i += chunkSize) {
-        chunkedApps.push(apps.slice(i, i + chunkSize));
-      }
-      setSections(chunkedApps);
-    }
-  }, [selectedApps]);
-
-  const handleDragEnd = useCallback((sectionIndex: number, { from, to }: { from: number; to: number }) => {
-    if (from === to) return;
-
-    setSections(currentSections => {
-      const newSections = [...currentSections];
-      const section = [...newSections[sectionIndex]];
-      const [movedApp] = section.splice(from, 1);
-      section.splice(to, 0, movedApp);
-      newSections[sectionIndex] = section;
-
-      // Update order for all apps across all sections
-      let order = 0;
-      return newSections.map(sec => {
-        return sec.map(app => {
-          return { ...app, order: order++ };
-        });
-      });
-    });
+  // Handler to update the order only when dropped
+  const handleDrop = useCallback((itemId: string, to: number) => {
+    const from = tasksRef.current.findIndex((t) => t.id === itemId);
+    if (from === -1 || from === to) return;
+    const newTasks = [...tasksRef.current];
+    const [movedTask] = newTasks.splice(from, 1);
+    newTasks.splice(to, 0, movedTask);
+    setTasks(newTasks);
   }, []);
 
-  const saveAppOrder = async () => {
-    try {
-      const allApps = sections.flat();
-      const appOrders = allApps.map(app => ({
-        appId: app.id as Id<"userApps">,
-        newOrder: app.order,
-      }));
-      
-      await updateAppOrders({ appOrders });
-      
-      Alert.alert("Success", "App order saved successfully!");
-      navigation.goBack();
-    } catch (error) {
-      console.error('Failed to save app order:', error);
-      Alert.alert("Error", "Failed to save app order");
-    }
-  };
-
-  const renderAppItem = useCallback((props: SortableRenderItemProps<DraggableApp>) => {
-    const {
-      item,
-      id,
-      positions,
-      lowerBound,
-      autoScrollDirection,
-      itemsCount,
-      itemHeight,
-    } = props;
-
-    return (
-      <SortableItem
-        key={id}
-        data={item}
-        id={id}
-        positions={positions}
-        lowerBound={lowerBound}
-        autoScrollDirection={autoScrollDirection}
-        itemsCount={itemsCount}
-        itemHeight={itemHeight}
-        style={styles.sortableItem}
-      >
-        <View style={styles.appItem}>
-          <View style={styles.appContent}>
-            <View style={styles.appIcon}>
-              <Ionicons name="phone-portrait-outline" size={24} color="#172F50" />
+  const renderTask = useCallback(
+    (props: SortableRenderItemProps<Task>) => {
+      const {
+        item,
+        id,
+        positions,
+        lowerBound,
+        autoScrollDirection,
+        itemsCount,
+        itemHeight,
+      } = props;
+      return (
+        <SortableItem
+          key={id}
+          data={item}
+          id={id}
+          positions={positions}
+          lowerBound={lowerBound}
+          autoScrollDirection={autoScrollDirection}
+          itemsCount={itemsCount}
+          itemHeight={itemHeight}
+          onDrop={handleDrop}
+          style={styles.taskItem}
+        >
+          <View style={styles.taskContent}>
+            <View style={styles.taskInfo}>
+              <Text style={styles.taskTitle}>{item.title}</Text>
+              <Text style={styles.taskStatus}>
+                {item.completed ? "✅ Completed" : "⏳ Pending"}
+              </Text>
             </View>
-            <Text style={styles.appText}>{item.app.displayName}</Text>
+            <SortableItem.Handle style={styles.dragHandle}>
+              <View style={styles.dragIconContainer}>
+                <View style={styles.dragColumn}>
+                  <View style={styles.dragDot} />
+                  <View style={styles.dragDot} />
+                  <View style={styles.dragDot} />
+                </View>
+                <View style={styles.dragColumn}>
+                  <View style={styles.dragDot} />
+                  <View style={styles.dragDot} />
+                  <View style={styles.dragDot} />
+                </View>
+              </View>
+            </SortableItem.Handle>
           </View>
-          <View style={styles.dragHandle}>
-            <Ionicons name="reorder-three" size={20} color="#666666" />
-          </View>
-        </View>
-      </SortableItem>
-    );
-  }, []);
+        </SortableItem>
+      );
+    },
+    [handleDrop]
+  );
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <GestureHandlerRootView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#172F50" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>App Order</Text>
-        <TouchableOpacity
-          onPress={saveAppOrder}
-          style={styles.saveButton}
-        >
-          <Text style={styles.saveButtonText}>Save</Text>
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>📋 My Tasks</Text>
+        <Text style={styles.headerSubtitle}>Drag to reorder</Text>
       </View>
-
-      {/* Content */}
-      <View style={styles.content}>
-        {sections.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateTitle}>No Apps Selected</Text>
-            <Text style={styles.emptyStateText}>
-              Select some apps first to reorder them
-            </Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate("AppSelectionScreen")}
-              style={styles.emptyStateButton}
-            >
-              <Text style={styles.emptyStateButtonText}>Select Apps</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <ScrollView>
-            {sections.map((section, sectionIndex) => (
-              <View key={sectionIndex} style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>
-                  Screen {sectionIndex + 1}
-                </Text>
-                <Sortable
-                  data={section}
-                  renderItem={renderAppItem}
-                  itemKeyExtractor={(item) => item.id}
-                  itemHeight={80}
-                  onDragEnd={(result) => handleDragEnd(sectionIndex, result)}
-                  style={styles.sortableContainer}
-                />
-              </View>
-            ))}
-          </ScrollView>
-        )}
-      </View>
-    </View>
+      <Sortable
+        data={tasks}
+        renderItem={renderTask}
+        itemHeight={80}
+        style={styles.list}
+      />
+    </GestureHandlerRootView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F7F7F7",
+    backgroundColor: "#000000",
   },
   header: {
-    backgroundColor: "#E1E1E1",
-    paddingTop: 50,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    padding: 20,
+    paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#B3B3B3",
-  },
-  backButton: {
-    padding: 8,
+    borderBottomColor: "#2C2C2E",
   },
   headerTitle: {
-    fontSize: RFValue(24),
-    fontFamily: "MBold",
-    color: "#172F50",
+    color: "#FFFFFF",
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 4,
   },
-  saveButton: {
-    backgroundColor: "#172F50",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
+  headerSubtitle: {
+    color: "#8E8E93",
+    fontSize: 14,
   },
-  saveButtonText: {
-    fontSize: RFValue(16),
-    fontFamily: "MMedium",
-    color: "#E1E1E1",
-  },
-  content: {
+  list: {
     flex: 1,
-    padding: 20,
+    backgroundColor: "#000000",
+    marginTop: 20,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    overflow: "hidden",
   },
-  sectionContainer: {
-    marginBottom: 20,
+  taskItem: {
+    height: 80,
+    backgroundColor: "transparent",
   },
-  sectionTitle: {
-    fontSize: RFValue(18),
-    fontFamily: "MSemiBold",
-    color: "#172F50",
-    marginBottom: 16,
-  },
-  sortableContainer: {
+  taskContent: {
     flex: 1,
-  },
-  sortableItem: {
-    marginBottom: 8,
-  },
-  appItem: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 16,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    paddingHorizontal: 20,
+    backgroundColor: "#1C1C1E",
+    borderWidth: 1,
+    borderColor: "#3A3A3C",
   },
-  appContent: {
-    flexDirection: "row",
-    alignItems: "center",
+  taskInfo: {
     flex: 1,
+    paddingRight: 16,
   },
-  appIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: "#F0F0F0",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
+  taskTitle: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
   },
-  appText: {
-    fontSize: RFValue(16),
-    fontFamily: "MMedium",
-    color: "#172F50",
-    flex: 1,
+  taskStatus: {
+    color: "#8E8E93",
+    fontSize: 14,
   },
   dragHandle: {
-    padding: 8,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 40,
-  },
-  emptyStateTitle: {
-    fontSize: RFValue(24),
-    fontFamily: "MBold",
-    color: "#172F50",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  emptyStateText: {
-    fontSize: RFValue(16),
-    fontFamily: "MRegular",
-    color: "#7A7A7A",
-    textAlign: "center",
-    marginBottom: 30,
-    lineHeight: 24,
-  },
-  emptyStateButton: {
-    backgroundColor: "#172F50",
-    paddingHorizontal: 30,
-    paddingVertical: 15,
+    padding: 12,
     borderRadius: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
   },
-  emptyStateButtonText: {
-    fontSize: RFValue(16),
-    fontFamily: "MMedium",
-    color: "#E1E1E1",
+  dragIconContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  dragColumn: {
+    flexDirection: "column",
+    gap: 2,
+  },
+  dragDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: "#6D6D70",
   },
 });
-
-export default AppOrderScreen;
