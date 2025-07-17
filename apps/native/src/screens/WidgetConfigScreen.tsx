@@ -34,12 +34,17 @@ interface DraggableApp {
 const WidgetConfigScreen = ({ navigation }) => {
   const selectedApps = useQuery(api.notes.getUserApps) || [];
   const updateAppOrders = useMutation(api.notes.updateAppOrders);
+  const reorganizeWidgets = useMutation(api.notes.reorganizeWidgets); // <-- Add this line
 
   const [sections, setSections] = useState<DraggableApp[][]>([]);
   const sectionsRef = useRef<DraggableApp[][]>([]);
   sectionsRef.current = sections;
 
   const [currentPage, setCurrentPage] = useState(0);
+
+  // --- Move To Section State ---
+  const [moveMode, setMoveMode] = useState(false);
+  const [selectedApp, setSelectedApp] = useState<{ sectionIndex: number; appIndex: number } | null>(null);
 
   // Initialize apps list
   useEffect(() => {
@@ -80,6 +85,53 @@ const WidgetConfigScreen = ({ navigation }) => {
     });
   }, []);
 
+  // --- Move To Section Logic ---
+  const handleMoveIconPress = (sectionIndex: number, appIndex: number) => {
+    // If already in move mode and this is the selected app, cancel
+    if (moveMode && selectedApp && selectedApp.sectionIndex === sectionIndex && selectedApp.appIndex === appIndex) {
+      setMoveMode(false);
+      setSelectedApp(null);
+      return;
+    }
+    setMoveMode(true);
+    setSelectedApp({ sectionIndex, appIndex });
+  };
+
+  const handleAppPressForMove = (sectionIndex: number, appIndex: number) => {
+    if (!moveMode || !selectedApp) return;
+    // If user taps the selected app again, cancel move mode
+    if (selectedApp.sectionIndex === sectionIndex && selectedApp.appIndex === appIndex) {
+      setMoveMode(false);
+      setSelectedApp(null);
+      return;
+    }
+    // Only allow swap with apps in a different section
+    if (selectedApp.sectionIndex !== sectionIndex) {
+      setSections(currentSections => {
+        const newSections = currentSections.map(section => [...section]);
+        const fromSection = newSections[selectedApp.sectionIndex];
+        const toSection = newSections[sectionIndex];
+        const fromApp = fromSection[selectedApp.appIndex];
+        const toApp = toSection[appIndex];
+        // Swap the apps
+        fromSection[selectedApp.appIndex] = toApp;
+        toSection[appIndex] = fromApp;
+        // Update order for all apps across all sections
+        // Flatten, reassign order, then re-chunk
+        const allApps = newSections.flat();
+        const updatedApps = allApps.map((app, idx) => ({ ...app, order: idx }));
+        const chunkSize = 6;
+        const updatedSections: DraggableApp[][] = [];
+        for (let i = 0; i < updatedApps.length; i += chunkSize) {
+          updatedSections.push(updatedApps.slice(i, i + chunkSize));
+        }
+        return updatedSections;
+      });
+      setMoveMode(false);
+      setSelectedApp(null);
+    }
+  };
+
   const saveAppOrder = async () => {
     try {
       const allApps = sections.flat();
@@ -88,6 +140,20 @@ const WidgetConfigScreen = ({ navigation }) => {
         newOrder: app.order,
       }));
       await updateAppOrders({ appOrders });
+      // --- Reorganize widgets after updating app order ---
+      // Use the same chunking logic as in HomeScreen
+      const appsPerWidget = 6;
+      const widgets = [];
+      for (let i = 0; i < allApps.length; i += appsPerWidget) {
+        const widgetApps = allApps.slice(i, i + appsPerWidget);
+        const widgetId = `widget_${Math.floor(i / appsPerWidget) + 1}`;
+        widgets.push({
+          widgetId,
+          appIds: widgetApps.map(app => app.id),
+          order: Math.floor(i / appsPerWidget),
+        });
+      }
+      await reorganizeWidgets({ widgets });
       Alert.alert("Success", "App order saved successfully!");
       navigation.goBack();
     } catch (error) {
@@ -105,7 +171,14 @@ const WidgetConfigScreen = ({ navigation }) => {
       autoScrollDirection,
       itemsCount,
       itemHeight,
+      index: appIndex,
     } = props;
+    // Determine if this app is selected for move
+    const isSelected = moveMode && selectedApp && selectedApp.sectionIndex === sectionIndex && selectedApp.appIndex === appIndex;
+    // Only show swap icon if not in move mode, or if this is the selected app
+    const showSwapIcon = !moveMode || isSelected;
+    // When in move mode, only allow pressing other apps in other sections
+    const isPressableForMove = moveMode && selectedApp && selectedApp.sectionIndex !== sectionIndex;
     return (
       <SortableItem
         key={id}
@@ -117,22 +190,64 @@ const WidgetConfigScreen = ({ navigation }) => {
         itemsCount={itemsCount}
         itemHeight={itemHeight}
         onDrop={(_id, to) => handleDrop(sectionIndex, _id, to)}
-        style={styles.sortableItem}
+        style={[styles.taskItem, isSelected && styles.selectedTaskItem]}
       >
-        <View style={styles.appItem}>
-          <View style={styles.appContent}>
-            <View style={styles.appIcon}>
-              <Ionicons name="phone-portrait-outline" size={24} color="#172F50" />
+        <TouchableOpacity
+          activeOpacity={isPressableForMove ? 0.7 : 1}
+          onPress={isPressableForMove ? () => handleAppPressForMove(sectionIndex, appIndex) : undefined}
+          style={{ flex: 1 }}
+          disabled={!isPressableForMove}
+        >
+          <View style={styles.taskContent}>
+            <View style={styles.taskInfo}>
+              <Text style={styles.taskTitle}>{item.app.displayName}</Text>
             </View>
-            <Text style={styles.appText}>{item.app.displayName}</Text>
+            {showSwapIcon && (
+              <TouchableOpacity
+                onPress={() => handleMoveIconPress(sectionIndex, appIndex)}
+                style={styles.swapIconButton}
+                disabled={moveMode && !isSelected}
+              >
+                <Ionicons name="swap-horizontal" size={22} color="#4A90E2" />
+              </TouchableOpacity>
+            )}
+            {/* Always render drag handle visually, but only make it functional when not in move mode */}
+            {moveMode ? (
+              <View style={styles.dragHandle}>
+                <View style={styles.dragIconContainer}>
+                  <View style={styles.dragColumn}>
+                    <View style={styles.dragDot} />
+                    <View style={styles.dragDot} />
+                    <View style={styles.dragDot} />
+                  </View>
+                  <View style={styles.dragColumn}>
+                    <View style={styles.dragDot} />
+                    <View style={styles.dragDot} />
+                    <View style={styles.dragDot} />
+                  </View>
+                </View>
+              </View>
+            ) : (
+              <SortableItem.Handle style={styles.dragHandle}>
+                <View style={styles.dragIconContainer}>
+                  <View style={styles.dragColumn}>
+                    <View style={styles.dragDot} />
+                    <View style={styles.dragDot} />
+                    <View style={styles.dragDot} />
+                  </View>
+                  <View style={styles.dragColumn}>
+                    <View style={styles.dragDot} />
+                    <View style={styles.dragDot} />
+                    <View style={styles.dragDot} />
+                  </View>
+                </View>
+              </SortableItem.Handle>
+            )}
           </View>
-          <View style={styles.dragHandle}>
-            <Ionicons name="reorder-three" size={20} color="#666666" />
-          </View>
-        </View>
+        </TouchableOpacity>
       </SortableItem>
     );
-  }, [handleDrop]);
+  }, [handleDrop, moveMode, selectedApp]);
 
   return (
     <View style={styles.container}>
@@ -168,7 +283,7 @@ const WidgetConfigScreen = ({ navigation }) => {
               <Sortable
                 data={section}
                 renderItem={renderAppItem(sectionIndex)}
-                itemHeight={68}
+                itemHeight={80}
                 style={styles.sortableList}
                 contentContainerStyle={styles.sortableListContent}
                 itemKeyExtractor={(item) => item.id}
@@ -248,47 +363,53 @@ const styles = StyleSheet.create({
   sortableListContent: {
     paddingBottom: 16,
   },
-  sortableItem: {
-    height: 68, // Updated to match itemHeight prop
+  taskItem: {
+    height: 80,
     backgroundColor: "transparent",
   },
-  appItem: {
-    backgroundColor: "#F8F8F8",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
+  selectedTaskItem: {
+    borderWidth: 2,
+    borderColor: "#4A90E2",
+    backgroundColor: "#E6F0FA",
+  },
+  taskContent: {
+    flex: 1,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    paddingHorizontal: 20,
+    backgroundColor: "#1C1C1E",
     borderWidth: 1,
-    borderColor: "#E0E0E0",
-    marginBottom: 8,
-    height: 60,
+    borderColor: "#3A3A3C",
   },
-  appContent: {
-    flexDirection: "row",
-    alignItems: "center",
+  taskInfo: {
     flex: 1,
+    paddingRight: 16,
   },
-  appIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
-    backgroundColor: "#E8E8E8",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  appText: {
-    fontSize: RFValue(14),
-    fontFamily: "MRegular",
-    color: "#172F50",
-    flex: 1,
+  taskTitle: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 0,
   },
   dragHandle: {
-    padding: 4,
-    borderRadius: 4,
-    backgroundColor: "#F0F0F0",
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+  },
+  dragIconContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  dragColumn: {
+    flexDirection: "column",
+    gap: 2,
+  },
+  dragDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: "#6D6D70",
   },
   dotsContainer: {
     flexDirection: 'row',
@@ -307,6 +428,14 @@ const styles = StyleSheet.create({
   },
   inactiveDot: {
     backgroundColor: '#B3B3B3',
+  },
+  swapIconButton: {
+    marginRight: 12,
+    padding: 6,
+    borderRadius: 16,
+    backgroundColor: 'rgba(74, 144, 226, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 
