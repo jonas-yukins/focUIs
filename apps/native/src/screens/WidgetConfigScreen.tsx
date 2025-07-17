@@ -7,6 +7,7 @@ import {
   Alert,
   Dimensions,
   ScrollView,
+  ImageBackground,
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,6 +16,7 @@ import { api } from "../../../../packages/backend/convex/_generated/api";
 import { Id } from "../../../../packages/backend/convex/_generated/dataModel";
 import { Sortable, SortableItem, SortableRenderItemProps } from "react-native-reanimated-dnd";
 import PagerView from 'react-native-pager-view';
+import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
 
 const { width, height } = Dimensions.get("window");
 
@@ -32,13 +34,19 @@ interface DraggableApp {
 }
 
 const WidgetConfigScreen = ({ navigation }) => {
-  const selectedApps = useQuery(api.notes.getUserApps) || [];
-  const updateAppOrders = useMutation(api.notes.updateAppOrders);
-  const reorganizeWidgets = useMutation(api.notes.reorganizeWidgets); // <-- Add this line
+  const backgroundUri = useBackgroundAsset();
+  const selectedApps = useQuery(api.notes.getUserApps);
+  // Add a loading state
+  const isLoading = selectedApps === undefined;
 
   const [sections, setSections] = useState<DraggableApp[][]>([]);
   const sectionsRef = useRef<DraggableApp[][]>([]);
   sectionsRef.current = sections;
+
+  // DEBUG: Log when the component renders and what sections contains
+  console.log("[DEBUG] WidgetConfigScreen render. sections:", sections);
+  const updateAppOrders = useMutation(api.notes.updateAppOrders);
+  const reorganizeWidgets = useMutation(api.notes.reorganizeWidgets); // <-- Add this line
 
   const [currentPage, setCurrentPage] = useState(0);
 
@@ -48,7 +56,8 @@ const WidgetConfigScreen = ({ navigation }) => {
 
   // Initialize apps list
   useEffect(() => {
-    if (selectedApps.length > 0) {
+    console.log("[DEBUG] selectedApps changed:", selectedApps);
+    if (selectedApps && selectedApps.length > 0) {
       const apps: DraggableApp[] = selectedApps
         .map((app, index) => ({
           id: app._id,
@@ -57,17 +66,21 @@ const WidgetConfigScreen = ({ navigation }) => {
         }))
         .sort((a, b) => a.order - b.order);
 
+      console.log("[DEBUG] Mapped and sorted apps:", apps);
+
       const chunkedApps = [];
       const chunkSize = 6;
       for (let i = 0; i < apps.length; i += chunkSize) {
         chunkedApps.push(apps.slice(i, i + chunkSize));
       }
+      console.log("[DEBUG] Chunked apps:", chunkedApps);
       setSections(chunkedApps);
     }
   }, [selectedApps]);
 
   // Handler to update order only on drop
   const handleDrop = useCallback((sectionIndex: number, itemId: string, to: number) => {
+    console.log(`[DEBUG] handleDrop: sectionIndex=${sectionIndex}, itemId=${itemId}, to=${to}`);
     setSections(currentSections => {
       const newSections = [...currentSections];
       const section = [...newSections[sectionIndex]];
@@ -87,6 +100,7 @@ const WidgetConfigScreen = ({ navigation }) => {
 
   // --- Move To Section Logic ---
   const handleMoveIconPress = (sectionIndex: number, appIndex: number) => {
+    console.log(`[DEBUG] handleMoveIconPress: sectionIndex=${sectionIndex}, appIndex=${appIndex}`);
     // If already in move mode and this is the selected app, cancel
     if (moveMode && selectedApp && selectedApp.sectionIndex === sectionIndex && selectedApp.appIndex === appIndex) {
       setMoveMode(false);
@@ -163,6 +177,7 @@ const WidgetConfigScreen = ({ navigation }) => {
   };
 
   const renderAppItem = useCallback((sectionIndex: number) => (props: SortableRenderItemProps<DraggableApp>) => {
+    console.log(`[DEBUG] Rendering app item: sectionIndex=${sectionIndex}, appIndex=${props.index}, app=`, props.item);
     const {
       item,
       id,
@@ -249,72 +264,101 @@ const WidgetConfigScreen = ({ navigation }) => {
     );
   }, [handleDrop, moveMode, selectedApp]);
 
-  return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#172F50" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Configure Apps</Text>
-        <TouchableOpacity
-          onPress={saveAppOrder}
-          style={styles.saveButton}
-        >
-          <Text style={styles.saveButtonText}>Save</Text>
-        </TouchableOpacity>
+  if (isLoading) {
+    console.log("[DEBUG] Still loading selectedApps...");
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#172F50' }}>
+        <Text style={{ color: '#F7F7F7', fontSize: 18 }}>Loading apps...</Text>
       </View>
+    );
+  }
 
-      {/* Horizontal Pager for Sections */}
-      <View style={styles.dragDropContainer}>
-        <PagerView
-          style={{ flex: 1 }}
-          initialPage={0}
-          onPageSelected={e => setCurrentPage(e.nativeEvent.position)}
-        >
-          {sections.map((section, sectionIndex) => (
-            <View key={sectionIndex} style={{ flex: 1 }}>
-              <Text style={styles.dragDropTitle}>
-                Screen {sectionIndex + 1}
-              </Text>
-              <Sortable
-                data={section}
-                renderItem={renderAppItem(sectionIndex)}
-                itemHeight={80}
-                style={styles.sortableList}
-                contentContainerStyle={styles.sortableListContent}
-                itemKeyExtractor={(item) => item.id}
+  return (
+    <ImageBackground
+      source={{ uri: backgroundUri }}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.headerButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="#F7F7F7" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Configure Apps</Text>
+          <TouchableOpacity
+            onPress={saveAppOrder}
+            style={styles.headerButton}
+            accessibilityLabel="Save app order"
+            accessibilityRole="button"
+          >
+            <Ionicons name="checkmark" size={26} color="#28A745" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Horizontal Pager for Sections */}
+        <View style={styles.dragDropContainer}>
+          <PagerView
+            style={{ flex: 1 }}
+            initialPage={0}
+            onPageSelected={e => setCurrentPage(e.nativeEvent.position)}
+          >
+            {sections.map((section, sectionIndex) => (
+              <View key={sectionIndex} style={{ flex: 1, backgroundColor: "transparent" }}>
+                <Text style={styles.dragDropTitle}>
+                  Screen {sectionIndex + 1}
+                </Text>
+                <Sortable
+                  data={section}
+                  renderItem={renderAppItem(sectionIndex)}
+                  itemHeight={80}
+                  style={styles.sortableList}
+                  contentContainerStyle={styles.sortableListContent}
+                  itemKeyExtractor={(item) => item.id}
+                />
+              </View>
+            ))}
+          </PagerView>
+          {/* Page Indicator Dots */}
+          <View style={styles.dotsContainer}>
+            {sections.map((_, idx) => (
+              <View
+                key={idx}
+                style={[
+                  styles.dot,
+                  currentPage === idx ? styles.activeDot : styles.inactiveDot,
+                ]}
               />
-            </View>
-          ))}
-        </PagerView>
-        {/* Page Indicator Dots */}
-        <View style={styles.dotsContainer}>
-          {sections.map((_, idx) => (
-            <View
-              key={idx}
-              style={[
-                styles.dot,
-                currentPage === idx ? styles.activeDot : styles.inactiveDot,
-              ]}
-            />
-          ))}
+            ))}
+          </View>
         </View>
       </View>
-    </View>
+      {/* Instructions Section */}
+      <View style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 48, alignItems: 'center' }}>
+        <View style={{ backgroundColor: 'rgba(23, 47, 80, 0.92)', borderRadius: 16, padding: 16, width: '100%', maxWidth: 400, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
+          <Text style={{ color: '#F7F7F7', fontSize: 14, textAlign: 'center', lineHeight: 20 }}>
+            Drag the right icon to reorder. Tap the switch to swap. Press ✓ to save.
+          </Text>
+        </View>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
-    backgroundColor: "#F7F7F7",
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   header: {
-    backgroundColor: "#E1E1E1",
+    backgroundColor: 'rgba(23, 47, 80, 0.7)',
     paddingTop: 50,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -322,26 +366,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: "#B3B3B3",
-  },
-  backButton: {
-    padding: 8,
+    borderBottomColor: "#222C3A",
   },
   headerTitle: {
-    fontSize: RFValue(20),
+    fontSize: RFValue(24),
     fontFamily: "MBold",
-    color: "#172F50",
+    color: "#F7F7F7",
   },
-  saveButton: {
-    backgroundColor: "#172F50",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+  headerButtons: {
+    width: 40,
   },
-  saveButtonText: {
-    fontSize: RFValue(14),
-    fontFamily: "MSemiBold",
-    color: "#FFFFFF",
+  headerButton: {
+    padding: 8,
   },
   dragDropContainer: {
     flex: 1,
@@ -359,6 +395,7 @@ const styles = StyleSheet.create({
   },
   sortableList: {
     flex: 1,
+    backgroundColor: "transparent",
   },
   sortableListContent: {
     paddingBottom: 16,

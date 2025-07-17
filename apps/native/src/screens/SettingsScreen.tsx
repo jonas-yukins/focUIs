@@ -7,17 +7,20 @@ import {
   ScrollView,
   Switch,
   Alert,
+  ImageBackground,
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { useAuth } from "@clerk/clerk-expo";
 import { api } from "@packages/backend/convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
 import { Ionicons } from "@expo/vector-icons";
+import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
 
 const SettingsScreen = ({ navigation }) => {
   const { signOut } = useAuth();
   const userSettings = useQuery(api.notes.getUserSettings);
   const updateUserSettings = useMutation(api.notes.updateUserSettings);
+  const backgroundUri = useBackgroundAsset();
 
   const [fontSize, setFontSize] = useState(userSettings?.fontSize || 16);
   const [theme, setTheme] = useState(userSettings?.theme || "default");
@@ -184,81 +187,94 @@ const SettingsScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#172F50" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <View style={styles.placeholder} />
+    <ImageBackground
+      source={{ uri: backgroundUri }}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.headerButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="#F7F7F7" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Settings</Text>
+          <View style={styles.headerButtons} />
+        </View>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* App Management */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>App Management</Text>
+            {renderSettingItem({
+              title: "Select Apps",
+              subtitle: "Choose which apps to display",
+              onPress: () => navigation.navigate("AppSelectionScreen"),
+            })}
+          </View>
+
+          {/* Appearance */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Appearance</Text>
+            {renderFontSizeSelector()}
+            {renderThemeSelector()}
+            {renderLayoutSelector()}
+          </View>
+
+          {/* Account */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Account</Text>
+            {renderSettingItem({
+              title: "Sign Out",
+              subtitle: "Sign out of your account",
+              onPress: handleSignOut,
+              showArrow: false,
+            })}
+          </View>
+
+          {/* About */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>About</Text>
+            {renderSettingItem({
+              title: "Version",
+              subtitle: "1.0.0",
+              onPress: () => {},
+              showArrow: false,
+            })}
+            {renderSettingItem({
+              title: "Privacy Policy",
+              subtitle: "Read our privacy policy",
+              onPress: () => {},
+            })}
+            {renderSettingItem({
+              title: "Terms of Service",
+              subtitle: "Read our terms of service",
+              onPress: () => {},
+            })}
+          </View>
+        </ScrollView>
       </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* App Management */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>App Management</Text>
-          {renderSettingItem({
-            title: "Select Apps",
-            subtitle: "Choose which apps to display",
-            onPress: () => navigation.navigate("AppSelectionScreen"),
-          })}
-        </View>
-
-        {/* Appearance */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Appearance</Text>
-          {renderFontSizeSelector()}
-          {renderThemeSelector()}
-          {renderLayoutSelector()}
-        </View>
-
-        {/* Account */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          {renderSettingItem({
-            title: "Sign Out",
-            subtitle: "Sign out of your account",
-            onPress: handleSignOut,
-            showArrow: false,
-          })}
-        </View>
-
-        {/* About */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
-          {renderSettingItem({
-            title: "Version",
-            subtitle: "1.0.0",
-            onPress: () => {},
-            showArrow: false,
-          })}
-          {renderSettingItem({
-            title: "Privacy Policy",
-            subtitle: "Read our privacy policy",
-            onPress: () => {},
-          })}
-          {renderSettingItem({
-            title: "Terms of Service",
-            subtitle: "Read our terms of service",
-            onPress: () => {},
-          })}
-        </View>
-      </ScrollView>
-    </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
   container: {
     flex: 1,
-    backgroundColor: "#F7F7F7",
+    // Remove backgroundColor for transparency
   },
   header: {
-    backgroundColor: "#E1E1E1",
+    backgroundColor: 'rgba(23, 47, 80, 0.7)',
     paddingTop: 50,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -266,31 +282,38 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: "#B3B3B3",
-  },
-  backButton: {
-    padding: 8,
+    borderBottomColor: "#222C3A",
   },
   headerTitle: {
-    fontSize: RFValue(20),
+    fontSize: RFValue(24),
     fontFamily: "MBold",
-    color: "#172F50",
+    color: "#F7F7F7",
   },
-  placeholder: {
+  headerButtons: {
     width: 40,
+  },
+  headerButton: {
+    padding: 8,
   },
   content: {
     flex: 1,
+    padding: 20,
   },
   section: {
-    marginTop: 20,
-    paddingHorizontal: 20,
+    marginBottom: 20,
+    backgroundColor: 'rgba(23, 47, 80, 0.6)',
+    borderRadius: 10,
+    padding: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 3,
   },
   sectionTitle: {
-    fontSize: RFValue(18),
+    fontSize: RFValue(20),
     fontFamily: "MBold",
-    color: "#172F50",
-    marginBottom: 15,
+    color: "#F7F7F7",
   },
   settingItem: {
     flexDirection: "row",

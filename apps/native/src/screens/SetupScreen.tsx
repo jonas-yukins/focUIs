@@ -7,6 +7,7 @@ import {
   ScrollView,
   Platform,
   Linking,
+  ImageBackground,
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { Ionicons } from "@expo/vector-icons";
@@ -253,85 +254,80 @@ const SetupScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#172F50" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Setup Guide</Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Introduction */}
-        <View style={styles.introSection}>
-          <Ionicons name="phone-portrait-outline" size={48} color="#172F50" />
-          <Text style={styles.introTitle}>Transform Your Smartphone</Text>
-          <Text style={styles.introText}>
-            Follow this guide to create a minimalist, distraction-free experience with Plainphone.
-          </Text>
+    <ImageBackground
+      source={require("../../assets/background_gradient.png")}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        {/* Header (moved outside ScrollView for full width and correct height) */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.headerButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="#F7F7F7" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Setup Guide</Text>
+          <View style={styles.headerButtons} />
         </View>
-
-        {/* Widget Instructions */}
-        {Platform.OS === 'ios' ? renderIOSWidgetInstructions() : renderAndroidWidgetInstructions()}
-
-        {/* App Selection */}
-        {renderAppSelectionInstructions()}
-
-        {/* Wallpaper Instructions */}
-        {renderWallpaperInstructions()}
-
-        {/* Optional Steps */}
-        {renderOptionalSteps()}
-
-        {/* Focus Modes */}
-        {renderFocusModes()}
-
-        {/* Completion */}
-        <View style={styles.completionSection}>
-          <View style={styles.completionHeader}>
-            <Ionicons name="checkmark-circle" size={32} color="#4CAF50" />
-            <Text style={styles.completionTitle}>You're All Set!</Text>
+        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+          {/* Introduction */}
+          <View style={styles.introSection}>
+            <Ionicons name="phone-portrait-outline" size={48} style={styles.introIcon} />
+            <Text style={styles.introTitle}>Transform Your Smartphone</Text>
+            <Text style={styles.introText}>
+              Follow this guide to create a minimalist, distraction-free experience with Plainphone.
+            </Text>
           </View>
-          <Text style={styles.completionText}>
-            You've created a digital space that's minimal, focused, and free of distractions. 
-            Return to the Plainphone app anytime to update your selected apps or widget setup.
-          </Text>
-        </View>
 
-        {/* Action buttons */}
-        <View style={styles.actionSection}>
-          <TouchableOpacity
-            onPress={openWidgetSettings}
-            style={styles.primaryButton}
-          >
-            <Ionicons name="settings-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.primaryButtonText}>Open Widget Settings</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            onPress={() => navigation.navigate("HomeScreen")}
-            style={styles.secondaryButton}
-          >
-            <Text style={styles.secondaryButtonText}>Back to Home</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </View>
+          {/* Widget Instructions */}
+          {Platform.OS === 'ios' ? renderIOSWidgetInstructions() : renderAndroidWidgetInstructions()}
+
+          {/* App Selection */}
+          {renderAppSelectionInstructions()}
+
+          {/* Wallpaper Instructions */}
+          {renderWallpaperInstructions()}
+
+          {/* Optional Steps */}
+          {renderOptionalSteps()}
+
+          {/* Focus Modes */}
+          {renderFocusModes()}
+
+          {/* Completion */}
+          <View style={styles.completionSection}>
+            <View style={styles.completionHeader}>
+              <Ionicons name="checkmark-circle" size={32} color="#4CAF50" />
+              <Text style={styles.completionTitle}>You're All Set!</Text>
+            </View>
+            <Text style={styles.completionText}>
+              You've created a digital space that's minimal, focused, and free of distractions. 
+              Return to the Plainphone app anytime to update your selected apps or widget setup.
+            </Text>
+          </View>
+
+          {/* Action buttons */}
+          {/* Removed actionSection with Open Widget Settings and Back to Home buttons */}
+        </ScrollView>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
-    backgroundColor: "#F7F7F7",
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   header: {
-    backgroundColor: "#E1E1E1",
+    backgroundColor: 'rgba(23, 47, 80, 0.7)',
     paddingTop: 50,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -339,35 +335,34 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: "#B3B3B3",
-  },
-  backButton: {
-    padding: 8,
+    borderBottomColor: "#222C3A",
   },
   headerTitle: {
-    fontSize: RFValue(20),
-    fontFamily: "MBold",
-    color: "#172F50",
-  },
-  placeholder: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  introSection: {
-    alignItems: "center",
-    paddingVertical: 30,
-    paddingHorizontal: 20,
-  },
-  introTitle: {
     fontSize: RFValue(24),
     fontFamily: "MBold",
-    color: "#172F50",
-    textAlign: "center",
-    marginTop: 16,
+    color: "#F7F7F7",
+  },
+  headerButtons: {
+    width: 40, // Ensures the title is centered
+  },
+  headerButton: {
+    padding: 8,
+  },
+  introSection: {
+    alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 24,
+  },
+  introIcon: {
     marginBottom: 12,
+    color: '#F7F7F7', // White icon
+  },
+  introTitle: {
+    fontSize: RFValue(22),
+    fontFamily: 'MBold',
+    color: '#F7F7F7',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   introText: {
     fontSize: RFValue(16),
@@ -377,89 +372,86 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   instructionSection: {
-    marginBottom: 30,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: 'rgba(23, 47, 80, 0.7)',
     borderRadius: 12,
-    padding: 20,
-    shadowColor: "#000",
+    padding: 18,
+    marginBottom: 24,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   sectionTitle: {
     fontSize: RFValue(18),
-    fontFamily: "MSemiBold",
-    color: "#172F50",
-    marginBottom: 16,
+    fontFamily: 'MBold',
+    color: '#F7F7F7',
+    marginBottom: 12,
   },
   stepContainer: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   stepHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   stepNumberContainer: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#172F50",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
+    backgroundColor: '#172F50',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
   stepNumber: {
-    color: "#FFFFFF",
+    color: '#F7F7F7',
+    fontFamily: 'MBold',
     fontSize: RFValue(14),
-    fontFamily: "MBold",
   },
   stepIcon: {
     marginRight: 8,
+    color: '#C8D2E0',
   },
   stepTitle: {
-    fontSize: RFValue(16),
-    fontFamily: "MSemiBold",
-    color: "#172F50",
-    flex: 1,
+    fontFamily: 'MSemiBold',
+    fontSize: RFValue(15),
+    color: '#F7F7F7',
   },
   stepDescription: {
+    fontFamily: 'MRegular',
     fontSize: RFValue(14),
-    fontFamily: "MRegular",
-    color: "#666666",
-    lineHeight: 20,
-    marginLeft: 40,
+    color: '#C8D2E0',
+    marginLeft: 38,
+    marginBottom: 2,
   },
   colorSection: {
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#E1E1E1",
+    marginTop: 10,
   },
   colorTitle: {
-    fontSize: RFValue(16),
-    fontFamily: "MSemiBold",
-    color: "#172F50",
-    marginBottom: 12,
+    fontFamily: 'MSemiBold',
+    fontSize: RFValue(14),
+    color: '#F7F7F7',
+    marginBottom: 6,
   },
   colorRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   colorSwatch: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    marginRight: 12,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    marginRight: 8,
     borderWidth: 1,
-    borderColor: "#CCCCCC",
+    borderColor: '#B3B3B3',
   },
   colorText: {
-    fontSize: RFValue(14),
-    fontFamily: "MRegular",
-    color: "#666666",
+    fontFamily: 'MRegular',
+    fontSize: RFValue(13),
+    color: '#C8D2E0',
   },
   completionSection: {
     backgroundColor: "#E8F5E8",
@@ -517,6 +509,10 @@ const styles = StyleSheet.create({
     fontSize: RFValue(16),
     fontFamily: "MSemiBold",
     color: "#172F50",
+  },
+  container: {
+    flexGrow: 1,
+    padding: 24,
   },
 });
 

@@ -9,6 +9,7 @@ import {
   Alert,
   Platform,
   Switch,
+  ImageBackground,
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,10 +17,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@packages/backend/convex/_generated/api";
 import useAvailableApps, { AvailableApp } from '../hooks/useAvailableApps';
+import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
 
 const SELECTED_APPS_KEY = 'SELECTED_APPS';
 
 const AppSelectionScreen = ({ navigation }) => {
+  const backgroundUri = useBackgroundAsset();
   const { apps, loading, error, refresh, launchApp } = useAvailableApps();
   const [searchText, setSearchText] = useState("");
   const [selectedApps, setSelectedApps] = useState<Set<string>>(new Set());
@@ -148,80 +151,88 @@ const AppSelectionScreen = ({ navigation }) => {
         <Switch
           value={selectedApps.has(identifier)}
           onValueChange={() => handleToggle(item.id)}
-          trackColor={{ false: "#B3B3B3", true: "#172F50" }}
-          thumbColor={selectedApps.has(identifier) ? "#E1E1E1" : "#F7F7F7"}
+          trackColor={{ false: '#3D3D3D', true: '#172F50' }}
+          thumbColor={selectedApps.has(identifier) ? '#E1E1E1' : '#F7F7F7'}
         />
       </View>
     );
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#172F50" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Select Apps</Text>
-        <View style={styles.placeholder} />
+    <ImageBackground
+      source={{ uri: backgroundUri }}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.headerButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="#F7F7F7" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Select Apps</Text>
+          <View style={styles.headerButtons} />
+        </View>
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#C8D2E0" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search apps..."
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholderTextColor="#C8D2E0"
+          />
+        </View>
+        <View style={styles.content}>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Loading apps...</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Error: {error}</Text>
+              <TouchableOpacity onPress={refresh} style={styles.retryButton}>
+                <Text style={styles.retryButtonText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.sectionTitle}>
+                Available Apps ({filteredApps.length})
+              </Text>
+              <FlatList
+                data={filteredApps}
+                renderItem={renderAppItem}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.appsList}
+              />
+            </>
+          )}
+        </View>
       </View>
-
-      {/* Search */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#7A7A7A" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search apps..."
-          value={searchText}
-          onChangeText={setSearchText}
-          placeholderTextColor="#7A7A7A"
-        />
-      </View>
-
-      {/* Apps List */}
-      <View style={styles.content}>
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Loading apps...</Text>
-          </View>
-        ) : error ? (
-          <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Error: {error}</Text>
-            <TouchableOpacity onPress={refresh} style={styles.retryButton}>
-              <Text style={styles.retryButtonText}>Retry</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <>
-            <Text style={styles.sectionTitle}>
-              Available Apps ({filteredApps.length})
-            </Text>
-            <FlatList
-              data={filteredApps}
-              renderItem={renderAppItem}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.appsList}
-            />
-          </>
-        )}
-      </View>
-
-
-    </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
   container: {
     flex: 1,
-    backgroundColor: "#F7F7F7",
+    // Remove backgroundColor for transparency
   },
   header: {
-    backgroundColor: "#E1E1E1",
+    backgroundColor: 'rgba(23, 47, 80, 0.7)',
     paddingTop: 50,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -229,28 +240,28 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: "#B3B3B3",
-  },
-  backButton: {
-    padding: 8,
+    borderBottomColor: "#222C3A",
   },
   headerTitle: {
-    fontSize: RFValue(20),
+    fontSize: RFValue(24),
     fontFamily: "MBold",
-    color: "#172F50",
+    color: "#F7F7F7",
   },
-  placeholder: {
+  headerButtons: {
     width: 40,
+  },
+  headerButton: {
+    padding: 8,
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#E1E1E1",
+    backgroundColor: 'rgba(23, 47, 80, 0.5)',
     margin: 20,
     paddingHorizontal: 15,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#B3B3B3",
+    borderColor: "#23304A",
   },
   searchIcon: {
     marginRight: 10,
@@ -259,7 +270,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: RFValue(16),
     fontFamily: "MRegular",
-    color: "#172F50",
+    color: "#F7F7F7",
     paddingVertical: 12,
   },
   content: {
@@ -307,7 +318,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: RFValue(15),
     fontFamily: "MRegular",
-    color: "#172F50",
+    color: "#F7F7F7",
   },
   appCategory: {
     fontSize: RFValue(12),

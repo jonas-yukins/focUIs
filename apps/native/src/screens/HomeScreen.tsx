@@ -11,6 +11,7 @@ import {
   Platform,
   NativeModules,
   ScrollView,
+  ImageBackground, // <-- Add this import
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { useAuth, useUser } from "@clerk/clerk-expo";
@@ -18,6 +19,7 @@ import { api } from "@packages/backend/convex/_generated/api";
 import { useQuery, useMutation } from "convex/react";
 import { Ionicons } from "@expo/vector-icons";
 import WidgetPreview from "../components/WidgetPreview";
+import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
 
 const { width, height } = Dimensions.get("window");
 
@@ -29,6 +31,8 @@ const HomeScreen = ({ navigation }) => {
   
   const reorganizeWidgets = useMutation(api.notes.reorganizeWidgets);
   const upsertWidget = useMutation(api.notes.upsertWidget);
+
+  const backgroundUri = useBackgroundAsset();
 
   // Auto-organize apps into widgets if no widgets exist or if the number of selected apps has changed
   useEffect(() => {
@@ -192,114 +196,127 @@ const HomeScreen = ({ navigation }) => {
 
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("AppOrderScreen")}
-          style={styles.headerButton}
-        >
-          <Ionicons name="reorder-three" size={24} color="#172F50" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Plainphone</Text>
-        <View style={styles.headerButtons}>
+    <ImageBackground
+      source={{ uri: backgroundUri }}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        {/* Header */}
+        <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => navigation.navigate("SettingsScreen")}
+            onPress={() => navigation.navigate("AppOrderScreen")}
             style={styles.headerButton}
           >
-            <Ionicons name="settings-outline" size={24} color="#172F50" />
+            <Ionicons name="reorder-three" size={24} color="#F7F7F7" />
           </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Quick Access Section */}
-      <View style={styles.quickAccessContainer}>
-        <View style={styles.quickAccessButtons}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("AppSelectionScreen")}
-            style={styles.quickAccessButton}
-          >
-            <Ionicons name="apps-outline" size={24} color="#172F50" />
-            <Text style={styles.quickAccessButtonText}>Select Apps</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("SetupScreen")}
-            style={styles.quickAccessButton}
-          >
-            <Ionicons name="phone-portrait-outline" size={24} color="#172F50" />
-            <Text style={styles.quickAccessButtonText}>Setup Guide</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("WidgetConfigScreen")}
-            style={styles.quickAccessButton}
-          >
-            <Ionicons name="grid-outline" size={24} color="#172F50" />
-            <Text style={styles.quickAccessButtonText}>Edit Widget</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Content */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {selectedApps.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateTitle}>No Apps Selected</Text>
-            <Text style={styles.emptyStateText}>
-              Tap the settings button to select which apps to display
-            </Text>
+          <Text style={styles.headerTitle}>Plainphone</Text>
+          <View style={styles.headerButtons}>
             <TouchableOpacity
-              onPress={() => navigation.navigate("AppSelectionScreen")}
-              style={styles.emptyStateButton}
+              onPress={() => navigation.navigate("SettingsScreen")}
+              style={styles.headerButton}
             >
-              <Text style={styles.emptyStateButtonText}>Select Apps</Text>
+              <Ionicons name="settings-outline" size={24} color="#F7F7F7" />
             </TouchableOpacity>
           </View>
-        ) : (
-          <>
-            {/* Widget Previews Section */}
-            {userWidgets.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Widget Previews</Text>
+        </View>
+
+        {/* Quick Access Section */}
+        <View style={styles.quickAccessContainer}>
+          <View style={styles.quickAccessButtons}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("AppSelectionScreen")}
+              style={styles.quickAccessButton}
+            >
+              <Ionicons name="apps-outline" size={24} color="#F7F7F7" />
+              <Text style={styles.quickAccessButtonText}>Select Apps</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("SetupScreen")}
+              style={styles.quickAccessButton}
+            >
+              <Ionicons name="phone-portrait-outline" size={24} color="#F7F7F7" />
+              <Text style={styles.quickAccessButtonText}>Setup Guide</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("WidgetConfigScreen")}
+              style={styles.quickAccessButton}
+            >
+              <Ionicons name="grid-outline" size={24} color="#F7F7F7" />
+              <Text style={styles.quickAccessButtonText}>Edit Widget</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Content */}
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {selectedApps.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateTitle}>No Apps Selected</Text>
+              <Text style={styles.emptyStateText}>
+                Tap the settings button to select which apps to display
+              </Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("AppSelectionScreen")}
+                style={styles.emptyStateButton}
+              >
+                <Text style={styles.emptyStateButtonText}>Select Apps</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              {/* Widget Previews Section */}
+              {userWidgets.length > 0 && (
+                <View style={styles.section}>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Widget Previews</Text>
+                  </View>
+                  <FlatList
+                    data={userWidgets}
+                    keyExtractor={(item) => item._id}
+                    renderItem={renderWidgetItem}
+                    contentContainerStyle={styles.widgetsList}
+                    scrollEnabled={false}
+                  />
                 </View>
-                <FlatList
-                  data={userWidgets}
-                  keyExtractor={(item) => item._id}
-                  renderItem={renderWidgetItem}
-                  contentContainerStyle={styles.widgetsList}
-                  scrollEnabled={false}
-                />
-              </View>
-            )}
-
-
-          </>
-        )}
-      </ScrollView>
-    </View>
+              )}
+            </>
+          )}
+        </ScrollView>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)', // subtle overlay for readability
+  },
   container: {
     flex: 1,
-    backgroundColor: "#F7F7F7",
+    // backgroundColor: "#F7F7F7", // REMOVE this line for transparency
   },
   header: {
-    backgroundColor: "#E1E1E1",
+    backgroundColor: 'transparent', // fully transparent
     paddingTop: 50,
-    paddingBottom: 20,
+    paddingBottom: 8,
     paddingHorizontal: 20,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#B3B3B3",
+    borderBottomWidth: 0,
+    // borderBottomColor: "#222C3A", // removed dividing line
   },
   headerTitle: {
     fontSize: RFValue(24),
     fontFamily: "MBold",
-    color: "#172F50",
+    color: "#F7F7F7",
   },
   headerButtons: {
     flexDirection: "row",
@@ -309,14 +326,15 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   quickAccessContainer: {
-    backgroundColor: "#F7F7F7",
+    backgroundColor: 'transparent',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   quickAccessTitle: {
     fontSize: RFValue(18),
     fontFamily: "MSemiBold",
-    color: "#172F50",
+    color: "#F7F7F7",
     marginBottom: 12,
   },
   quickAccessButtons: {
@@ -330,15 +348,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: 'rgba(30, 40, 60, 0.7)',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E9ECEF",
+    borderColor: "#23304A",
   },
   quickAccessButtonText: {
     fontSize: RFValue(14),
     fontFamily: "MMedium",
-    color: "#172F50",
+    color: "#F7F7F7",
     marginLeft: 8,
   },
   content: {
@@ -354,14 +372,14 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: RFValue(24),
     fontFamily: "MBold",
-    color: "#172F50",
+    color: "#F7F7F7",
     marginBottom: 10,
     textAlign: "center",
   },
   emptyStateText: {
     fontSize: RFValue(16),
     fontFamily: "MRegular",
-    color: "#7A7A7A",
+    color: "#C8D2E0",
     textAlign: "center",
     marginBottom: 30,
     lineHeight: 24,
@@ -375,11 +393,11 @@ const styles = StyleSheet.create({
   emptyStateButtonText: {
     fontSize: RFValue(16),
     fontFamily: "MMedium",
-    color: "#E1E1E1",
+    color: "#F7F7F7",
   },
   section: {
     marginBottom: 20,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: 'transparent',
     borderRadius: 10,
     padding: 15,
     shadowColor: "#000",
@@ -390,19 +408,21 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 22,
   },
   sectionTitle: {
     fontSize: RFValue(20),
     fontFamily: "MBold",
-    color: "#172F50",
+    color: "#F7F7F7",
+    textAlign: "center",
+    width: '100%',
   },
   sectionSubtitle: {
     fontSize: RFValue(14),
     fontFamily: "MRegular",
-    color: "#7A7A7A",
+    color: "#C8D2E0",
     marginTop: 5,
   },
   widgetsList: {

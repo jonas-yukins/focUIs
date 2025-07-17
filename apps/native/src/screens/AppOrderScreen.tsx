@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, ImageBackground } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { Ionicons } from "@expo/vector-icons";
 import {
   Sortable,
   SortableItem,
@@ -13,7 +14,7 @@ interface Task {
   completed: boolean;
 }
 
-export default function AppOrderScreen() {
+export default function AppOrderScreen({ navigation }) {
   const [tasks, setTasks] = useState<Task[]>([
     { id: "1", title: "Learn React Native", completed: false },
     { id: "2", title: "Build an app", completed: false },
@@ -88,49 +89,76 @@ export default function AppOrderScreen() {
   );
 
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>📋 My Tasks</Text>
-        <Text style={styles.headerSubtitle}>Drag to reorder</Text>
+    <ImageBackground
+      source={require("../../assets/background_gradient.png")}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack && navigation.goBack()}
+            style={styles.headerButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="#F7F7F7" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>App Order</Text>
+          <View style={styles.headerButtons} />
+        </View>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Sortable
+            data={tasks}
+            renderItem={renderTask}
+            itemHeight={80}
+            style={styles.list}
+          />
+        </GestureHandlerRootView>
       </View>
-      <Sortable
-        data={tasks}
-        renderItem={renderTask}
-        itemHeight={80}
-        style={styles.list}
-      />
-    </GestureHandlerRootView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
   container: {
     flex: 1,
-    backgroundColor: "#000000",
+    // No backgroundColor here
   },
   header: {
-    padding: 20,
-    paddingBottom: 16,
+    backgroundColor: 'rgba(23, 47, 80, 0.7)',
+    paddingTop: 50,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: "#2C2C2E",
+    borderBottomColor: "#222C3A",
   },
   headerTitle: {
-    color: "#FFFFFF",
     fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 4,
+    fontFamily: "MBold",
+    color: "#F7F7F7",
   },
-  headerSubtitle: {
-    color: "#8E8E93",
-    fontSize: 14,
+  headerButtons: {
+    width: 40,
+  },
+  headerButton: {
+    padding: 8,
   },
   list: {
     flex: 1,
-    backgroundColor: "#000000",
     marginTop: 20,
     paddingHorizontal: 20,
-    borderRadius: 20,
-    overflow: "hidden",
+    // No background, border, or borderRadius
   },
   taskItem: {
     height: 80,
@@ -141,7 +169,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 20,
-    backgroundColor: "#1C1C1E",
+    backgroundColor: 'rgba(30, 40, 60, 0.7)', // semi-transparent, not white
     borderWidth: 1,
     borderColor: "#3A3A3C",
   },

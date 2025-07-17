@@ -1,0 +1,30 @@
+---
+alwaysApply: true
+---
+
+# Color Palette
+
+When working on UI, adhere to the following color palette as closely as possible to maintain visual consistency across the application.
+
+### Grayscale
+
+-   **Primary Light Gray:** `#E1E1E1`
+-   **Extra Light Gray:** `#F7F7F7`
+-   **Medium Gray:** `#B3B3B3`
+-   **Dark Gray:** `#7A7A7A`
+-   **Extra Dark Gray:** `#3D3D3D`
+
+### Blues
+
+-   **Primary Deep Navy:** `#172F50`
+-   **Lightest Blue:** `#C8D2E0`
+-   **Lighter Blue:** `#6D8AAF`
+-   **Dark Blue:** `#0F1E35`
+-   **Deepest Blue:** `#0A1424`
+
+### Semantic Colors
+
+-   **Success Green:** `#28A745`
+-   **Warning Yellow:** `#FFC107`
+-   **Error Red:** `#DC3545`
+-   **Info Cyan:** `#17A2B8`
