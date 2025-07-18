@@ -1,4 +1,4 @@
-package com.narbhacks.plainphone
+package com.narbhacks.focuis
 
 import android.app.Application
 import com.facebook.react.PackageList

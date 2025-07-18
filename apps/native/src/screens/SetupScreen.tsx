@@ -36,7 +36,7 @@ const SetupScreen = ({ navigation }) => {
 
   const renderIOSWidgetInstructions = () => (
     <View style={styles.instructionSection}>
-      <Text style={styles.sectionTitle}>📱 Add Plainphone Widget</Text>
+      <Text style={styles.sectionTitle}>Add focUIs Widget</Text>
       {renderStep(
         "1",
         "Long-press your home screen",
@@ -49,8 +49,8 @@ const SetupScreen = ({ navigation }) => {
       )}
       {renderStep(
         "3",
-        "Search for Plainphone",
-        "Scroll or search for 'Plainphone' in the widget list."
+        "Search for focUIs",
+        "Scroll or search for 'focUIs' in the widget list."
       )}
       {renderStep(
         "4",
@@ -72,7 +72,7 @@ const SetupScreen = ({ navigation }) => {
 
   const renderAndroidWidgetInstructions = () => (
     <View style={styles.instructionSection}>
-      <Text style={styles.sectionTitle}>📱 Add Plainphone Widget</Text>
+      <Text style={styles.sectionTitle}>Add focUIs Widget</Text>
       {renderStep(
         "1",
         "Long-press home screen",
@@ -85,13 +85,13 @@ const SetupScreen = ({ navigation }) => {
       )}
       {renderStep(
         "3",
-        "Find Plainphone",
-        "Find 'Plainphone' in the widget list and press and hold it."
+        "Find focUIs",
+        "Find 'focUIs' in the widget list and press and hold it."
       )}
       {renderStep(
         "4",
         "Drag to home screen",
-        "Drag the Plainphone widget to your home screen and release."
+        "Drag the focUIs widget to your home screen and release."
       )}
       {renderStep(
         "5",
@@ -103,11 +103,11 @@ const SetupScreen = ({ navigation }) => {
 
   const renderAppSelectionInstructions = () => (
     <View style={styles.instructionSection}>
-      <Text style={styles.sectionTitle}>🎯 Choose Your Apps</Text>
+      <Text style={styles.sectionTitle}>Choose Your Apps</Text>
       {renderStep(
         "1",
-        "Open Plainphone app",
-        "Launch the Plainphone app on your device."
+        "Open focUIs app",
+        "Launch the focUIs app on your device."
       )}
       {renderStep(
         "2",
@@ -131,7 +131,7 @@ const SetupScreen = ({ navigation }) => {
 
   const renderWallpaperInstructions = () => (
     <View style={styles.instructionSection}>
-      <Text style={styles.sectionTitle}>🖼️ Change Your Wallpaper</Text>
+      <Text style={styles.sectionTitle}>Change Your Wallpaper</Text>
       {Platform.OS === 'ios' ? (
         <>
           {renderStep(
@@ -142,7 +142,7 @@ const SetupScreen = ({ navigation }) => {
           {renderStep(
             "2",
             "Choose background",
-            "Select a solid color or use a Plainphone wallpaper."
+            "Select a solid color or use a focUIs wallpaper."
           )}
           {renderStep(
             "3",
@@ -160,7 +160,7 @@ const SetupScreen = ({ navigation }) => {
           {renderStep(
             "2",
             "Select background",
-            "Choose a plain color or Plainphone background."
+            "Choose a plain color or focUIs background."
           )}
           {renderStep(
             "3",
@@ -170,7 +170,7 @@ const SetupScreen = ({ navigation }) => {
         </>
       )}
       <View style={styles.colorSection}>
-        <Text style={styles.colorTitle}>🎨 Suggested Colors:</Text>
+        <Text style={styles.colorTitle}>Suggested Colors:</Text>
         <View style={styles.colorRow}>
           <View style={[styles.colorSwatch, { backgroundColor: '#E1E1E1' }]} />
           <Text style={styles.colorText}>#E1E1E1 – Light Gray</Text>
@@ -189,7 +189,7 @@ const SetupScreen = ({ navigation }) => {
 
   const renderOptionalSteps = () => (
     <View style={styles.instructionSection}>
-      <Text style={styles.sectionTitle}>🚫 Optional: Hide Other Apps</Text>
+      <Text style={styles.sectionTitle}>Optional: Hide Other Apps</Text>
       {Platform.OS === 'ios' ? (
         <>
           {renderStep(
@@ -220,9 +220,55 @@ const SetupScreen = ({ navigation }) => {
     </View>
   );
 
+  const renderBlockNotifications = () => (
+    <View style={styles.instructionSection}>
+      <Text style={styles.sectionTitle}>Optional: Block Notifications from Non-Essential Apps</Text>
+      {Platform.OS === 'ios' ? (
+        <>
+          {renderStep(
+            "1",
+            "Go to Settings",
+            "Open Settings → Notifications."
+          )}
+          {renderStep(
+            "2",
+            "Select an app",
+            "Tap on any non-essential app you want to silence."
+          )}
+          {renderStep(
+            "3",
+            "Turn off notifications",
+            "Toggle 'Allow Notifications' off for that app."
+          )}
+        </>
+      ) : (
+        <>
+          {renderStep(
+            "1",
+            "Go to Settings",
+            "Open Settings → Apps & notifications → See all apps."
+          )}
+          {renderStep(
+            "2",
+            "Select an app",
+            "Tap on any non-essential app you want to silence."
+          )}
+          {renderStep(
+            "3",
+            "Block notifications",
+            "Tap 'Notifications' and turn off 'All notifications' for that app."
+          )}
+        </>
+      )}
+      <Text style={{marginTop: 10, color: '#C8D2E0', fontFamily: 'MRegular', fontSize: RFValue(13)}}>
+        This helps keep your device distraction-free by only allowing important notifications.
+      </Text>
+    </View>
+  );
+
   const renderFocusModes = () => (
     <View style={styles.instructionSection}>
-      <Text style={styles.sectionTitle}>⏳ Optional: Use Focus Modes</Text>
+      <Text style={styles.sectionTitle}>Optional: Use Focus Modes</Text>
       {Platform.OS === 'ios' ? (
         <>
           {renderStep(
@@ -233,7 +279,7 @@ const SetupScreen = ({ navigation }) => {
           {renderStep(
             "2",
             "Set up Focus Mode",
-            "Create a Focus Mode that only shows the Plainphone screen."
+            "Create a Focus Mode that only shows the focUIs screen."
           )}
         </>
       ) : (
@@ -277,7 +323,7 @@ const SetupScreen = ({ navigation }) => {
             <Ionicons name="phone-portrait-outline" size={48} style={styles.introIcon} />
             <Text style={styles.introTitle}>Transform Your Smartphone</Text>
             <Text style={styles.introText}>
-              Follow this guide to create a minimalist, distraction-free experience with Plainphone.
+              Follow this guide to create a minimalist, distraction-free experience with focUIs.
             </Text>
           </View>
 
@@ -293,6 +339,9 @@ const SetupScreen = ({ navigation }) => {
           {/* Optional Steps */}
           {renderOptionalSteps()}
 
+          {/* Block Notifications */}
+          {renderBlockNotifications()}
+
           {/* Focus Modes */}
           {renderFocusModes()}
 
@@ -304,7 +353,7 @@ const SetupScreen = ({ navigation }) => {
             </View>
             <Text style={styles.completionText}>
               You've created a digital space that's minimal, focused, and free of distractions. 
-              Return to the Plainphone app anytime to update your selected apps or widget setup.
+              Return to the focUIs app anytime to update your selected apps or widget setup.
             </Text>
           </View>
 

@@ -1,11 +1,11 @@
 {
   "expo": {
     "newArchEnabled": true,
-      "name": "Plainphone",
-  "slug": "plainphone",
+      "name": "focUIs",
+  "slug": "focuis",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/focUIs_logo3.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
@@ -25,7 +25,7 @@
       },
       "widgets": [
         {
-          "name": "PlainphoneWidget",
+          "name": "focUIsWidget",
           "description": "Quick access to your selected apps",
           "sizes": [
             "medium"
@@ -33,7 +33,7 @@
           "target": "widget"
         },
         {
-          "name": "PlainphoneWidget",
+          "name": "focUIsWidget",
           "description": "Quick access to your selected apps",
           "sizes": [
             "medium"
@@ -41,11 +41,11 @@
           "target": "widget"
         }
       ],
-      "bundleIdentifier": "com.jonasyukins.plainphone"
+      "bundleIdentifier": "com.jonasyukins.focuis"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/focUIs_logo3.png",
         "backgroundColor": "#172F50"
       },
       "permissions": [
@@ -54,7 +54,7 @@
       ],
       "widgets": [
         {
-          "name": "PlainphoneWidget",
+          "name": "focUIsWidget",
           "description": "Quick access to your selected apps",
           "sizes": [
             "medium"

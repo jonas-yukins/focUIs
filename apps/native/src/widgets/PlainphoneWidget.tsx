@@ -12,9 +12,10 @@ interface WidgetProps {
     appStoreUrl?: string;
     isThirdParty?: boolean;
   }>;
+  fontSize?: number;
 }
 
-const PlainphoneWidget: React.FC<WidgetProps> = ({ widgetId, apps }) => {
+const focUIsWidget: React.FC<WidgetProps> = ({ widgetId, apps, fontSize = 20 }) => {
   const displayApps = apps.slice(0, 6); // Show max 6 apps
   const hasMoreApps = apps.length > 6;
 
@@ -35,7 +36,7 @@ const PlainphoneWidget: React.FC<WidgetProps> = ({ widgetId, apps }) => {
             onPress={() => handleAppPress(app)}
             activeOpacity={0.7}
           >
-            <Text style={styles.appName} numberOfLines={1}>
+            <Text style={[styles.appName, { fontSize }]} numberOfLines={1}>
               {app.displayName}
             </Text>
           </TouchableOpacity>
@@ -95,4 +96,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PlainphoneWidget; 
+export default focUIsWidget; 

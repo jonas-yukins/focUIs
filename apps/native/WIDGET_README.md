@@ -1,6 +1,6 @@
 # Widget System
 
-This document describes the widget system implementation for the Plainphone app, which allows users to create customizable home screen widgets with their selected apps.
+This document describes the widget system implementation for the focUIs app, which allows users to create customizable home screen widgets with their selected apps.
 
 ## Overview
 
@@ -111,7 +111,7 @@ Widget configurations are stored in Convex and synchronized across devices. The 
 ## Platform-Specific Implementation
 
 ### iOS Widgets
-- **Location**: `src/widgets/PlainphoneWidget.tsx`
+- **Location**: `src/widgets/focUIsWidget.tsx`
 - **Features**: 
   - Medium widget size (2x2 grid)
   - App launching via URL schemes

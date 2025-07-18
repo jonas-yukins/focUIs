@@ -28,6 +28,8 @@ const HomeScreen = ({ navigation }) => {
   const { signOut } = useAuth();
   const selectedApps = useQuery(api.notes.getUserApps) || [];
   const userWidgets = useQuery(api.notes.getUserWidgets) || [];
+  const userSettings = useQuery(api.notes.getUserSettings);
+  const widgetFontSize = userSettings?.fontSize || 16;
   
   const reorganizeWidgets = useMutation(api.notes.reorganizeWidgets);
   const upsertWidget = useMutation(api.notes.upsertWidget);
@@ -170,7 +172,6 @@ const HomeScreen = ({ navigation }) => {
 
   const renderWidgetItem = ({ item }) => {
     const widgetApps = getAppsForWidget(item);
-    
     return (
       <View style={styles.widgetContainer}>
         <WidgetPreview
@@ -179,6 +180,7 @@ const HomeScreen = ({ navigation }) => {
           onAppPress={handleAppPress}
           isDragging={false}
           showTitle={false}
+          fontSize={widgetFontSize}
         />
       </View>
     );
@@ -204,13 +206,8 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.overlay}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("AppOrderScreen")}
-            style={styles.headerButton}
-          >
-            <Ionicons name="reorder-three" size={24} color="#F7F7F7" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Plainphone</Text>
+          {/* Removed AppOrderScreen navigation button */}
+          <Text style={styles.headerTitle}>focUIs</Text>
           <View style={styles.headerButtons}>
             <TouchableOpacity
               onPress={() => navigation.navigate("SettingsScreen")}
@@ -415,7 +412,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: RFValue(20),
     fontFamily: "MBold",
-    color: "#F7F7F7",
+    color: "#7A7A7A",
     textAlign: "center",
     width: '100%',
   },

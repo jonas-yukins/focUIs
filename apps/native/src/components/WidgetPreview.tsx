@@ -28,6 +28,7 @@ interface WidgetPreviewProps {
   onDragEnd?: () => void;
   isDragging?: boolean;
   showTitle?: boolean;
+  fontSize?: number;
 }
 
 const WidgetPreview: React.FC<WidgetPreviewProps> = ({
@@ -38,6 +39,7 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
   onDragEnd,
   isDragging = false,
   showTitle = true,
+  fontSize = 20,
 }) => {
   const displayApps = apps.slice(0, 6); // Show max 6 apps
   const hasMoreApps = apps.length > 6;
@@ -63,7 +65,7 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
             onPress={() => onAppPress(app)}
             activeOpacity={0.7}
           >
-            <Text style={styles.appName} numberOfLines={1}>
+            <Text style={[styles.appName, { fontSize }]} numberOfLines={1}>
               {app.displayName}
             </Text>
           </TouchableOpacity>

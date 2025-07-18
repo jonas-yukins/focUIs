@@ -5,7 +5,7 @@ const HowItWorks = () => {
     {
       number: "01",
       title: "Download & Install",
-              description: "Get the Plainphone app from the App Store or Google Play Store. It's free and takes just a few seconds to install.",
+              description: "Get the focUIs app from the App Store or Google Play Store. It's free and takes just a few seconds to install.",
       icon: "📥",
     },
     {
@@ -36,7 +36,7 @@ const HowItWorks = () => {
             How It Works
           </h2>
           <p className="text-xl text-[#7A7A7A] max-w-3xl mx-auto">
-            Transform your smartphone into a plainphone in just four simple steps.
+            Transform your smartphone into a focUIs in just four simple steps.
           </p>
         </div>
 

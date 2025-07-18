@@ -1,4 +1,4 @@
-package com.narbhacks.plainphone
+package com.narbhacks.focuis
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.NativeModule

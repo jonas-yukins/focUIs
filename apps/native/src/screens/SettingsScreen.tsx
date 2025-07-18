@@ -22,36 +22,39 @@ const SettingsScreen = ({ navigation }) => {
   const updateUserSettings = useMutation(api.notes.updateUserSettings);
   const backgroundUri = useBackgroundAsset();
 
-  const [fontSize, setFontSize] = useState(userSettings?.fontSize || 16);
+  // Use local state, initialize from userSettings
+  const [fontSize, setFontSize] = useState(userSettings?.fontSize || 20);
   const [theme, setTheme] = useState(userSettings?.theme || "default");
   const [layout, setLayout] = useState(userSettings?.layout || "grid");
+  const [saving, setSaving] = useState(false);
 
-  const handleFontSizeChange = async (newSize) => {
-    setFontSize(newSize);
+  // Update local state when userSettings changes (for Clerk hot reload)
+  React.useEffect(() => {
+    if (userSettings) {
+      setFontSize(userSettings.fontSize || 16);
+      setTheme(userSettings.theme || "default");
+      setLayout(userSettings.layout || "grid");
+    }
+  }, [userSettings]);
+
+  // Save handler for checkmark
+  const handleSave = async () => {
+    setSaving(true);
     try {
-      await updateUserSettings({ fontSize: newSize });
+      await updateUserSettings({ fontSize, theme, layout });
+      Alert.alert("Settings Saved", "Your preferences have been updated.");
+      navigation.goBack();
     } catch (error) {
-      Alert.alert("Error", "Failed to update font size");
+      Alert.alert("Error", "Failed to save settings");
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleThemeChange = async (newTheme) => {
-    setTheme(newTheme);
-    try {
-      await updateUserSettings({ theme: newTheme });
-    } catch (error) {
-      Alert.alert("Error", "Failed to update theme");
-    }
-  };
-
-  const handleLayoutChange = async (newLayout) => {
-    setLayout(newLayout);
-    try {
-      await updateUserSettings({ layout: newLayout });
-    } catch (error) {
-      Alert.alert("Error", "Failed to update layout");
-    }
-  };
+  // Remove mutation from selectors, just update local state
+  const handleFontSizeChange = (newSize) => setFontSize(newSize);
+  const handleThemeChange = (newTheme) => setTheme(newTheme);
+  const handleLayoutChange = (newLayout) => setLayout(newLayout);
 
   const handleSignOut = async () => {
     Alert.alert(
@@ -90,7 +93,7 @@ const SettingsScreen = ({ navigation }) => {
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Font Size</Text>
       <View style={styles.fontSizeContainer}>
-        {[12, 14, 16, 18, 20].map((size) => (
+        {[16, 18, 20, 22, 24].map((size) => (
           <TouchableOpacity
             key={size}
             style={[
@@ -201,19 +204,17 @@ const SettingsScreen = ({ navigation }) => {
             <Ionicons name="arrow-back" size={24} color="#F7F7F7" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
-          <View style={styles.headerButtons} />
+          <TouchableOpacity
+            onPress={handleSave}
+            style={styles.headerButton}
+            disabled={saving}
+            accessibilityLabel="Save settings"
+            accessibilityRole="button"
+          >
+            <Ionicons name="checkmark" size={26} color="#28A745" />
+          </TouchableOpacity>
         </View>
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* App Management */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>App Management</Text>
-            {renderSettingItem({
-              title: "Select Apps",
-              subtitle: "Choose which apps to display",
-              onPress: () => navigation.navigate("AppSelectionScreen"),
-            })}
-          </View>
-
           {/* Appearance */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Appearance</Text>
@@ -241,16 +242,6 @@ const SettingsScreen = ({ navigation }) => {
               subtitle: "1.0.0",
               onPress: () => {},
               showArrow: false,
-            })}
-            {renderSettingItem({
-              title: "Privacy Policy",
-              subtitle: "Read our privacy policy",
-              onPress: () => {},
-            })}
-            {renderSettingItem({
-              title: "Terms of Service",
-              subtitle: "Read our terms of service",
-              onPress: () => {},
             })}
           </View>
         </ScrollView>

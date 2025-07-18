@@ -14,7 +14,7 @@ const TestimonialsData = [
   {
     rating: 5,
     review:
-              "Really like the clean design of Plainphone. The minimalist interface helps me stay focused and reduces distractions. Fast and very easy to use.",
+              "Really like the clean design of focUIs. The minimalist interface helps me stay focused and reduces distractions. Fast and very easy to use.",
     name: "John Collins",
     designation: "Engineer & Author",
     profile: "/images/profile.png",
@@ -22,7 +22,7 @@ const TestimonialsData = [
   },
   {
     rating: 5,
-          review: "Simply brilliant! Plainphone has elevated my productivity.",
+          review: "Simply brilliant! focUIs has elevated my productivity.",
     name: "Moe Partuj",
     designation: "Student",
     profile: "/images/Moe-Partuj.jpeg",

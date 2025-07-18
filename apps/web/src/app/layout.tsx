@@ -24,8 +24,8 @@ const lato = Lato({
 });
 
 export const metadata: Metadata = {
-      title: "Plainphone - Transform Your Smartphone",
-    description: "Transform your smartphone into a minimalist device. Reduce screen time with our plainphone app that replaces colorful icons with simple text.",
+      title: "focUIs - Transform Your Smartphone",
+    description: "Transform your smartphone into a minimalist device. Reduce screen time with our focUIs app that replaces colorful icons with simple text.",
 };
 
 export default function RootLayout({

@@ -6,7 +6,7 @@
       }
     },
     "ios": {
-      "bundleIdentifier": "app.jonasyukins.plainphone",
+      "bundleIdentifier": "app.jonasyukins.focuis",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

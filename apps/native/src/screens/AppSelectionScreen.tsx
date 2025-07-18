@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: RFValue(16),
     fontFamily: "MBold",
-    color: "#172F50",
+    color: "#7A7A7A",
     marginBottom: 8,
   },
   appItem: {

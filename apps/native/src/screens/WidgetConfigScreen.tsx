@@ -36,6 +36,8 @@ interface DraggableApp {
 const WidgetConfigScreen = ({ navigation }) => {
   const backgroundUri = useBackgroundAsset();
   const selectedApps = useQuery(api.notes.getUserApps);
+  const userSettings = useQuery(api.notes.getUserSettings);
+  const widgetFontSize = userSettings?.fontSize || 16;
   // Add a loading state
   const isLoading = selectedApps === undefined;
 
@@ -317,7 +319,10 @@ const WidgetConfigScreen = ({ navigation }) => {
                   style={styles.sortableList}
                   contentContainerStyle={styles.sortableListContent}
                   itemKeyExtractor={(item) => item.id}
-                />
+                >
+                  {/* In the PagerView section, when rendering each Sortable, pass fontSize={widgetFontSize} to the widget preview component (PlainphoneWidget or WidgetPreview) if used.
+                  If you use a custom preview, pass fontSize={widgetFontSize} to the Text displaying app names. */}
+                </Sortable>
               </View>
             ))}
           </PagerView>
@@ -390,7 +395,7 @@ const styles = StyleSheet.create({
   dragDropTitle: {
     fontSize: RFValue(16),
     fontFamily: "MSemiBold",
-    color: "#172F50",
+    color: "#7A7A7A",
     marginBottom: 12,
   },
   sortableList: {
@@ -407,14 +412,14 @@ const styles = StyleSheet.create({
   selectedTaskItem: {
     borderWidth: 2,
     borderColor: "#4A90E2",
-    backgroundColor: "#E6F0FA",
+    backgroundColor: "transparent",
   },
   taskContent: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 20,
-    backgroundColor: "#1C1C1E",
+    backgroundColor: "transparent",
     borderWidth: 1,
     borderColor: "#3A3A3C",
   },

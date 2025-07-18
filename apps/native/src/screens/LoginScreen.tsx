@@ -111,7 +111,7 @@ const LoginScreen = ({ navigation }: { navigation: any }) => {
         <View style={styles.container}>
           <View style={styles.card}>
             <Image
-              source={require("../assets/icons/logo.png")}
+              source={require("../../assets/focUIs_logo3.png")}
               style={styles.logo}
             />
             <Text style={styles.title}>Log in to your account</Text>
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   card: {
-    backgroundColor: 'rgba(23, 47, 80, 0.7)',
+    backgroundColor: 'transparent',
     padding: 24,
     alignItems: "center",
     width: "92%",
@@ -182,6 +182,9 @@ const styles = StyleSheet.create({
     width: 74,
     height: 74,
     marginTop: 20,
+    borderRadius: 15, // iOS standard rounding
+    overflow: "hidden",
+    backgroundColor: "#172F50", // Optional: matches your palette
   },
   title: {
     marginTop: 49,
