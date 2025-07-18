@@ -30,6 +30,9 @@ const HomeScreen = ({ navigation }) => {
   const userWidgets = useQuery(api.notes.getUserWidgets) || [];
   const userSettings = useQuery(api.notes.getUserSettings);
   const widgetFontSize = userSettings?.fontSize || 16;
+  const widgetAlignment = (userSettings?.layout || "center") as 'left' | 'center' | 'right';
+  const theme = userSettings?.theme || "default";
+  const fontColor = userSettings?.fontColor || '#FFFFFF';
   
   const reorganizeWidgets = useMutation(api.notes.reorganizeWidgets);
   const upsertWidget = useMutation(api.notes.upsertWidget);
@@ -122,7 +125,7 @@ const HomeScreen = ({ navigation }) => {
               }
             }
           } else {
-            console.log(`${app.displayName} is not installed, falling back to App Store`);
+            
             if (app.appStoreUrl) {
               await Linking.openURL(app.appStoreUrl);
               return;
@@ -181,6 +184,9 @@ const HomeScreen = ({ navigation }) => {
           isDragging={false}
           showTitle={false}
           fontSize={widgetFontSize}
+          alignment={widgetAlignment}
+          theme={theme as 'default' | 'dark' | 'light'}
+          fontColor={fontColor}
         />
       </View>
     );

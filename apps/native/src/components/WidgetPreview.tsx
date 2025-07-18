@@ -29,7 +29,47 @@ interface WidgetPreviewProps {
   isDragging?: boolean;
   showTitle?: boolean;
   fontSize?: number;
+  alignment?: 'left' | 'center' | 'right'; // NEW PROP
+  theme?: 'default' | 'dark' | 'light'; // NEW PROP
+  fontColor?: string; // NEW PROP
 }
+
+// Helper function to get alignment styles
+const getAlignmentStyles = (alignment: 'left' | 'center' | 'right' = 'center') => {
+  let justifyContent, alignItems, textAlign;
+  switch (alignment) {
+    case 'left':
+      justifyContent = 'flex-start';
+      alignItems = 'flex-start';
+      textAlign = 'left';
+      break;
+    case 'right':
+      justifyContent = 'flex-end';
+      alignItems = 'flex-end';
+      textAlign = 'right';
+      break;
+    case 'center':
+    default:
+      justifyContent = 'center';
+      alignItems = 'center';
+      textAlign = 'center';
+      break;
+  }
+  return { justifyContent, alignItems, textAlign };
+};
+
+// Add helper for theme-based colors
+const getWidgetColors = (theme: 'default' | 'dark' | 'light' = 'default') => {
+  switch (theme) {
+    case 'dark':
+      return { backgroundColor: '#000000', borderColor: 'transparent', borderWidth: 0 };
+    case 'light':
+      return { backgroundColor: '#FFFFFF', borderColor: 'transparent', borderWidth: 0 };
+    case 'default':
+    default:
+      return { backgroundColor: 'transparent', borderColor: '#FFFFFF', borderWidth: 1 };
+  }
+};
 
 const WidgetPreview: React.FC<WidgetPreviewProps> = ({
   widgetId,
@@ -40,32 +80,37 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
   isDragging = false,
   showTitle = true,
   fontSize = 20,
+  alignment = 'center', // Default to center
+  theme = 'default', // Default to default
+  fontColor = '#FFFFFF', // Default to white
 }) => {
   const displayApps = apps.slice(0, 6); // Show max 6 apps
   const hasMoreApps = apps.length > 6;
+  const { justifyContent, alignItems, textAlign } = getAlignmentStyles(alignment);
+  const { backgroundColor, borderColor, borderWidth } = getWidgetColors(theme);
 
   return (
-    <View style={[styles.container, isDragging && styles.dragging]}>
+    <View style={[styles.container, isDragging && styles.dragging, { backgroundColor, borderColor, borderWidth }]}>
       {/* Widget Header - Only show if showTitle is true */}
       {showTitle && (
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Ionicons name="phone-portrait-outline" size={16} color="#172F50" />
-            <Text style={styles.widgetTitle}>{widgetId.replace('_', ' ').toUpperCase()}</Text>
+        <View style={[styles.header, { justifyContent, alignItems }]}> {/* Dynamic alignment */}
+          <View style={[styles.headerLeft, { justifyContent, alignItems }]}> {/* Dynamic alignment */}
+            <Ionicons name="phone-portrait-outline" size={16} color={fontColor} />
+            <Text style={[styles.widgetTitle, { textAlign, color: fontColor }]}>{widgetId.replace('_', ' ').toUpperCase()}</Text>
           </View>
         </View>
       )}
 
       {/* Apps Grid */}
-      <View style={styles.appsGrid}>
+      <View style={[styles.appsGrid, { alignItems }]}> {/* Dynamic alignment */}
         {displayApps.map((app, index) => (
           <TouchableOpacity
             key={app._id}
-            style={styles.appItem}
+            style={[styles.appItem, { alignItems, justifyContent }]} // Dynamic alignment
             onPress={() => onAppPress(app)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.appName, { fontSize }]} numberOfLines={1}>
+            <Text style={[styles.appName, { fontSize, textAlign, color: fontColor }]} numberOfLines={1}>
               {app.displayName}
             </Text>
           </TouchableOpacity>
@@ -73,7 +118,7 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
         {/* Empty slots for visual consistency */}
         {Array.from({ length: Math.max(0, 6 - displayApps.length) }).map((_, index) => (
           <View key={`empty-${index}`} style={styles.emptySlot}>
-            <Text style={styles.emptyText}>+</Text>
+            <Text style={[styles.emptyText, { color: fontColor }]}>+</Text>
           </View>
         ))}
       </View>
@@ -90,6 +135,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FFFFFF', // fine white outline
     // No shadow
+    minHeight: 296, // Ensures height matches a widget with 6 apps (header + 6*appItem + margins)
   },
   dragging: {
     // Remove shadow and transform for dragging

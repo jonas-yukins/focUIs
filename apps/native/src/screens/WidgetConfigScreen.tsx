@@ -38,6 +38,7 @@ const WidgetConfigScreen = ({ navigation }) => {
   const selectedApps = useQuery(api.notes.getUserApps);
   const userSettings = useQuery(api.notes.getUserSettings);
   const widgetFontSize = userSettings?.fontSize || 16;
+  const widgetAlignment = userSettings?.layout || "center";
   // Add a loading state
   const isLoading = selectedApps === undefined;
 
@@ -267,7 +268,7 @@ const WidgetConfigScreen = ({ navigation }) => {
   }, [handleDrop, moveMode, selectedApp]);
 
   if (isLoading) {
-    console.log("[DEBUG] Still loading selectedApps...");
+    
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#172F50' }}>
         <Text style={{ color: '#F7F7F7', fontSize: 18 }}>Loading apps...</Text>
@@ -320,7 +321,7 @@ const WidgetConfigScreen = ({ navigation }) => {
                   contentContainerStyle={styles.sortableListContent}
                   itemKeyExtractor={(item) => item.id}
                 >
-                  {/* In the PagerView section, when rendering each Sortable, pass fontSize={widgetFontSize} to the widget preview component (PlainphoneWidget or WidgetPreview) if used.
+                  {/* In the PagerView section, when rendering each Sortable, pass fontSize={widgetFontSize} to the widget preview component (focUIsWidget or WidgetPreview) if used.
                   If you use a custom preview, pass fontSize={widgetFontSize} to the Text displaying app names. */}
                 </Sortable>
               </View>

@@ -117,7 +117,7 @@ const AppSelectionScreen = ({ navigation }) => {
 
       // Note: Widget reorganization will happen automatically when the user navigates back to HomeScreen
       // The HomeScreen has logic to auto-organize apps into widgets when needed
-      console.log(`App ${app.name} ${isCurrentlySelected ? 'deselected' : 'selected'}. Widgets will be reorganized on navigation.`);
+      
     } catch (err) {
       console.error('Failed to save app selection', err);
       // Revert local state on error

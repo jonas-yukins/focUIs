@@ -1,0 +1,10 @@
+---
+alwaysApply: true
+---
+
+# Widget Development Guidelines
+
+When making changes to any widget, the corresponding widget preview must be updated to reflect those changes. The widget preview should always be a 1-to-1 representation of the actual widget's appearance and behavior.
+
+- **Synchronization:** Any modification to a widget's UI, functionality, or data handling must be mirrored in its preview component.
+- **Consistency:** Ensure that the preview accurately displays how the widget will look and feel on the user's device.

@@ -19,6 +19,7 @@ export default defineSchema({
     theme: v.optional(v.string()),
     fontSize: v.optional(v.number()),
     layout: v.optional(v.string()),
+    fontColor: v.optional(v.string()),
   }),
 
   userWidgets: defineTable({

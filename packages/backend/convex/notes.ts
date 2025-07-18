@@ -186,6 +186,7 @@ export const updateUserSettings = mutation({
     theme: v.optional(v.string()),
     fontSize: v.optional(v.number()),
     layout: v.optional(v.string()),
+    fontColor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await getUserId(ctx);
