@@ -1,8 +1,13 @@
-import { View, StatusBar, Platform } from "react-native";
+import { useEffect, useState } from "react";
+import { View, StatusBar, ActivityIndicator } from "react-native";
 import { useFonts } from "expo-font";
 import { LogBox } from "react-native";
+
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import Navigation from "./src/navigation/Navigation";
 import ConvexClientProvider from "./ConvexClientProvider";
+import { Asset } from "expo-asset";
+import { BackgroundAssetContext } from "./src/assets/BackgroundAssetContext";
 
 export default function App() {
   LogBox.ignoreLogs(["Warning: ..."]);
@@ -20,25 +25,45 @@ export default function App() {
     MRegular: require("./src/assets/fonts/Montserrat-Regular.ttf"),
     MLight: require("./src/assets/fonts/Montserrat-Light.ttf"),
   });
-  if (!loaded) {
-    return false;
+
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
+  const [backgroundUri, setBackgroundUri] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    async function loadAssets() {
+      try {
+        const [asset] = await Asset.loadAsync([
+          require("./assets/background_gradient.png"),
+        ]);
+        setBackgroundUri(asset.localUri || asset.uri);
+        setAssetsLoaded(true);
+      } catch (e) {
+        setAssetsLoaded(true);
+      }
+    }
+    loadAssets();
+  }, []);
+
+  if (!loaded || !assetsLoaded || !backgroundUri) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#172F50" />
+      </View>
+    );
   }
 
-  const STATUS_BAR_HEIGHT =
-    Platform.OS === "ios" ? 50 : StatusBar.currentHeight;
-
   return (
-    <ConvexClientProvider>
-      <View style={{ flex: 1 }}>
-        <View style={{ height: STATUS_BAR_HEIGHT, backgroundColor: "#172F50" }}>
-          <StatusBar
-            translucent
-            backgroundColor={"#172F50"}
+    <BackgroundAssetContext.Provider value={backgroundUri}>
+      <SafeAreaProvider>
+        <StatusBar
             barStyle="light-content"
+            backgroundColor="#172F50"
+            translucent={true}
           />
-        </View>
-        <Navigation />
-      </View>
-    </ConvexClientProvider>
+          <ConvexClientProvider>
+            <Navigation />
+          </ConvexClientProvider>
+      </SafeAreaProvider>
+    </BackgroundAssetContext.Provider>
   );
 }

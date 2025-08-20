@@ -20,7 +20,8 @@ export const getUserApps = query({
       .order("asc")
       .collect();
 
-    return apps;
+    // Sort by order field since Convex doesn't support ordering by specific fields in this context
+    return apps.sort((a, b) => a.order - b.order);
   },
 });
 
@@ -49,6 +50,9 @@ export const upsertApp = mutation({
     displayName: v.string(),
     isSelected: v.boolean(),
     order: v.number(),
+    urlScheme: v.optional(v.string()),
+    appStoreUrl: v.optional(v.string()),
+    isThirdParty: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const userId = await getUserId(ctx);
@@ -68,6 +72,9 @@ export const upsertApp = mutation({
         displayName: args.displayName,
         isSelected: args.isSelected,
         order: args.order,
+        urlScheme: args.urlScheme,
+        appStoreUrl: args.appStoreUrl,
+        isThirdParty: args.isThirdParty,
       });
       return existingApp._id;
     } else {
@@ -79,6 +86,9 @@ export const upsertApp = mutation({
         displayName: args.displayName,
         isSelected: args.isSelected,
         order: args.order,
+        urlScheme: args.urlScheme,
+        appStoreUrl: args.appStoreUrl,
+        isThirdParty: args.isThirdParty,
       });
     }
   },
@@ -131,6 +141,29 @@ export const updateAppOrder = mutation({
   },
 });
 
+// Update multiple app orders
+export const updateAppOrders = mutation({
+  args: {
+    appOrders: v.array(v.object({
+      appId: v.id("userApps"),
+      newOrder: v.number(),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx);
+    if (!userId) throw new Error("User not found");
+
+    for (const appOrder of args.appOrders) {
+      const app = await ctx.db.get(appOrder.appId);
+      if (app && app.userId === userId) {
+        await ctx.db.patch(appOrder.appId, {
+          order: appOrder.newOrder,
+        });
+      }
+    }
+  },
+});
+
 // Get user settings
 export const getUserSettings = query({
   args: {},
@@ -153,6 +186,7 @@ export const updateUserSettings = mutation({
     theme: v.optional(v.string()),
     fontSize: v.optional(v.number()),
     layout: v.optional(v.string()),
+    fontColor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await getUserId(ctx);
@@ -169,6 +203,116 @@ export const updateUserSettings = mutation({
       await ctx.db.insert("userSettings", {
         userId,
         ...args,
+      });
+    }
+  },
+});
+
+// Get user widgets
+export const getUserWidgets = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getUserId(ctx);
+    if (!userId) return [];
+
+    const widgets = await ctx.db
+      .query("userWidgets")
+      .filter((q) => q.eq(q.field("userId"), userId))
+      .order("asc")
+      .collect();
+
+    return widgets;
+  },
+});
+
+// Create or update a widget
+export const upsertWidget = mutation({
+  args: {
+    widgetId: v.string(),
+    appIds: v.array(v.string()),
+    order: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx);
+    if (!userId) throw new Error("User not found");
+
+    // Check if widget already exists for this user
+    const existingWidget = await ctx.db
+      .query("userWidgets")
+      .filter((q) => q.eq(q.field("userId"), userId))
+      .filter((q) => q.eq(q.field("widgetId"), args.widgetId))
+      .first();
+
+    if (existingWidget) {
+      // Update existing widget
+      await ctx.db.patch(existingWidget._id, {
+        appIds: args.appIds,
+        order: args.order,
+      });
+      return existingWidget._id;
+    } else {
+      // Create new widget
+      return await ctx.db.insert("userWidgets", {
+        userId,
+        widgetId: args.widgetId,
+        appIds: args.appIds,
+        order: args.order,
+      });
+    }
+  },
+});
+
+// Delete a widget
+export const deleteWidget = mutation({
+  args: {
+    widgetId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx);
+    if (!userId) throw new Error("User not found");
+
+    const widget = await ctx.db
+      .query("userWidgets")
+      .filter((q) => q.eq(q.field("userId"), userId))
+      .filter((q) => q.eq(q.field("widgetId"), args.widgetId))
+      .first();
+
+    if (widget) {
+      await ctx.db.delete(widget._id);
+    }
+  },
+});
+
+// Reorganize widgets (move apps between widgets)
+export const reorganizeWidgets = mutation({
+  args: {
+    widgets: v.array(v.object({
+      widgetId: v.string(),
+      appIds: v.array(v.string()),
+      order: v.number(),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx);
+    if (!userId) throw new Error("User not found");
+
+    // Delete all existing widgets for this user
+    const existingWidgets = await ctx.db
+      .query("userWidgets")
+      .filter((q) => q.eq(q.field("userId"), userId))
+      .collect();
+
+    for (const widget of existingWidgets) {
+      await ctx.db.delete(widget._id);
+    }
+
+    // Create new widgets with the provided configuration
+    for (const widgetConfig of args.widgets) {
+      await ctx.db.insert("userWidgets", {
+        userId,
+        widgetId: widgetConfig.widgetId,
+        appIds: widgetConfig.appIds,
+        order: widgetConfig.order,
       });
     }
   },

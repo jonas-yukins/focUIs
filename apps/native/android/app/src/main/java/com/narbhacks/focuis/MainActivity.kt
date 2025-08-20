@@ -1,4 +1,4 @@
-package com.narbhacks.dumbphone
+package com.narbhacks.focuis
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

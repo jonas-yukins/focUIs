@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -9,192 +9,230 @@ import {
   Alert,
   Platform,
   Switch,
+  ImageBackground,
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
-import { api } from "@packages/backend/convex/_generated/api";
-import { useQuery, useMutation } from "convex/react";
 import { Ionicons } from "@expo/vector-icons";
-import * as Application from 'expo-application';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@packages/backend/convex/_generated/api";
+import useAvailableApps, { AvailableApp } from '../hooks/useAvailableApps';
+import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
+
+const SELECTED_APPS_KEY = 'SELECTED_APPS';
 
 const AppSelectionScreen = ({ navigation }) => {
+  const backgroundUri = useBackgroundAsset();
+  const { apps, loading, error, refresh, launchApp } = useAvailableApps();
   const [searchText, setSearchText] = useState("");
-  const [installedApps, setInstalledApps] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedApps, setSelectedApps] = useState<Set<string>>(new Set());
+  const [isPersisting, setIsPersisting] = useState(false);
 
-  const userApps = useQuery(api.notes.getAllUserApps) || [];
+  // Convex mutations
   const upsertApp = useMutation(api.notes.upsertApp);
   const toggleAppSelection = useMutation(api.notes.toggleAppSelection);
 
-  // Common apps that users typically want to access
-  const commonApps = [
-    { name: "Phone", packageName: "com.android.dialer", displayName: "Phone" },
-    { name: "Messages", packageName: "com.android.mms", displayName: "Messages" },
-    { name: "Camera", packageName: "com.android.camera", displayName: "Camera" },
-    { name: "Settings", packageName: "com.android.settings", displayName: "Settings" },
-    { name: "Maps", packageName: "com.google.android.apps.maps", displayName: "Maps" },
-    { name: "Calendar", packageName: "com.android.calendar", displayName: "Calendar" },
-    { name: "Clock", packageName: "com.android.deskclock", displayName: "Clock" },
-    { name: "Calculator", packageName: "com.android.calculator2", displayName: "Calculator" },
-    { name: "Notes", packageName: "com.android.notes", displayName: "Notes" },
-    { name: "Browser", packageName: "com.android.chrome", displayName: "Browser" },
-    { name: "Email", packageName: "com.android.email", displayName: "Email" },
-    { name: "Gallery", packageName: "com.android.gallery3d", displayName: "Gallery" },
-  ];
+  // Load existing user apps from Convex
+  const existingUserApps = useQuery(api.notes.getAllUserApps) || [];
 
+  // Load selected apps from AsyncStorage on mount (for backward compatibility)
   useEffect(() => {
-    loadInstalledApps();
-  }, []);
-
-  const loadInstalledApps = async () => {
-    setIsLoading(true);
-    try {
-      if (Platform.OS === 'android') {
-        // For Android, we'll use the common apps list as a starting point
-        // In a real implementation, you'd use PackageManager to get installed apps
-        setInstalledApps(commonApps);
-      } else {
-        // For iOS, we can't get installed apps, so we'll use a predefined list
-        const iosApps = [
-          { name: "Phone", packageName: "tel://", displayName: "Phone" },
-          { name: "Messages", packageName: "sms://", displayName: "Messages" },
-          { name: "Camera", packageName: "camera://", displayName: "Camera" },
-          { name: "Settings", packageName: "App-Prefs://", displayName: "Settings" },
-          { name: "Maps", packageName: "maps://", displayName: "Maps" },
-          { name: "Calendar", packageName: "calshow://", displayName: "Calendar" },
-          { name: "Clock", packageName: "clock://", displayName: "Clock" },
-          { name: "Calculator", packageName: "calculator://", displayName: "Calculator" },
-          { name: "Notes", packageName: "mobilenotes://", displayName: "Notes" },
-          { name: "Safari", packageName: "x-web-search://", displayName: "Browser" },
-          { name: "Mail", packageName: "message://", displayName: "Email" },
-          { name: "Photos", packageName: "photos-redirect://", displayName: "Photos" },
-        ];
-        setInstalledApps(iosApps);
+    const loadSelectedApps = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(SELECTED_APPS_KEY);
+        if (stored) {
+          const storedApps = new Set(JSON.parse(stored) as string[]);
+          setSelectedApps(storedApps);
+          
+          // Migrate stored apps to Convex if they exist
+          if (storedApps.size > 0) {
+            for (const appId of storedApps) {
+              const app = apps.find(a => a.id === appId);
+              if (app) {
+                await upsertApp({
+                  appName: app.name,
+                  packageName: app.packageName || app.name,
+                  displayName: app.name,
+                  isSelected: true,
+                  order: 0,
+                  urlScheme: app.urlScheme,
+                  appStoreUrl: app.appStoreUrl,
+                  isThirdParty: app.isThirdParty,
+                });
+              }
+            }
+            // Clear AsyncStorage after migration
+            await AsyncStorage.removeItem(SELECTED_APPS_KEY);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load selected apps from storage', err);
       }
-    } catch (error) {
-      console.error("Error loading installed apps:", error);
-      // Fallback to common apps
-      setInstalledApps(commonApps);
+    };
+    loadSelectedApps();
+  }, [apps, upsertApp]);
+
+  // Update selected apps state based on Convex data
+  useEffect(() => {
+    const selectedSet = new Set(
+      existingUserApps
+        .filter(app => app.isSelected)
+        .map(app => app.packageName || app.appName) // Use packageName or fallback to appName
+    );
+    setSelectedApps(selectedSet);
+  }, [existingUserApps]);
+
+  const handleToggle = async (appId: string) => {
+    const app = apps.find(a => a.id === appId);
+    if (!app) return;
+
+    // Use packageName as the identifier for consistency with backend
+    const identifier = app.packageName || app.name;
+    const isCurrentlySelected = selectedApps.has(identifier);
+
+    setIsPersisting(true);
+    try {
+      // Update local state immediately for better UX
+      setSelectedApps(prev => {
+        const next = new Set(prev);
+        if (isCurrentlySelected) {
+          next.delete(identifier);
+        } else {
+          next.add(identifier);
+        }
+        return next;
+      });
+
+      // Save to Convex backend
+      await upsertApp({
+        appName: app.name,
+        packageName: app.packageName || app.name,
+        displayName: app.name,
+        isSelected: !isCurrentlySelected,
+        order: existingUserApps.length,
+        urlScheme: app.urlScheme,
+        appStoreUrl: app.appStoreUrl,
+        isThirdParty: app.isThirdParty,
+      });
+
+      // Note: Widget reorganization will happen automatically when the user navigates back to HomeScreen
+      // The HomeScreen has logic to auto-organize apps into widgets when needed
+      
+    } catch (err) {
+      console.error('Failed to save app selection', err);
+      // Revert local state on error
+      setSelectedApps(prev => {
+        const next = new Set(prev);
+        if (isCurrentlySelected) {
+          next.delete(identifier);
+        } else {
+          next.add(identifier);
+        }
+        return next;
+      });
+      Alert.alert("Error", "Failed to save app selection");
     } finally {
-      setIsLoading(false);
+      setIsPersisting(false);
     }
   };
 
-  const handleAppToggle = async (app) => {
-    try {
-      const isCurrentlySelected = userApps.some(
-        userApp => userApp.packageName === app.packageName && userApp.isSelected
-      );
+  const filteredApps = apps.filter(app =>
+    app.name.toLowerCase().includes(searchText.toLowerCase())
+  );
 
-      if (isCurrentlySelected) {
-        await toggleAppSelection({ packageName: app.packageName });
-      } else {
-        const nextOrder = userApps.length + 1;
-        await upsertApp({
-          appName: app.name,
-          packageName: app.packageName,
-          displayName: app.displayName,
-          isSelected: true,
-          order: nextOrder,
-        });
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to update app selection");
-    }
-  };
-
-  const isAppSelected = (app) => {
-    return userApps.some(
-      userApp => userApp.packageName === app.packageName && userApp.isSelected
+  const renderAppItem = ({ item }: { item: AvailableApp }) => {
+    const identifier = item.packageName || item.name;
+    return (
+      <View style={styles.appItem}>
+        <View style={styles.appInfo}>
+          <Text style={styles.appName}>{item.name}</Text>
+          {item.category && <Text style={styles.appCategory}>{item.category}</Text>}
+        </View>
+        <Switch
+          value={selectedApps.has(identifier)}
+          onValueChange={() => handleToggle(item.id)}
+          trackColor={{ false: '#3D3D3D', true: '#172F50' }}
+          thumbColor={selectedApps.has(identifier) ? '#E1E1E1' : '#F7F7F7'}
+        />
+      </View>
     );
   };
 
-  const filteredApps = installedApps.filter(app =>
-    app.displayName.toLowerCase().includes(searchText.toLowerCase())
-  );
-
-  const renderAppItem = ({ item }) => (
-    <View style={styles.appItem}>
-      <View style={styles.appInfo}>
-        <Text style={styles.appName}>{item.displayName}</Text>
-        <Text style={styles.appPackage}>{item.packageName}</Text>
-      </View>
-      <Switch
-        value={isAppSelected(item)}
-        onValueChange={() => handleAppToggle(item)}
-        trackColor={{ false: "#B3B3B3", true: "#172F50" }}
-        thumbColor={isAppSelected(item) ? "#E1E1E1" : "#F7F7F7"}
-      />
-    </View>
-  );
-
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#172F50" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Select Apps</Text>
-        <View style={styles.placeholder} />
+    <ImageBackground
+      source={{ uri: backgroundUri }}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.headerButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="#F7F7F7" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Select Apps</Text>
+          <View style={styles.headerButtons} />
+        </View>
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#C8D2E0" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search apps..."
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholderTextColor="#C8D2E0"
+          />
+        </View>
+        <View style={styles.content}>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Loading apps...</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Error: {error}</Text>
+              <TouchableOpacity onPress={refresh} style={styles.retryButton}>
+                <Text style={styles.retryButtonText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.sectionTitle}>
+                Available Apps ({filteredApps.length})
+              </Text>
+              <FlatList
+                data={filteredApps}
+                renderItem={renderAppItem}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.appsList}
+              />
+            </>
+          )}
+        </View>
       </View>
-
-      {/* Search */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#7A7A7A" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search apps..."
-          value={searchText}
-          onChangeText={setSearchText}
-          placeholderTextColor="#7A7A7A"
-        />
-      </View>
-
-      {/* Apps List */}
-      <View style={styles.content}>
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Loading apps...</Text>
-          </View>
-        ) : (
-          <>
-            <Text style={styles.sectionTitle}>
-              Available Apps ({filteredApps.length})
-            </Text>
-            <FlatList
-              data={filteredApps}
-              renderItem={renderAppItem}
-              keyExtractor={(item) => item.packageName}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.appsList}
-            />
-          </>
-        )}
-      </View>
-
-      {/* Info Text */}
-      <View style={styles.infoContainer}>
-        <Text style={styles.infoText}>
-          {Platform.OS === 'ios' 
-            ? "Note: iOS restrictions limit app detection. You may need to manually add apps."
-            : "Selected apps will appear on your home screen."
-          }
-        </Text>
-      </View>
-    </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
   container: {
     flex: 1,
-    backgroundColor: "#F7F7F7",
+    // Remove backgroundColor for transparency
   },
   header: {
-    backgroundColor: "#E1E1E1",
+    backgroundColor: 'rgba(23, 47, 80, 0.7)',
     paddingTop: 50,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -202,28 +240,28 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: "#B3B3B3",
-  },
-  backButton: {
-    padding: 8,
+    borderBottomColor: "#222C3A",
   },
   headerTitle: {
-    fontSize: RFValue(20),
+    fontSize: RFValue(24),
     fontFamily: "MBold",
-    color: "#172F50",
+    color: "#F7F7F7",
   },
-  placeholder: {
+  headerButtons: {
     width: 40,
+  },
+  headerButton: {
+    padding: 8,
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#E1E1E1",
+    backgroundColor: 'rgba(23, 47, 80, 0.5)',
     margin: 20,
     paddingHorizontal: 15,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#B3B3B3",
+    borderColor: "#23304A",
   },
   searchIcon: {
     marginRight: 10,
@@ -232,7 +270,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: RFValue(16),
     fontFamily: "MRegular",
-    color: "#172F50",
+    color: "#F7F7F7",
     paddingVertical: 12,
   },
   content: {
@@ -249,52 +287,60 @@ const styles = StyleSheet.create({
     fontFamily: "MRegular",
     color: "#7A7A7A",
   },
-  sectionTitle: {
-    fontSize: RFValue(18),
-    fontFamily: "MMedium",
-    color: "#172F50",
-    marginBottom: 15,
+  retryButton: {
+    marginTop: 12,
+    padding: 10,
+    backgroundColor: '#172F50',
+    borderRadius: 8,
   },
-  appsList: {
-    paddingBottom: 20,
+  retryButtonText: {
+    color: '#fff',
+    fontFamily: 'MRegular',
+    fontSize: RFValue(14),
+  },
+  sectionTitle: {
+    fontSize: RFValue(16),
+    fontFamily: "MBold",
+    color: "#7A7A7A",
+    marginBottom: 8,
   },
   appItem: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#E1E1E1",
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#B3B3B3",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E1E1E1",
   },
   appInfo: {
     flex: 1,
   },
   appName: {
-    fontSize: RFValue(16),
-    fontFamily: "MMedium",
-    color: "#172F50",
-    marginBottom: 4,
-  },
-  appPackage: {
-    fontSize: RFValue(12),
+    fontSize: RFValue(15),
     fontFamily: "MRegular",
+    color: "#F7F7F7",
+  },
+  appCategory: {
+    fontSize: RFValue(12),
     color: "#7A7A7A",
+    marginTop: 2,
+  },
+  appsList: {
+    paddingBottom: 40,
   },
   infoContainer: {
-    padding: 20,
-    backgroundColor: "#C8D2E0",
-    borderTopWidth: 1,
-    borderTopColor: "#B3B3B3",
+    padding: 16,
+    alignItems: 'center',
   },
   infoText: {
-    fontSize: RFValue(14),
-    fontFamily: "MRegular",
-    color: "#172F50",
-    textAlign: "center",
-    lineHeight: 20,
+    fontSize: RFValue(13),
+    color: '#7A7A7A',
+    textAlign: 'center',
+  },
+  persistingText: {
+    fontSize: RFValue(12),
+    color: '#B3B3B3',
+    marginTop: 4,
   },
 });
 

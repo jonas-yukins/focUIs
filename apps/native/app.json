@@ -1,29 +1,34 @@
 {
   "expo": {
     "newArchEnabled": true,
-    "name": "Dumbphone",
-    "slug": "dumbphone",
+    "name": "focUIs",
+    "slug": "focuis",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/focUIs_logo3.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#172F50"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
-        }
-      }
+        },
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.jonasyukins.focuis"
     },
+
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/focUIs_logo3.png",
         "backgroundColor": "#172F50"
       },
       "permissions": [
@@ -34,6 +39,14 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-font"]
+    "plugins": [
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "80117b49-f8bd-4346-a9ad-23b9adef590f"
+      }
+    },
+    "owner": "jonas_yukins"
   }
 }

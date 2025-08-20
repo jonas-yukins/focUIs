@@ -1,10 +1,10 @@
-# Dumbphone App Implementation
+# focUIs App Implementation
 
-This document describes the implementation of the Dumbphone app, which provides a minimal, text-only interface for launching apps on both Android and iOS platforms.
+This document describes the implementation of the focUIs app, which provides a minimal, text-only interface for launching apps on both Android and iOS platforms.
 
 ## Overview
 
-The Dumbphone app provides users with a distraction-free interface to launch their installed applications. Due to platform restrictions, the implementation differs between Android and iOS:
+The focUIs app provides users with a distraction-free interface to launch their installed applications. Due to platform restrictions, the implementation differs between Android and iOS:
 
 ### Android Implementation
 - Uses a native Android module (`InstalledAppsModule.kt`) to fetch the user's installed apps
@@ -38,7 +38,7 @@ interface UseAvailableAppsReturn {
 ### Platform-Specific Implementation
 
 #### Android Native Module
-- **File**: `android/app/src/main/java/com/narbhacks/dumbphone/InstalledAppsModule.kt`
+- **File**: `android/app/src/main/java/com/narbhacks/focuis/InstalledAppsModule.kt`
 - **Methods**:
   - `getInstalledApps()`: Returns JSON array of installed apps
   - `launchApp(packageName)`: Launches app via Android Intent
@@ -51,7 +51,7 @@ interface UseAvailableAppsReturn {
 
 ### UI Components
 
-#### DumbphoneScreen
+#### focUIsScreen
 - Minimal, text-only interface
 - Search functionality
 - App selection via long press
@@ -117,7 +117,7 @@ interface UseAvailableAppsReturn {
 
 ```
 apps/native/
-├── android/app/src/main/java/com/narbhacks/dumbphone/
+├── android/app/src/main/java/com/narbhacks/focuis/
 │   ├── InstalledAppsModule.kt      # Android native module
 │   ├── InstalledAppsPackage.kt     # Package registration
 │   ├── MainActivity.kt             # Main activity
@@ -130,13 +130,13 @@ apps/native/
 │   ├── data/
 │   │   └── popularApps.json        # iOS static app list
 │   └── screens/
-│       └── DumbphoneScreen.tsx     # Main UI component
+│       └── focUIsScreen.tsx     # Main UI component
 └── package.json                    # Dependencies
 ```
 
 ## Usage
 
-1. **Navigate to Dumbphone**: Tap the phone icon in the header
+1. **Navigate to focUIs**: Tap the phone icon in the header
 2. **Search Apps**: Use the search bar to filter apps
 3. **Launch Apps**: Tap any app to launch it
 4. **Select Multiple**: Long press to select multiple apps (for future features)

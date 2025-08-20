@@ -11,7 +11,7 @@ const Hero = () => {
             <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
               Transform Your{" "}
               <span className="text-[#C8D2E0]">Smartphone</span>{" "}
-              Into a Dumbphone
+              Into a focUIs
             </h1>
             <p className="text-xl md:text-2xl text-[#C8D2E0] mb-8 leading-relaxed">
               Reduce screen time and digital distractions with our minimalist app that replaces colorful icons with simple text.
@@ -43,7 +43,7 @@ const Hero = () => {
             <div className="bg-white p-8 rounded-2xl shadow-2xl">
               <div className="bg-[#F7F7F7] p-6 rounded-xl">
                 <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-[#172F50] mb-2">Dumbphone</h3>
+                  <h3 className="text-2xl font-bold text-[#172F50] mb-2">focUIs</h3>
                   <p className="text-[#7A7A7A]">Your minimalist home screen</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">

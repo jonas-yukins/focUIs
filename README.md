@@ -1,6 +1,6 @@
-# Dumbphone App - Transform Your Smartphone
+# focUIs App - Transform Your Smartphone
 
-This is a modern TypeScript monorepo featuring a minimalist mobile app that helps users reduce screen time by transforming their smartphones into "dumbphones." The app replaces colorful app icons with monochrome widgets displaying plain-text app names.
+This is a modern TypeScript monorepo featuring a minimalist mobile app that helps users reduce screen time by transforming their smartphones into "focUIs" devices. The app replaces colorful app icons with monochrome widgets displaying plain-text app names.
 
 ## Features
 

@@ -165,7 +165,7 @@ const useAvailableApps = (): UseAvailableAppsReturn => {
               }
             }
           } else {
-            console.log(`${app.name} is not installed, falling back to App Store`);
+            
             if (app.appStoreUrl) {
               await Linking.openURL(app.appStoreUrl);
               return true;

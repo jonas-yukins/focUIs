@@ -12,7 +12,7 @@ const FooterHero = () => {
           </h2>
           <p className="text-white max-w-[681px] text-xl sm:text-3xl not-italic font-normal leading-[103.3%] tracking-[-0.75px] font-montserrat pb-[66px] sm:pb-[53px]">
             Sign up now and experience the power of distraction-free app management with
-            Dumbphone
+            focUIs
           </p>
           <Link href={"/"}>
             <button className="linear_gradient flex max-w-[438px] w-full justify-center items-center gap-2.5 shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] px-8 py-4 rounded-[11px]  text-black text-xl sm:text-3xl not-italic font-semibold leading-[90.3%] tracking-[-0.75px]">

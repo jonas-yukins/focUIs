@@ -1,8 +1,9 @@
 import React, { useEffect } from "react";
-import { StyleSheet, View, Text, TouchableOpacity, Image, Alert } from "react-native";
+import { StyleSheet, View, Text, TouchableOpacity, Image, Alert, ImageBackground } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { useOAuth, useUser, useAuth } from "@clerk/clerk-expo";
 import { AntDesign } from "@expo/vector-icons";
+import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
 
 const LoginScreen = ({ navigation }: { navigation: any }) => {
   const { isLoaded: userLoaded, user } = useUser();
@@ -14,6 +15,8 @@ const LoginScreen = ({ navigation }: { navigation: any }) => {
   const { startOAuthFlow: startAppleAuthFlow } = useOAuth({
     strategy: "oauth_apple",
   });
+
+  const backgroundUri = useBackgroundAsset();
 
   useEffect(() => {
     if (isSignedIn) {
@@ -99,73 +102,100 @@ const LoginScreen = ({ navigation }: { navigation: any }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Image
-          source={require("../assets/icons/logo.png")} // Ensure the correct path to your logo image file
-          style={styles.logo}
-        />
-        <Text style={styles.title}>Log in to your account</Text>
-        <Text style={styles.subtitle}>Welcome! Please login below.</Text>
-        <TouchableOpacity
-          style={styles.buttonGoogle}
-          onPress={() => onPress("google")}
-        >
-          <Image
-            style={styles.googleIcon}
-            source={require("../assets/icons/google.png")}
-          />
-          <Text style={{ ...styles.buttonText, color: "#344054" }}>
-            Continue with Google
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.buttonApple}
-          onPress={() => onPress("apple")}
-        >
-          <AntDesign name="apple1" size={24} color="black" />
-          <Text
-            style={{ ...styles.buttonText, color: "#344054", marginLeft: 12 }}
-          >
-            Continue with Apple
-          </Text>
-        </TouchableOpacity>
-
-        <View style={styles.signupContainer}>
-          <Text style={{ fontFamily: "Regular" }}>Don’t have an account? </Text>
-          <Text>Sign up above.</Text>
+    <ImageBackground
+      source={{ uri: backgroundUri }}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <View style={styles.container}>
+          <View style={styles.card}>
+            <Image
+              source={require("../../assets/focUIs_logo3.png")}
+              style={styles.logo}
+            />
+            <Text style={styles.title}>Log in to your account</Text>
+            <Text style={styles.subtitle}>Welcome! Please login below.</Text>
+            <TouchableOpacity
+              style={styles.buttonGoogle}
+              onPress={() => onPress("google")}
+            >
+              <Image
+                style={styles.googleIcon}
+                source={require("../assets/icons/google.png")}
+              />
+              <Text style={{ ...styles.buttonText, color: "#F7F7F7" }}>
+                Continue with Google
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.buttonApple}
+              onPress={() => onPress("apple")}
+            >
+              <AntDesign name="apple1" size={24} color="#F7F7F7" />
+              <Text
+                style={{ ...styles.buttonText, color: "#F7F7F7", marginLeft: 12 }}
+              >
+                Continue with Apple
+              </Text>
+            </TouchableOpacity>
+            <View style={styles.signupContainer}>
+              <Text style={{ fontFamily: "Regular", color: "#C8D2E0" }}>Don’t have an account? </Text>
+              <Text style={{ color: "#C8D2E0" }}>Sign up above.</Text>
+            </View>
+          </View>
         </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 60,
   },
   card: {
-    backgroundColor: "#fff",
-    padding: 10,
+    backgroundColor: 'transparent',
+    padding: 24,
     alignItems: "center",
-    width: "98%",
+    width: "92%",
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   logo: {
     width: 74,
     height: 74,
     marginTop: 20,
+    borderRadius: 15, // iOS standard rounding
+    overflow: "hidden",
+    backgroundColor: "#172F50", // Optional: matches your palette
   },
   title: {
     marginTop: 49,
     fontSize: RFValue(21),
     fontFamily: "SemiBold",
+    color: "#F7F7F7",
   },
   subtitle: {
     marginTop: 8,
     fontSize: RFValue(14),
-    color: "#000",
+    color: "#C8D2E0",
     fontFamily: "Regular",
     marginBottom: 32,
     textAlign: "center",
@@ -173,15 +203,17 @@ const styles = StyleSheet.create({
   input: {
     width: "100%",
     borderWidth: 1,
-    borderColor: "#D0D5DD",
+    borderColor: "#344054",
     borderRadius: 10,
     padding: 14,
     marginBottom: 16,
     fontFamily: "Regular",
     fontSize: RFValue(14),
+    color: "#F7F7F7",
+    backgroundColor: 'rgba(30, 40, 60, 0.7)',
   },
   buttonEmail: {
-    backgroundColor: "#0D87E1",
+    backgroundColor: "#172F50",
     padding: 15,
     borderRadius: 10,
     width: "100%",
@@ -190,7 +222,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     textAlign: "center",
-    color: "#FFF",
+    color: "#F7F7F7",
     fontFamily: "SemiBold",
     fontSize: RFValue(14),
   },
@@ -217,10 +249,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFF",
+    backgroundColor: 'rgba(30, 40, 60, 0.7)',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#D0D5DD",
+    borderColor: "#23304A",
     width: "100%",
     marginBottom: 12,
     height: 44,
@@ -229,20 +261,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFF",
-    padding: 15,
+    backgroundColor: 'rgba(30, 40, 60, 0.7)',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#D0D5DD",
+    borderColor: "#23304A",
     width: "100%",
     marginBottom: 32,
+    height: 44,
   },
   signupContainer: {
     flexDirection: "row",
+    marginTop: 16,
   },
   signupText: {
     color: "#4D9DE0",
-    fontFamily: "SemiBold",
   },
   googleIcon: {
     width: 24,

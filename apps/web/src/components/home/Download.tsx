@@ -5,7 +5,7 @@ const Download = () => {
     <section className="py-20 bg-[#172F50]">
       <div className="container mx-auto px-4 text-center">
         <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-          Download Dumbphone Today
+          Download focUIs Today
         </h2>
         <p className="text-xl text-[#C8D2E0] mb-12 max-w-3xl mx-auto">
           Join thousands of users who have already transformed their smartphone experience and reduced their screen time.
