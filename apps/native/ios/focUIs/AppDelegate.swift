@@ -29,43 +29,7 @@ public class AppDelegate: ExpoAppDelegate {
       launchOptions: launchOptions)
 #endif
 
-    // Check for widget launch requests
-    checkForWidgetLaunchRequests()
-
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-  }
-  
-  private func checkForWidgetLaunchRequests() {
-    if let userDefaults = UserDefaults(suiteName: "group.com.jonasyukins.focuis"),
-       let launchData = userDefaults.dictionary(forKey: "widgetLaunchRequest") {
-      
-      // Clear the launch request
-      userDefaults.removeObject(forKey: "widgetLaunchRequest")
-      userDefaults.synchronize()
-      
-      // Handle the launch request
-      if let packageName = launchData["packageName"] as? String,
-         let urlScheme = launchData["urlScheme"] as? String {
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-          self.handleWidgetLaunch(packageName: packageName, urlScheme: urlScheme)
-        }
-      }
-    }
-  }
-  
-  private func handleWidgetLaunch(packageName: String, urlScheme: String) {
-    var urlToOpen: URL?
-    
-    if !urlScheme.isEmpty {
-      urlToOpen = URL(string: urlScheme)
-    } else {
-      urlToOpen = URL(string: "\(packageName)://")
-    }
-    
-    if let url = urlToOpen, UIApplication.shared.canOpenURL(url) {
-      UIApplication.shared.open(url, options: [:], completionHandler: nil)
-    }
   }
 
   // Linking API
@@ -85,12 +49,6 @@ public class AppDelegate: ExpoAppDelegate {
   ) -> Bool {
     let result = RCTLinkingManager.application(application, continue: userActivity, restorationHandler: restorationHandler)
     return super.application(application, continue: userActivity, restorationHandler: restorationHandler) || result
-  }
-  
-  // Check for widget launch requests when app becomes active
-  public override func applicationDidBecomeActive(_ application: UIApplication) {
-    super.applicationDidBecomeActive(application)
-    checkForWidgetLaunchRequests()
   }
 }
 

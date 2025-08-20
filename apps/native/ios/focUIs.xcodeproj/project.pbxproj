@@ -8,8 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		1BB9DC7FEEADBA1D32A11598 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2119AB5C080EE49A4E19E14F /* ExpoModulesProvider.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
+		7E6F719E796C9194EE697B8E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FE9C3BFB28458BBFDDEEC296 /* PrivacyInfo.xcprivacy */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		BB3B046401FD0103D68D926E /* libPods-focUIs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E5FAEB7A1851C99937A7EB08 /* libPods-focUIs.a */; };
 		DDF1E1ED2E3BFE8B0044FD3A /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DDF1E1EC2E3BFE8B0044FD3A /* WidgetKit.framework */; };
 		DDF1E1EF2E3BFE8B0044FD3A /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DDF1E1EE2E3BFE8B0044FD3A /* SwiftUI.framework */; };
 		DDF1E1FE2E3BFE8D0044FD3A /* focUIsWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DDF1E1EB2E3BFE8B0044FD3A /* focUIsWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -44,21 +47,28 @@
 		13B07F961A680F5B00A75B9A /* focUIs.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = focUIs.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = focUIs/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = focUIs/Info.plist; sourceTree = "<group>"; };
+		2119AB5C080EE49A4E19E14F /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-focUIs/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = focUIs/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
+		D399DE3BC8E56CD2F3720E41 /* Pods-focUIs.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-focUIs.release.xcconfig"; path = "Target Support Files/Pods-focUIs/Pods-focUIs.release.xcconfig"; sourceTree = "<group>"; };
 		DDC6C70E2E3C08DB001BAD69 /* focUIsWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = focUIsWidgetExtension.entitlements; sourceTree = "<group>"; };
 		DDC6C70F2E3C090F001BAD69 /* focUIs.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = focUIs.entitlements; path = focUIs/focUIs.entitlements; sourceTree = "<group>"; };
 		DDF1E1EB2E3BFE8B0044FD3A /* focUIsWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = focUIsWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DDF1E1EC2E3BFE8B0044FD3A /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		DDF1E1EE2E3BFE8B0044FD3A /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		E5FAEB7A1851C99937A7EB08 /* libPods-focUIs.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-focUIs.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E903A8EAB27555712E0783A0 /* Pods-focUIs.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-focUIs.debug.xcconfig"; path = "Target Support Files/Pods-focUIs/Pods-focUIs.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = focUIs/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* focUIs-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "focUIs-Bridging-Header.h"; path = "focUIs/focUIs-Bridging-Header.h"; sourceTree = "<group>"; };
+		FE9C3BFB28458BBFDDEEC296 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = focUIs/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DDF1E1F02E3BFE8B0044FD3A /* focUIsWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = focUIsWidget;
 			sourceTree = "<group>";
 		};
@@ -69,6 +79,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BB3B046401FD0103D68D926E /* libPods-focUIs.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -94,6 +105,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
+				FE9C3BFB28458BBFDDEEC296 /* PrivacyInfo.xcprivacy */,
 			);
 			name = focUIs;
 			sourceTree = "<group>";
@@ -104,8 +116,17 @@
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				DDF1E1EC2E3BFE8B0044FD3A /* WidgetKit.framework */,
 				DDF1E1EE2E3BFE8B0044FD3A /* SwiftUI.framework */,
+				E5FAEB7A1851C99937A7EB08 /* libPods-focUIs.a */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		68A89F185AF5D6857F23745A /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				D4B4D214B7F222428A1A6456 /* focUIs */,
+			);
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -124,6 +145,8 @@
 				DDF1E1F02E3BFE8B0044FD3A /* focUIsWidget */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
+				AA9CD87F6BC5AF8D033EEEE1 /* Pods */,
+				68A89F185AF5D6857F23745A /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -139,6 +162,16 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		AA9CD87F6BC5AF8D033EEEE1 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				E903A8EAB27555712E0783A0 /* Pods-focUIs.debug.xcconfig */,
+				D399DE3BC8E56CD2F3720E41 /* Pods-focUIs.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
@@ -146,6 +179,14 @@
 			);
 			name = Supporting;
 			path = focUIs/Supporting;
+			sourceTree = "<group>";
+		};
+		D4B4D214B7F222428A1A6456 /* focUIs */ = {
+			isa = PBXGroup;
+			children = (
+				2119AB5C080EE49A4E19E14F /* ExpoModulesProvider.swift */,
+			);
+			name = focUIs;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -156,12 +197,14 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "focUIs" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
+				B67800A7DD3E7CD551D86165 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
 				DDF1E1FF2E3BFE8D0044FD3A /* Embed Foundation Extensions */,
+				3403E3B1582F4AF6D12C8CBD /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -189,8 +232,6 @@
 				DDF1E1F02E3BFE8B0044FD3A /* focUIsWidget */,
 			);
 			name = focUIsWidgetExtension;
-			packageProductDependencies = (
-			);
 			productName = focUIsWidgetExtension;
 			productReference = DDF1E1EB2E3BFE8B0044FD3A /* focUIsWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -239,6 +280,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
+				7E6F719E796C9194EE697B8E /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -289,27 +331,58 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		3403E3B1582F4AF6D12C8CBD /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-focUIs/Pods-focUIs-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-focUIs/Pods-focUIs-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-focUIs/Pods-focUIs-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-focUIs/Pods-focUIs-resources.sh",
-				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/EXUpdates/EXUpdates.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/RCTI18nStrings.bundle",
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-focUIs/Pods-focUIs-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXUpdates.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RCTI18nStrings.bundle",
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-focUIs/Pods-focUIs-resources-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-focUIs/Pods-focUIs-resources.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		B67800A7DD3E7CD551D86165 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-focUIs/expo-configure-project.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -319,6 +392,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
+				1BB9DC7FEEADBA1D32A11598 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -342,6 +416,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = E903A8EAB27555712E0783A0 /* Pods-focUIs.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -365,6 +440,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jonasyukins.focuis;
 				PRODUCT_NAME = focUIs;
 				SWIFT_OBJC_BRIDGING_HEADER = "focUIs/focUIs-Bridging-Header.h";
@@ -376,6 +452,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D399DE3BC8E56CD2F3720E41 /* Pods-focUIs.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -394,6 +471,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jonasyukins.focuis;
 				PRODUCT_NAME = focUIs;
 				SWIFT_OBJC_BRIDGING_HEADER = "focUIs/focUIs-Bridging-Header.h";
@@ -454,10 +532,17 @@
 					/usr/lib/swift,
 					"$(inherited)",
 				);
-				LIBRARY_SEARCH_PATHS = "\"$(inherited)\"";
+				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+				USE_HERMES = true;
 			};
 			name = Debug;
 		};
@@ -506,9 +591,15 @@
 					/usr/lib/swift,
 					"$(inherited)",
 				);
-				LIBRARY_SEARCH_PATHS = "\"$(inherited)\"";
+				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -546,6 +637,7 @@
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jonasyukins.focuis.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -590,6 +682,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MTL_FAST_MATH = YES;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jonasyukins.focuis.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
