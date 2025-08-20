@@ -38,25 +38,42 @@ struct Provider: TimelineProvider {
     
     private func getAppsFromUserDefaults() -> [AppData] {
         guard let userDefaults = UserDefaults(suiteName: "group.com.jonasyukins.focuis") else {
+            print("Widget: Failed to access UserDefaults with suite name")
             return getDefaultApps()
         }
         
-        if let data = userDefaults.data(forKey: "selectedApps"),
-           let apps = try? JSONDecoder().decode([AppData].self, from: data) {
-            return apps
+        // Try to get the data as a string first (React Native might save it as JSON string)
+        if let jsonString = userDefaults.string(forKey: "selectedApps") {
+            print("Widget: Found JSON string in UserDefaults: \(jsonString.prefix(100))...")
+            if let data = jsonString.data(using: .utf8) {
+                do {
+                    let apps = try JSONDecoder().decode([AppData].self, from: data)
+                    print("Widget: Successfully loaded \(apps.count) apps from UserDefaults string")
+                    return apps
+                } catch {
+                    print("Widget: Failed to decode JSON string: \(error)")
+                }
+            }
         }
         
+        // Try to get the data as Data
+        if let data = userDefaults.data(forKey: "selectedApps") {
+            do {
+                let apps = try JSONDecoder().decode([AppData].self, from: data)
+                print("Widget: Successfully loaded \(apps.count) apps from UserDefaults data")
+                return apps
+            } catch {
+                print("Widget: Failed to decode UserDefaults data: \(error)")
+            }
+        }
+        
+        print("Widget: No valid data found in UserDefaults, using default apps")
         return getDefaultApps()
     }
     
     private func getDefaultApps() -> [AppData] {
         return [
-            AppData(id: "1", displayName: "Messages", packageName: "com.apple.MobileSMS", urlScheme: "sms://"),
-            AppData(id: "2", displayName: "Mail", packageName: "com.apple.mobilemail", urlScheme: "mailto://"),
-            AppData(id: "3", displayName: "Safari", packageName: "com.apple.mobilesafari", urlScheme: "x-web-search://"),
-            AppData(id: "4", displayName: "Phone", packageName: "com.apple.mobilephone", urlScheme: "tel://"),
-            AppData(id: "5", displayName: "Camera", packageName: "com.apple.camera", urlScheme: "camera://"),
-            AppData(id: "6", displayName: "Settings", packageName: "com.apple.Preferences", urlScheme: "App-Prefs://")
+            AppData(id: "1", displayName: "Messages", packageName: "com.apple.MobileSMS", urlScheme: "sms://")
         ]
     }
 }
@@ -73,9 +90,26 @@ struct focUIsWidgetEntryView : View {
     var body: some View {
         VStack(spacing: 6) {
             ForEach(entry.apps.prefix(6), id: \.id) { app in
-                Button(action: {
-                    launchApp(app)
-                }) {
+                // Create deep link to focUIs app with app data
+                let deepLink = "focuis://launch-app?name=\(app.displayName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&scheme=\(app.urlScheme?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&package=\(app.packageName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+                
+                if let url = URL(string: deepLink) {
+                    Link(destination: url) {
+                        HStack {
+                            Text(app.displayName)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white)
+                                .lineLimit(1)
+                            
+                            Spacer()
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.white.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                } else {
+                    // Fallback for invalid URLs
                     HStack {
                         Text(app.displayName)
                             .font(.system(size: 14, weight: .medium))
@@ -89,7 +123,6 @@ struct focUIsWidgetEntryView : View {
                     .background(Color.white.opacity(0.1))
                     .cornerRadius(8)
                 }
-                .buttonStyle(PlainButtonStyle())
             }
         }
         .padding(12)
@@ -101,21 +134,6 @@ struct focUIsWidgetEntryView : View {
             )
         )
         .cornerRadius(16)
-    }
-    
-    private func launchApp(_ app: AppData) {
-        // Store the app to launch in UserDefaults for the main app to handle
-        if let userDefaults = UserDefaults(suiteName: "group.com.jonasyukins.focuis") {
-            let launchData = [
-                "packageName": app.packageName,
-                "urlScheme": app.urlScheme ?? ""
-            ]
-            userDefaults.set(launchData, forKey: "widgetLaunchRequest")
-            userDefaults.synchronize()
-        }
-        
-        // Reload the widget timeline
-        WidgetCenter.shared.reloadAllTimelines()
     }
 }
 
@@ -143,8 +161,6 @@ struct focUIsWidget: Widget {
     focUIsWidget()
 } timeline: {
     SimpleEntry(date: .now, apps: [
-        AppData(id: "1", displayName: "Messages", packageName: "com.apple.MobileSMS", urlScheme: "sms://"),
-        AppData(id: "2", displayName: "Mail", packageName: "com.apple.mobilemail", urlScheme: "mailto://"),
-        AppData(id: "3", displayName: "Safari", packageName: "com.apple.mobilesafari", urlScheme: "x-web-search://")
+        AppData(id: "1", displayName: "Messages", packageName: "com.apple.MobileSMS", urlScheme: "sms://")
     ])
 }

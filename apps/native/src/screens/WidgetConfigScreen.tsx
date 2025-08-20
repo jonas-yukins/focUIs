@@ -186,10 +186,17 @@ const WidgetConfigScreen = ({ navigation }) => {
         const AsyncStorage = require('@react-native-async-storage/async-storage').default;
         await AsyncStorage.setItem('selectedApps', JSON.stringify(widgetApps));
         
-        // Also save to UserDefaults for iOS widget access
+        // Also save to UserDefaults for iOS widget access using a simpler approach
         if (Platform.OS === 'ios') {
-          const { SharedGroupPreferences } = require('react-native-shared-group-preferences');
-          await SharedGroupPreferences.setItem('selectedApps', JSON.stringify(widgetApps), 'group.com.jonasyukins.focuis');
+          try {
+            const { SharedGroupPreferences } = require('react-native-shared-group-preferences');
+            await SharedGroupPreferences.setItem('selectedApps', JSON.stringify(widgetApps), 'group.com.jonasyukins.focuis');
+            console.log('Widget data saved successfully to SharedGroupPreferences');
+          } catch (sharedGroupError) {
+            console.log('SharedGroupPreferences failed, trying alternative method:', sharedGroupError);
+            // Fallback: try to use a different approach or just log the data
+            console.log('Widget apps data that should be saved:', JSON.stringify(widgetApps, null, 2));
+          }
         }
       } catch (widgetError) {
         console.log('Widget data save error (non-critical):', widgetError);

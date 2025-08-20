@@ -27,9 +27,48 @@ public class AppDelegate: ExpoAppDelegate {
       withModuleName: "main",
       in: window,
       launchOptions: launchOptions)
+    
+    // Check for widget launch requests
+    checkForWidgetLaunchRequests()
 #endif
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+  
+  private func checkForWidgetLaunchRequests() {
+    guard let userDefaults = UserDefaults(suiteName: "group.com.jonasyukins.focuis") else { 
+      print("AppDelegate: Failed to access UserDefaults with suite name")
+      return 
+    }
+    
+    if let launchData = userDefaults.dictionary(forKey: "widgetLaunchRequest") {
+      print("AppDelegate: Found widget launch request: \(launchData)")
+      
+      if let urlScheme = launchData["urlScheme"] as? String, !urlScheme.isEmpty {
+        print("AppDelegate: Attempting to launch URL scheme: \(urlScheme)")
+        
+        if let url = URL(string: urlScheme) {
+          print("AppDelegate: Created URL: \(url)")
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            print("AppDelegate: Launching URL: \(url)")
+            UIApplication.shared.open(url, options: [:]) { success in
+              print("AppDelegate: URL launch result: \(success)")
+            }
+          }
+        } else {
+          print("AppDelegate: Failed to create URL from scheme: \(urlScheme)")
+        }
+      } else {
+        print("AppDelegate: No valid URL scheme found in launch data")
+      }
+      
+      // Clear the launch request
+      userDefaults.removeObject(forKey: "widgetLaunchRequest")
+      userDefaults.synchronize()
+      print("AppDelegate: Cleared widget launch request")
+    } else {
+      print("AppDelegate: No widget launch request found")
+    }
   }
 
   // Linking API
@@ -38,7 +77,44 @@ public class AppDelegate: ExpoAppDelegate {
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey: Any] = [:]
   ) -> Bool {
+    print("AppDelegate: Received URL: \(url)")
+    
+    // Handle widget deep links
+    if url.scheme == "focuis" && url.host == "launch-app" {
+      handleWidgetLaunchRequest(url: url)
+      return true
+    }
+    
     return super.application(app, open: url, options: options) || RCTLinkingManager.application(app, open: url, options: options)
+  }
+  
+  private func handleWidgetLaunchRequest(url: URL) {
+    print("AppDelegate: Handling widget launch request")
+    
+    guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+          let queryItems = components.queryItems else {
+      print("AppDelegate: Invalid URL format")
+      return
+    }
+    
+    // Extract app data from URL parameters
+    let name = queryItems.first(where: { $0.name == "name" })?.value ?? ""
+    let scheme = queryItems.first(where: { $0.name == "scheme" })?.value ?? ""
+    let package = queryItems.first(where: { $0.name == "package" })?.value ?? ""
+    
+    print("AppDelegate: Launching app - Name: \(name), Scheme: \(scheme), Package: \(package)")
+    
+    // Launch the intended app
+    if let appScheme = scheme.isEmpty ? nil : scheme, let appUrl = URL(string: appScheme) {
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        print("AppDelegate: Launching URL: \(appUrl)")
+        UIApplication.shared.open(appUrl, options: [:]) { success in
+          print("AppDelegate: URL launch result: \(success)")
+        }
+      }
+    } else {
+      print("AppDelegate: No valid URL scheme to launch")
+    }
   }
 
   // Universal Links
@@ -49,6 +125,12 @@ public class AppDelegate: ExpoAppDelegate {
   ) -> Bool {
     let result = RCTLinkingManager.application(application, continue: userActivity, restorationHandler: restorationHandler)
     return super.application(application, continue: userActivity, restorationHandler: restorationHandler) || result
+  }
+  
+  // App becomes active
+  public override func applicationDidBecomeActive(_ application: UIApplication) {
+    super.applicationDidBecomeActive(application)
+    checkForWidgetLaunchRequests()
   }
 }
 
