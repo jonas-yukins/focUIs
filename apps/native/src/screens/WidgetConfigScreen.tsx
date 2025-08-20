@@ -8,6 +8,7 @@ import {
   Dimensions,
   ScrollView,
   ImageBackground,
+  Platform,
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { Ionicons } from "@expo/vector-icons";
@@ -171,6 +172,29 @@ const WidgetConfigScreen = ({ navigation }) => {
         });
       }
       await reorganizeWidgets({ widgets });
+      
+      // Save apps to UserDefaults for widget access
+      try {
+        const widgetApps = allApps.map(app => ({
+          id: app.id,
+          displayName: app.app.displayName,
+          packageName: app.app.packageName || '',
+          urlScheme: app.app.urlScheme || null
+        }));
+        
+        // Use AsyncStorage to save the apps data
+        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+        await AsyncStorage.setItem('selectedApps', JSON.stringify(widgetApps));
+        
+        // Also save to UserDefaults for iOS widget access
+        if (Platform.OS === 'ios') {
+          const { SharedGroupPreferences } = require('react-native-shared-group-preferences');
+          await SharedGroupPreferences.setItem('selectedApps', JSON.stringify(widgetApps), 'group.com.jonasyukins.focuis');
+        }
+      } catch (widgetError) {
+        console.log('Widget data save error (non-critical):', widgetError);
+      }
+      
       Alert.alert("Success", "App order saved successfully!");
       navigation.goBack();
     } catch (error) {

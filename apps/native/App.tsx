@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { View, StatusBar, ActivityIndicator } from "react-native";
 import { useFonts } from "expo-font";
 import { LogBox } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Navigation from "./src/navigation/Navigation";
 import ConvexClientProvider from "./ConvexClientProvider";
@@ -55,8 +55,7 @@ export default function App() {
   return (
     <BackgroundAssetContext.Provider value={backgroundUri}>
       <SafeAreaProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <StatusBar
+        <StatusBar
             barStyle="light-content"
             backgroundColor="#172F50"
             translucent={true}
@@ -64,7 +63,6 @@ export default function App() {
           <ConvexClientProvider>
             <Navigation />
           </ConvexClientProvider>
-        </GestureHandlerRootView>
       </SafeAreaProvider>
     </BackgroundAssetContext.Provider>
   );

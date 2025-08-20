@@ -2,11 +2,15 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "node": "22.16.0"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "node": "22.16.0"
     },
-    "production": {}
+    "production": {
+      "node": "22.16.0"
+    }
   }
 } 

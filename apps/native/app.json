@@ -1,8 +1,8 @@
 {
   "expo": {
     "newArchEnabled": true,
-      "name": "focUIs",
-  "slug": "focuis",
+    "name": "focUIs",
+    "slug": "focuis",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/focUIs_logo3.png",
@@ -23,26 +23,9 @@
         },
         "ITSAppUsesNonExemptEncryption": false
       },
-      "widgets": [
-        {
-          "name": "focUIsWidget",
-          "description": "Quick access to your selected apps",
-          "sizes": [
-            "medium"
-          ],
-          "target": "widget"
-        },
-        {
-          "name": "focUIsWidget",
-          "description": "Quick access to your selected apps",
-          "sizes": [
-            "medium"
-          ],
-          "target": "widget"
-        }
-      ],
       "bundleIdentifier": "com.jonasyukins.focuis"
     },
+
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/focUIs_logo3.png",
@@ -51,16 +34,6 @@
       "permissions": [
         "QUERY_ALL_PACKAGES",
         "PACKAGE_USAGE_STATS"
-      ],
-      "widgets": [
-        {
-          "name": "focUIsWidget",
-          "description": "Quick access to your selected apps",
-          "sizes": [
-            "medium"
-          ],
-          "target": "widget"
-        }
       ]
     },
     "web": {
@@ -71,8 +44,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "34d1aa6b-2e9e-4ff9-8865-25193682dfa1"
+        "projectId": "80117b49-f8bd-4346-a9ad-23b9adef590f"
       }
-    }
+    },
+    "owner": "jonas_yukins"
   }
 }
