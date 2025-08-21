@@ -23,7 +23,7 @@ The widget system provides:
 1. User selects apps in `AppSelectionScreen`
 2. Apps are automatically organized into widgets (6 apps per widget)
 3. User can customize organization in `WidgetConfigScreen`
-4. Widget configurations are saved to Convex backend
+4. Widget configurations are saved to local storage
 5. Native widgets display the configured apps
 
 ## Widget Configuration Screen
@@ -92,16 +92,16 @@ interface App {
 
 ## Backend Integration
 
-### Convex Functions
+### Local Storage Functions
 
-- `getUserApps`: Retrieve user's selected apps
-- `getUserWidgets`: Retrieve user's widget configurations
+- `getSelectedApps`: Retrieve user's selected apps
+- `getWidgetConfigs`: Retrieve user's widget configurations
 - `reorganizeWidgets`: Save widget configurations
 - `updateAppOrders`: Update app ordering within widgets
 
 ### Data Persistence
 
-Widget configurations are stored in Convex and synchronized across devices. The system automatically handles:
+Widget configurations are stored in local storage (AsyncStorage) and synchronized with iOS widgets via SharedGroupPreferences. The system automatically handles:
 
 - Widget creation and deletion
 - App reordering within widgets
@@ -209,7 +209,8 @@ const renderAppItem = useCallback((props: SortableRenderItemProps<DraggableApp>)
 - `react-native-reanimated`: Animation engine
 - `react-native-gesture-handler`: Gesture handling
 - `@expo/vector-icons`: For icons in widgets
-- Convex backend: For storing widget configurations
+- `@react-native-async-storage/async-storage`: For local data storage
+- `react-native-shared-group-preferences`: For iOS widget data sharing
 
 ### Performance Considerations
 - Widget data is cached locally for performance
@@ -227,12 +228,12 @@ const renderAppItem = useCallback((props: SortableRenderItemProps<DraggableApp>)
 ### Common Issues
 1. **Widget not appearing**: Check if widget was added correctly to home screen
 2. **Apps not launching**: Verify app is installed and URL scheme/package name is correct
-3. **Configuration not saving**: Check network connection and backend status
+3. **Configuration not saving**: Check local storage permissions and iOS widget data sharing
 4. **Drag and drop not working**: Ensure `react-native-reanimated-dnd` is properly installed
 
 ### Debugging
 - Use console logs in widget components for debugging
-- Check Convex dashboard for widget data
+- Check local storage and iOS widget data sharing
 - Verify app permissions for widget functionality
 - Test drag and drop functionality in development mode
 

@@ -12,12 +12,10 @@ import {
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../packages/backend/convex/_generated/api";
-import { Id } from "../../../../packages/backend/convex/_generated/dataModel";
 import { Sortable, SortableItem, SortableRenderItemProps } from "react-native-reanimated-dnd";
 import PagerView from 'react-native-pager-view';
 import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
+import localStorageService, { LocalAppSelection, LocalWidgetConfig, LocalUserSettings } from '../services/LocalStorageService';
 
 const { width, height } = Dimensions.get("window");
 
@@ -36,21 +34,20 @@ interface DraggableApp {
 
 const WidgetConfigScreen = ({ navigation }) => {
   const backgroundUri = useBackgroundAsset();
-  const selectedApps = useQuery(api.notes.getUserApps);
-  const userSettings = useQuery(api.notes.getUserSettings);
-  const widgetFontSize = userSettings?.fontSize || 16;
-  const widgetAlignment = userSettings?.layout || "center";
-  // Add a loading state
-  const isLoading = selectedApps === undefined;
+  const [selectedApps, setSelectedApps] = useState<LocalAppSelection[]>([]);
+  const [userSettings, setUserSettings] = useState<LocalUserSettings>({
+    theme: 'default',
+    fontSize: 16,
+    layout: 'center',
+    fontColor: '#FFFFFF'
+  });
+  const [loading, setLoading] = useState(true);
 
   const [sections, setSections] = useState<DraggableApp[][]>([]);
   const sectionsRef = useRef<DraggableApp[][]>([]);
   sectionsRef.current = sections;
 
-  // DEBUG: Log when the component renders and what sections contains
-  console.log("[DEBUG] WidgetConfigScreen render. sections:", sections);
-  const updateAppOrders = useMutation(api.notes.updateAppOrders);
-  const reorganizeWidgets = useMutation(api.notes.reorganizeWidgets); // <-- Add this line
+
 
   const [currentPage, setCurrentPage] = useState(0);
 
@@ -58,33 +55,55 @@ const WidgetConfigScreen = ({ navigation }) => {
   const [moveMode, setMoveMode] = useState(false);
   const [selectedApp, setSelectedApp] = useState<{ sectionIndex: number; appIndex: number } | null>(null);
 
+  // Load data from local storage on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [apps, settings] = await Promise.all([
+          localStorageService.getSelectedApps(),
+          localStorageService.getUserSettings()
+        ]);
+        
+        setSelectedApps(apps);
+        setUserSettings(settings);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, []);
+
   // Initialize apps list
   useEffect(() => {
-    console.log("[DEBUG] selectedApps changed:", selectedApps);
     if (selectedApps && selectedApps.length > 0) {
       const apps: DraggableApp[] = selectedApps
         .map((app, index) => ({
-          id: app._id,
-          app,
+          id: app.appId,
+          app: {
+            _id: app.appId,
+            displayName: app.displayName,
+            packageName: app.packageName,
+            urlScheme: app.urlScheme,
+          },
           order: app.order || index,
         }))
         .sort((a, b) => a.order - b.order);
-
-      console.log("[DEBUG] Mapped and sorted apps:", apps);
 
       const chunkedApps = [];
       const chunkSize = 6;
       for (let i = 0; i < apps.length; i += chunkSize) {
         chunkedApps.push(apps.slice(i, i + chunkSize));
       }
-      console.log("[DEBUG] Chunked apps:", chunkedApps);
       setSections(chunkedApps);
     }
   }, [selectedApps]);
 
   // Handler to update order only on drop
   const handleDrop = useCallback((sectionIndex: number, itemId: string, to: number) => {
-    console.log(`[DEBUG] handleDrop: sectionIndex=${sectionIndex}, itemId=${itemId}, to=${to}`);
     setSections(currentSections => {
       const newSections = [...currentSections];
       const section = [...newSections[sectionIndex]];
@@ -104,7 +123,6 @@ const WidgetConfigScreen = ({ navigation }) => {
 
   // --- Move To Section Logic ---
   const handleMoveIconPress = (sectionIndex: number, appIndex: number) => {
-    console.log(`[DEBUG] handleMoveIconPress: sectionIndex=${sectionIndex}, appIndex=${appIndex}`);
     // If already in move mode and this is the selected app, cancel
     if (moveMode && selectedApp && selectedApp.sectionIndex === sectionIndex && selectedApp.appIndex === appIndex) {
       setMoveMode(false);
@@ -154,14 +172,15 @@ const WidgetConfigScreen = ({ navigation }) => {
     try {
       const allApps = sections.flat();
       const appOrders = allApps.map(app => ({
-        appId: app.id as Id<"userApps">,
+        appId: app.id,
         newOrder: app.order,
       }));
-      await updateAppOrders({ appOrders });
+      await localStorageService.updateAppOrders(appOrders);
+      
       // --- Reorganize widgets after updating app order ---
       // Use the same chunking logic as in HomeScreen
       const appsPerWidget = 6;
-      const widgets = [];
+      const widgets: LocalWidgetConfig[] = [];
       for (let i = 0; i < allApps.length; i += appsPerWidget) {
         const widgetApps = allApps.slice(i, i + appsPerWidget);
         const widgetId = `widget_${Math.floor(i / appsPerWidget) + 1}`;
@@ -171,7 +190,7 @@ const WidgetConfigScreen = ({ navigation }) => {
           order: Math.floor(i / appsPerWidget),
         });
       }
-      await reorganizeWidgets({ widgets });
+      await localStorageService.reorganizeWidgets(widgets);
       
       // Save apps to UserDefaults for widget access
       try {
@@ -198,8 +217,8 @@ const WidgetConfigScreen = ({ navigation }) => {
             console.log('Widget apps data that should be saved:', JSON.stringify(widgetApps, null, 2));
           }
         }
-      } catch (widgetError) {
-        console.log('Widget data save error (non-critical):', widgetError);
+      } catch (error) {
+        console.error('Error saving widget data:', error);
       }
       
       Alert.alert("Success", "App order saved successfully!");
@@ -211,7 +230,6 @@ const WidgetConfigScreen = ({ navigation }) => {
   };
 
   const renderAppItem = useCallback((sectionIndex: number) => (props: SortableRenderItemProps<DraggableApp>) => {
-    console.log(`[DEBUG] Rendering app item: sectionIndex=${sectionIndex}, appIndex=${props.index}, app=`, props.item);
     const {
       item,
       id,
@@ -298,8 +316,7 @@ const WidgetConfigScreen = ({ navigation }) => {
     );
   }, [handleDrop, moveMode, selectedApp]);
 
-  if (isLoading) {
-    
+  if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#172F50' }}>
         <Text style={{ color: '#F7F7F7', fontSize: 18 }}>Loading apps...</Text>
@@ -371,13 +388,13 @@ const WidgetConfigScreen = ({ navigation }) => {
             ))}
           </View>
         </View>
-      </View>
-      {/* Instructions Section */}
-      <View style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 48, alignItems: 'center' }}>
-        <View style={{ backgroundColor: 'rgba(23, 47, 80, 0.92)', borderRadius: 16, padding: 16, width: '100%', maxWidth: 400, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
-          <Text style={{ color: '#F7F7F7', fontSize: 14, textAlign: 'center', lineHeight: 20 }}>
-            Drag the right icon to reorder. Tap the switch to swap. Press ✓ to save.
-          </Text>
+        {/* Instructions Section */}
+        <View style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 48, alignItems: 'center' }}>
+          <View style={{ backgroundColor: 'rgba(23, 47, 80, 0.92)', borderRadius: 16, padding: 16, width: '100%', maxWidth: 400, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
+            <Text style={{ color: '#F7F7F7', fontSize: 14, textAlign: 'center', lineHeight: 20 }}>
+              Drag the right icon to reorder. Tap the switch to swap. Press ✓ to save.
+            </Text>
+          </View>
         </View>
       </View>
     </ImageBackground>

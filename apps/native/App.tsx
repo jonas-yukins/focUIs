@@ -5,7 +5,6 @@ import { LogBox } from "react-native";
 
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Navigation from "./src/navigation/Navigation";
-import ConvexClientProvider from "./ConvexClientProvider";
 import { Asset } from "expo-asset";
 import { BackgroundAssetContext } from "./src/assets/BackgroundAssetContext";
 
@@ -56,13 +55,11 @@ export default function App() {
     <BackgroundAssetContext.Provider value={backgroundUri}>
       <SafeAreaProvider>
         <StatusBar
-            barStyle="light-content"
-            backgroundColor="#172F50"
-            translucent={true}
-          />
-          <ConvexClientProvider>
-            <Navigation />
-          </ConvexClientProvider>
+          barStyle="light-content"
+          backgroundColor="#172F50"
+          translucent={true}
+        />
+        <Navigation />
       </SafeAreaProvider>
     </BackgroundAssetContext.Provider>
   );

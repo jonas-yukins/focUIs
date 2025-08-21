@@ -13,31 +13,65 @@ import {
   ScrollView,
   ImageBackground, // <-- Add this import
 } from "react-native";
+import { useFocusEffect } from '@react-navigation/native';
 import { RFValue } from "react-native-responsive-fontsize";
-import { useAuth, useUser } from "@clerk/clerk-expo";
-import { api } from "@packages/backend/convex/_generated/api";
-import { useQuery, useMutation } from "convex/react";
 import { Ionicons } from "@expo/vector-icons";
 import WidgetPreview from "../components/WidgetPreview";
 import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
+import localStorageService, { LocalAppSelection, LocalWidgetConfig, LocalUserSettings } from '../services/LocalStorageService';
 
 const { width, height } = Dimensions.get("window");
 
 const HomeScreen = ({ navigation }) => {
-  const user = useUser();
-  const { signOut } = useAuth();
-  const selectedApps = useQuery(api.notes.getUserApps) || [];
-  const userWidgets = useQuery(api.notes.getUserWidgets) || [];
-  const userSettings = useQuery(api.notes.getUserSettings);
-  const widgetFontSize = userSettings?.fontSize || 16;
-  const widgetAlignment = (userSettings?.layout || "center") as 'left' | 'center' | 'right';
-  const theme = userSettings?.theme || "default";
-  const fontColor = userSettings?.fontColor || '#FFFFFF';
-  
-  const reorganizeWidgets = useMutation(api.notes.reorganizeWidgets);
-  const upsertWidget = useMutation(api.notes.upsertWidget);
+  const [selectedApps, setSelectedApps] = useState<LocalAppSelection[]>([]);
+  const [userWidgets, setUserWidgets] = useState<LocalWidgetConfig[]>([]);
+  const [userSettings, setUserSettings] = useState<LocalUserSettings>({
+    theme: 'default',
+    fontSize: 16,
+    layout: 'center',
+    fontColor: '#FFFFFF'
+  });
+  const [loading, setLoading] = useState(true);
 
   const backgroundUri = useBackgroundAsset();
+
+  // Load data from local storage on mount and when screen comes into focus
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      
+      // Clean up legacy data first
+      await localStorageService.cleanupLegacyData();
+      
+      const [apps, widgets, settings] = await Promise.all([
+        localStorageService.getSelectedApps(),
+        localStorageService.getWidgetConfigs(),
+        localStorageService.getUserSettings()
+      ]);
+      
+
+      
+      setSelectedApps(apps);
+      setUserWidgets(widgets);
+      setUserSettings(settings);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load data on mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Reload data when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadData();
+    }, [])
+  );
 
   // Auto-organize apps into widgets if no widgets exist or if the number of selected apps has changed
   useEffect(() => {
@@ -53,24 +87,29 @@ const HomeScreen = ({ navigation }) => {
     }
   }, [selectedApps, userWidgets]);
 
-  const organizeAppsIntoWidgets = () => {
-    const appsPerWidget = 6;
-    const widgets = [];
-    
-    for (let i = 0; i < selectedApps.length; i += appsPerWidget) {
-      const widgetApps = selectedApps.slice(i, i + appsPerWidget);
-      const widgetId = `widget_${Math.floor(i / appsPerWidget) + 1}`;
+  const organizeAppsIntoWidgets = async () => {
+    try {
+      const appsPerWidget = 6;
+      const widgets: LocalWidgetConfig[] = [];
       
-      widgets.push({
-        widgetId,
-        appIds: widgetApps.map(app => app._id),
-        order: Math.floor(i / appsPerWidget),
-      });
-    }
+      for (let i = 0; i < selectedApps.length; i += appsPerWidget) {
+        const widgetApps = selectedApps.slice(i, i + appsPerWidget);
+        const widgetId = `widget_${Math.floor(i / appsPerWidget) + 1}`;
+        
+        widgets.push({
+          widgetId,
+          appIds: widgetApps.map(app => app.appId).filter(id => id), // Filter out undefined/null IDs
+          order: Math.floor(i / appsPerWidget),
+        });
+      }
 
-    console.log(`Creating ${widgets.length} widgets with ${selectedApps.length} apps:`, widgets);
-    if (widgets.length > 0) {
-      reorganizeWidgets({ widgets });
+      console.log(`Creating ${widgets.length} widgets with ${selectedApps.length} apps:`, widgets);
+      if (widgets.length > 0) {
+        await localStorageService.reorganizeWidgets(widgets);
+        setUserWidgets(widgets);
+      }
+    } catch (error) {
+      console.error('Error organizing widgets:', error);
     }
   };
 
@@ -125,7 +164,7 @@ const HomeScreen = ({ navigation }) => {
               }
             }
           } else {
-            
+            // App not installed, try to open App Store
             if (app.appStoreUrl) {
               await Linking.openURL(app.appStoreUrl);
               return;
@@ -155,22 +194,25 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      Alert.alert("Error", "Failed to sign out");
-    }
-  };
-
   const getAppsForWidget = (widget) => {
     const widgetApps = selectedApps.filter(app => 
-      widget.appIds.includes(app._id)
-    );
+      widget.appIds.includes(app.appId)
+    ).map(app => ({
+      _id: app.appId,
+      displayName: app.displayName,
+      packageName: app.packageName || '',
+      urlScheme: app.urlScheme,
+      appStoreUrl: app.appStoreUrl,
+      isThirdParty: app.isThirdParty,
+    }));
     
     // Sort apps by their order within the widget
     // The order is determined by the global order of all apps
-    return widgetApps.sort((a, b) => a.order - b.order);
+    return widgetApps.sort((a, b) => {
+      const appA = selectedApps.find(originalApp => originalApp.appId === a._id);
+      const appB = selectedApps.find(originalApp => originalApp.appId === b._id);
+      return (appA?.order || 0) - (appB?.order || 0);
+    });
   };
 
   const renderWidgetItem = ({ item }) => {
@@ -183,10 +225,10 @@ const HomeScreen = ({ navigation }) => {
           onAppPress={handleAppPress}
           isDragging={false}
           showTitle={false}
-          fontSize={widgetFontSize}
-          alignment={widgetAlignment}
-          theme={theme as 'default' | 'dark' | 'light'}
-          fontColor={fontColor}
+          fontSize={userSettings.fontSize}
+          alignment={userSettings.layout as 'left' | 'center' | 'right'}
+          theme={userSettings.theme as 'default' | 'dark' | 'light'}
+          fontColor={userSettings.fontColor}
         />
       </View>
     );
@@ -198,10 +240,25 @@ const HomeScreen = ({ navigation }) => {
       order: index,
     }));
     
-    reorganizeWidgets({ widgets: updatedWidgets });
+    localStorageService.reorganizeWidgets(updatedWidgets);
+    setUserWidgets(updatedWidgets);
   };
 
-
+  if (loading) {
+    return (
+      <ImageBackground
+        source={{ uri: backgroundUri }}
+        style={styles.background}
+        resizeMode="cover"
+      >
+        <View style={styles.overlay}>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading...</Text>
+          </View>
+        </View>
+      </ImageBackground>
+    );
+  }
 
   return (
     <ImageBackground
@@ -276,7 +333,7 @@ const HomeScreen = ({ navigation }) => {
                   </View>
                   <FlatList
                     data={userWidgets}
-                    keyExtractor={(item) => item._id}
+                    keyExtractor={(item) => item.widgetId}
                     renderItem={renderWidgetItem}
                     contentContainerStyle={styles.widgetsList}
                     scrollEnabled={false}
@@ -365,6 +422,16 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: RFValue(16),
+    fontFamily: "MRegular",
+    color: "#7A7A7A",
   },
   emptyState: {
     flex: 1,
