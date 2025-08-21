@@ -32,30 +32,41 @@ interface WidgetPreviewProps {
   alignment?: 'left' | 'center' | 'right'; // NEW PROP
   theme?: 'default' | 'dark' | 'light'; // NEW PROP
   fontColor?: string; // NEW PROP
+  verticalAlignment?: 'top' | 'middle' | 'bottom'; // NEW PROP
 }
 
 // Helper function to get alignment styles
 const getAlignmentStyles = (alignment: 'left' | 'center' | 'right' = 'center') => {
-  let justifyContent, alignItems, textAlign;
+  let alignItems, textAlign;
   switch (alignment) {
     case 'left':
-      justifyContent = 'flex-start';
       alignItems = 'flex-start';
       textAlign = 'left';
       break;
     case 'right':
-      justifyContent = 'flex-end';
       alignItems = 'flex-end';
       textAlign = 'right';
       break;
     case 'center':
     default:
-      justifyContent = 'center';
       alignItems = 'center';
       textAlign = 'center';
       break;
   }
-  return { justifyContent, alignItems, textAlign };
+  return { alignItems, textAlign };
+};
+
+// Helper function to get vertical alignment styles
+const getVerticalAlignmentStyles = (verticalAlignment: 'top' | 'middle' | 'bottom' = 'middle') => {
+  switch (verticalAlignment) {
+    case 'top':
+      return { justifyContent: 'flex-start' as const };
+    case 'bottom':
+      return { justifyContent: 'flex-end' as const };
+    case 'middle':
+    default:
+      return { justifyContent: 'center' as const };
+  }
 };
 
 // Add helper for theme-based colors
@@ -83,18 +94,20 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
   alignment = 'center', // Default to center
   theme = 'default', // Default to default
   fontColor = '#FFFFFF', // Default to white
+  verticalAlignment = 'middle', // Default to middle
 }) => {
   const displayApps = apps.slice(0, 6); // Show max 6 apps
   const hasMoreApps = apps.length > 6;
-  const { justifyContent, alignItems, textAlign } = getAlignmentStyles(alignment);
+  const { alignItems, textAlign } = getAlignmentStyles(alignment);
   const { backgroundColor, borderColor, borderWidth } = getWidgetColors(theme);
+  const verticalStyles = getVerticalAlignmentStyles(verticalAlignment);
 
   return (
     <View style={[styles.container, isDragging && styles.dragging, { backgroundColor, borderColor, borderWidth }]}>
       {/* Widget Header - Only show if showTitle is true */}
       {showTitle && (
-        <View style={[styles.header, { justifyContent, alignItems }]}> {/* Dynamic alignment */}
-          <View style={[styles.headerLeft, { justifyContent, alignItems }]}> {/* Dynamic alignment */}
+        <View style={[styles.header, { justifyContent: 'space-between', alignItems }]}> {/* Dynamic alignment */}
+          <View style={[styles.headerLeft, { justifyContent: 'flex-start', alignItems }]}> {/* Dynamic alignment */}
             <Ionicons name="phone-portrait-outline" size={16} color={fontColor} />
             <Text style={[styles.widgetTitle, { textAlign, color: fontColor }]}>{widgetId.replace('_', ' ').toUpperCase()}</Text>
           </View>
@@ -102,11 +115,11 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
       )}
 
       {/* Apps Grid */}
-      <View style={[styles.appsGrid, { alignItems }]}> {/* Dynamic alignment */}
+      <View style={[styles.appsGrid, { alignItems, ...verticalStyles }]}> {/* Dynamic alignment */}
         {displayApps.map((app, index) => (
           <TouchableOpacity
             key={app._id}
-            style={[styles.appItem, { alignItems, justifyContent }]} // Dynamic alignment
+            style={[styles.appItem, { alignItems, justifyContent: 'center' }]} // Dynamic alignment
             onPress={() => onAppPress(app)}
             activeOpacity={0.7}
           >
@@ -172,9 +185,9 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   appsGrid: {
+    flex: 1,
     flexDirection: 'column',
     flexWrap: 'nowrap',
-    justifyContent: 'flex-start',
     alignItems: 'stretch',
   },
   appItem: {

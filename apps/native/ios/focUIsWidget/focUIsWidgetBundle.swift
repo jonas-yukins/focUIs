@@ -11,6 +11,11 @@ import SwiftUI
 @main
 struct focUIsWidgetBundle: WidgetBundle {
     var body: some Widget {
-        focUIsWidget()
+        focUIsWidget1()
+        focUIsWidget2()
+        focUIsWidget3()
+        focUIsWidget4()
+        focUIsWidget5()
+        focUIsWidget6()
     }
 }

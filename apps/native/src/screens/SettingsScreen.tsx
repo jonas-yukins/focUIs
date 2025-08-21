@@ -24,6 +24,7 @@ const SettingsScreen = ({ navigation }) => {
   const [layout, setLayout] = useState("center");
   const [saving, setSaving] = useState(false);
   const [fontColor, setFontColor] = useState('white');
+  const [verticalAlignment, setVerticalAlignment] = useState('middle'); // NEW
   const [loading, setLoading] = useState(true);
 
   // Load settings from local storage on mount
@@ -36,6 +37,7 @@ const SettingsScreen = ({ navigation }) => {
         setFontSize(settings.fontSize || 20);
         setTheme(settings.theme || "default");
         setLayout(settings.layout || "center");
+        setVerticalAlignment(settings.verticalAlignment || "middle"); // NEW
         
         // Auto-set fontColor based on theme
         if ((settings.theme === 'default' || settings.theme === 'dark') || !settings.theme) {
@@ -68,7 +70,7 @@ const SettingsScreen = ({ navigation }) => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await localStorageService.saveUserSettings({ fontSize, theme, layout, fontColor });
+      await localStorageService.saveUserSettings({ fontSize, theme, layout, fontColor, verticalAlignment });
       Alert.alert("Settings Saved", "Your preferences have been updated.");
       navigation.goBack();
     } catch (error) {
@@ -92,8 +94,9 @@ const SettingsScreen = ({ navigation }) => {
             setFontSize(20);
             setTheme("default");
             setLayout("center");
+            setVerticalAlignment("middle"); // NEW
             try {
-              await localStorageService.saveUserSettings({ fontSize: 20, theme: "default", layout: "center", fontColor: "white" });
+              await localStorageService.saveUserSettings({ fontSize: 20, theme: "default", layout: "center", fontColor: "white", verticalAlignment: "middle" });
               Alert.alert("Styling Reset", "All styling has been reset to default.");
               navigation.goBack(); // Navigate back after reset
             } catch (error) {
@@ -286,6 +289,41 @@ const SettingsScreen = ({ navigation }) => {
     </View>
   );
 
+  const renderVerticalAlignmentSelector = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Vertical Layout</Text>
+      <View style={styles.layoutContainer}>
+        {[
+          { id: "top", name: "Top", icon: "arrow-up" },
+          { id: "middle", name: "Middle", icon: "remove" },
+          { id: "bottom", name: "Bottom", icon: "arrow-down" },
+        ].map((option) => (
+          <TouchableOpacity
+            key={option.id}
+            style={[
+              styles.layoutButton,
+              verticalAlignment === option.id && styles.layoutButtonActive,
+            ]}
+            onPress={() => setVerticalAlignment(option.id)}
+          >
+            <Ionicons
+              name={option.icon as any}
+              size={24}
+              color={verticalAlignment === option.id ? "#172F50" : "#7A7A7A"}
+            />
+            <Text
+              style={[
+                styles.layoutButtonText,
+                verticalAlignment === option.id && styles.layoutButtonTextActive,
+              ]}
+            >
+              {option.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
 
 
   return (
@@ -320,6 +358,7 @@ const SettingsScreen = ({ navigation }) => {
             {renderThemeSelector()}
             {renderFontColorSelector()}
             {renderAlignmentSelector()}
+            {renderVerticalAlignmentSelector()}
           </View>
 
           {/* Reset Styling Button */}
@@ -503,14 +542,14 @@ const styles = StyleSheet.create({
   },
   layoutButton: {
     alignItems: "center",
-    padding: 15,
+    padding: 10,
     borderRadius: 6,
     borderWidth: 1,
     borderColor: "#F7F7F7", // white outline
     backgroundColor: "transparent", // transparent when unfocused
     flex: 1,
     marginHorizontal: 5,
-    minWidth: 95, // make buttons wider so "Center" fits
+    minWidth: 90, // make buttons wider so "Center" fits
   },
   layoutButtonActive: {
     backgroundColor: "#E1E1E1", // gray when focused
