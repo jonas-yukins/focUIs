@@ -542,14 +542,14 @@ const styles = StyleSheet.create({
   },
   layoutButton: {
     alignItems: "center",
-    padding: 15,
+    padding: 10,
     borderRadius: 6,
     borderWidth: 1,
     borderColor: "#F7F7F7", // white outline
     backgroundColor: "transparent", // transparent when unfocused
     flex: 1,
     marginHorizontal: 5,
-    minWidth: 95, // make buttons wider so "Center" fits
+    minWidth: 90, // make buttons wider so "Center" fits
   },
   layoutButtonActive: {
     backgroundColor: "#E1E1E1", // gray when focused
