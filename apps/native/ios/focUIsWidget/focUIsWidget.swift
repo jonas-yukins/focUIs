@@ -16,23 +16,35 @@ struct AppData: Codable, Identifiable {
     let urlScheme: String?
 }
 
+// Shared user settings structure
+struct UserSettings: Codable {
+    let theme: String // "default" | "dark" | "light"
+    let fontSize: Double
+    let layout: String // "left" | "center" | "right"
+    let fontColor: String // hex or named color like "white"
+
+    static func defaults() -> UserSettings {
+        return UserSettings(theme: "default", fontSize: 16, layout: "center", fontColor: "#FFFFFF")
+    }
+}
+
 struct SectionedProvider: TimelineProvider {
     let sectionIndex: Int
 
     func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), apps: getDefaultApps())
+        SimpleEntry(date: Date(), apps: getDefaultApps(), settings: getUserSettingsFromUserDefaults())
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let entry = SimpleEntry(date: Date(), apps: getAppsFromUserDefaults(section: sectionIndex))
+        let entry = SimpleEntry(date: Date(), apps: getAppsFromUserDefaults(section: sectionIndex), settings: getUserSettingsFromUserDefaults())
         completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         let apps = getAppsFromUserDefaults(section: sectionIndex)
-        let entry = SimpleEntry(date: Date(), apps: apps)
+        let settings = getUserSettingsFromUserDefaults()
+        let entry = SimpleEntry(date: Date(), apps: apps, settings: settings)
         
-        // Update every 30 minutes
         let timeline = Timeline(entries: [entry], policy: .never)
         completion(timeline)
     }
@@ -123,11 +135,25 @@ struct SectionedProvider: TimelineProvider {
             AppData(id: "1", displayName: "Messages", packageName: "com.apple.MobileSMS", urlScheme: "sms://")
         ]
     }
+
+    private func getUserSettingsFromUserDefaults() -> UserSettings {
+        guard let userDefaults = UserDefaults(suiteName: "group.com.jonasyukins.focuis") else {
+            return UserSettings.defaults()
+        }
+        if let jsonString = userDefaults.string(forKey: "userSettings"), let data = jsonString.data(using: .utf8), let decoded = try? JSONDecoder().decode(UserSettings.self, from: data) {
+            return decoded
+        }
+        if let data = userDefaults.data(forKey: "userSettings"), let decoded = try? JSONDecoder().decode(UserSettings.self, from: data) {
+            return decoded
+        }
+        return UserSettings.defaults()
+    }
 }
 
 struct SimpleEntry: TimelineEntry {
     let date: Date
     let apps: [AppData]
+    let settings: UserSettings
 }
 
 struct focUIsWidgetEntryView : View {
@@ -135,52 +161,114 @@ struct focUIsWidgetEntryView : View {
     @Environment(\.widgetFamily) var family
 
     var body: some View {
-        VStack(spacing: 6) {
-            ForEach(entry.apps.prefix(6), id: \.id) { app in
-                // Create deep link to focUIs app with app data
-                let deepLink = "focuis://launch-app?name=\(app.displayName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&scheme=\(app.urlScheme?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&package=\(app.packageName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
-                
-                if let url = URL(string: deepLink) {
-                    Link(destination: url) {
-                        HStack {
-                            Text(app.displayName)
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.white)
-                                .lineLimit(1)
-                            
-                            Spacer()
+        let fontColor = colorFromString(entry.settings.fontColor)
+        let alignment = entry.settings.layout
+        let fontSize = entry.settings.fontSize
+
+        ZStack {
+            backgroundView(for: entry.settings.theme)
+                .cornerRadius(16)
+
+            VStack(spacing: 6) {
+                ForEach(entry.apps.prefix(6), id: \.id) { app in
+                    let deepLink = "focuis://launch-app?name=\(app.displayName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&scheme=\(app.urlScheme?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&package=\(app.packageName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+
+                    if let url = URL(string: deepLink) {
+                        Link(destination: url) {
+                            row(for: app.displayName, fontColor: fontColor, fontSize: fontSize, alignment: alignment)
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.white.opacity(0.1))
-                        .cornerRadius(8)
+                    } else {
+                        row(for: app.displayName, fontColor: fontColor, fontSize: fontSize, alignment: alignment)
                     }
-                } else {
-                    // Fallback for invalid URLs
-                    HStack {
-                        Text(app.displayName)
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.white)
-                            .lineLimit(1)
-                        
-                        Spacer()
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color.white.opacity(0.1))
-                    .cornerRadius(8)
                 }
             }
+            .padding(12)
         }
-        .padding(12)
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [Color.black.opacity(0.7), Color.black.opacity(0.5)]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+        .overlay(
+            Group {
+                if entry.settings.theme == "default" {
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white, lineWidth: 1)
+                }
+            }
         )
-        .cornerRadius(16)
+    }
+
+    @ViewBuilder
+    private func backgroundView(for theme: String) -> some View {
+        switch theme {
+        case "dark":
+            Color.black
+        case "light":
+            Color.white
+        default:
+            Color.clear
+        }
+    }
+
+    @ViewBuilder
+    private func row(for text: String, fontColor: Color, fontSize: Double, alignment: String) -> some View {
+        switch alignment {
+        case "left":
+            HStack {
+                Text(text)
+                    .font(.system(size: fontSize, weight: .semibold))
+                    .foregroundColor(fontColor)
+                    .lineLimit(1)
+                Spacer()
+            }
+        case "right":
+            HStack {
+                Spacer()
+                Text(text)
+                    .font(.system(size: fontSize, weight: .semibold))
+                    .foregroundColor(fontColor)
+                    .lineLimit(1)
+            }
+        default:
+            HStack {
+                Spacer()
+                Text(text)
+                    .font(.system(size: fontSize, weight: .semibold))
+                    .foregroundColor(fontColor)
+                    .lineLimit(1)
+                Spacer()
+            }
+        }
+    }
+
+    private func colorFromString(_ value: String) -> Color {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if trimmed == "white" { return .white }
+        if trimmed == "black" { return .black }
+        if trimmed.hasPrefix("#") {
+            let hexString = String(trimmed.dropFirst())
+            if let uiColor = UIColor(hex: hexString) {
+                return Color(uiColor)
+            }
+        }
+        return .white
+    }
+}
+
+// MARK: - Helpers
+extension UIColor {
+    convenience init?(hex: String) {
+        var hexSanitized = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int = UInt64()
+        Scanner(string: hexSanitized).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hexSanitized.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            return nil
+        }
+        self.init(red: CGFloat(r) / 255, green: CGFloat(g) / 255, blue: CGFloat(b) / 255, alpha: CGFloat(a) / 255)
     }
 }
 
@@ -309,5 +397,5 @@ struct focUIsWidget6: Widget {
 } timeline: {
     SimpleEntry(date: .now, apps: [
         AppData(id: "1", displayName: "Messages", packageName: "com.apple.MobileSMS", urlScheme: "sms://")
-    ])
+    ], settings: UserSettings.defaults())
 }

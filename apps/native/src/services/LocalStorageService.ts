@@ -182,6 +182,8 @@ class LocalStorageService {
       const updatedSettings = { ...currentSettings, ...settings };
       await AsyncStorage.setItem(USER_SETTINGS_KEY, JSON.stringify(updatedSettings));
       if (Platform.OS === 'ios') {
+        // Persist settings for WidgetKit via App Group so the widget can match preview styling
+        await this.saveUserSettingsToIOSWidgetStorage(updatedSettings);
         await this.reloadIOSWidgets();
       }
     } catch (error) {
@@ -378,6 +380,36 @@ class LocalStorageService {
     } catch (error) {
       console.error('Error getting storage keys:', error);
       return [];
+    }
+  }
+
+  // Persist user settings for iOS WidgetKit to read from the shared app group
+  private async saveUserSettingsToIOSWidgetStorage(settings: LocalUserSettings): Promise<void> {
+    try {
+      let wrote = false;
+      try {
+        const { SharedGroupPreferences } = require('react-native-shared-group-preferences');
+        if (SharedGroupPreferences?.setItem) {
+          await SharedGroupPreferences.setItem('userSettings', JSON.stringify(settings), 'group.com.jonasyukins.focuis');
+          wrote = true;
+        }
+      } catch (_) {}
+
+      if (!wrote) {
+        const reloader = (NativeModules as any)?.WidgetReloader;
+        if (reloader?.setSharedItem) {
+          await reloader.setSharedItem('userSettings', JSON.stringify(settings));
+          wrote = true;
+        }
+      }
+
+      if (wrote) {
+        console.log('Saved user settings to shared app group for widgets');
+      } else {
+        console.log('No available method to save user settings to shared app group');
+      }
+    } catch (error) {
+      console.log('Failed to save user settings to SharedGroupPreferences:', error);
     }
   }
 }
