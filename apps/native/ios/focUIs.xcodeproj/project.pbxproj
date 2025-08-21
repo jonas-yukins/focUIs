@@ -17,6 +17,8 @@
 		DDF1E1EF2E3BFE8B0044FD3A /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DDF1E1EE2E3BFE8B0044FD3A /* SwiftUI.framework */; };
 		DDF1E1FE2E3BFE8D0044FD3A /* focUIsWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DDF1E1EB2E3BFE8B0044FD3A /* focUIsWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
+        F1A7C0012D0EEE9900AAA111 /* MainApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A7C0002D0EEE9900AAA111 /* MainApplication.swift */; };
+        F1A7C0032D0EEF1B00AAA111 /* WidgetReloader.m in Sources */ = {isa = PBXBuildFile; fileRef = F1A7C0022D0EEF1B00AAA111 /* WidgetReloader.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -62,6 +64,8 @@
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = focUIs/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* focUIs-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "focUIs-Bridging-Header.h"; path = "focUIs/focUIs-Bridging-Header.h"; sourceTree = "<group>"; };
 		FE9C3BFB28458BBFDDEEC296 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = focUIs/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+        F1A7C0002D0EEE9900AAA111 /* MainApplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MainApplication.swift; path = focUIs/MainApplication.swift; sourceTree = "<group>"; };
+        F1A7C0022D0EEF1B00AAA111 /* WidgetReloader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = WidgetReloader.m; path = focUIs/WidgetReloader.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -111,7 +115,9 @@
 			children = (
 				DDC6C70F2E3C090F001BAD69 /* focUIs.entitlements */,
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
+				F1A7C0002D0EEE9900AAA111 /* MainApplication.swift */,
 				F11748442D0722820044C1D9 /* focUIs-Bridging-Header.h */,
+				F1A7C0022D0EEF1B00AAA111 /* WidgetReloader.m */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
@@ -403,6 +409,8 @@
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
 				1BB9DC7FEEADBA1D32A11598 /* ExpoModulesProvider.swift in Sources */,
+                F1A7C0012D0EEE9900AAA111 /* MainApplication.swift in Sources */,
+                F1A7C0032D0EEF1B00AAA111 /* WidgetReloader.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -58,6 +58,26 @@
       <key>NSAllowsArbitraryLoads</key>
       <true/>
     </dict>
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+      <string>sms</string>
+      <string>tel</string>
+      <string>maps</string>
+      <string>message</string>
+      <string>music</string>
+      <string>itms-music</string>
+      <string>tv</string>
+      <string>calshow</string>
+      <string>camera</string>
+      <string>photos-redirect</string>
+      <string>App-Prefs</string>
+      <string>x-web-search</string>
+      <string>itms-apps</string>
+      <string>weather</string>
+      <string>calculator</string>
+      <string>mobilenotes</string>
+      <string>x-apple-reminder</string>
+    </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>
