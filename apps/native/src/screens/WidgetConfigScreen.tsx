@@ -316,13 +316,7 @@ const WidgetConfigScreen = ({ navigation }) => {
     );
   }, [handleDrop, moveMode, selectedApp]);
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#172F50' }}>
-        <Text style={{ color: '#F7F7F7', fontSize: 18 }}>Loading apps...</Text>
-      </View>
-    );
-  }
+
 
   return (
     <ImageBackground

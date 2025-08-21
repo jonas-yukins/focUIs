@@ -137,11 +137,7 @@ const AppSelectionScreen = ({ navigation }) => {
           />
         </View>
         <View style={styles.content}>
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Loading apps...</Text>
-            </View>
-          ) : error ? (
+          {error ? (
             <View style={styles.loadingContainer}>
               <Text style={styles.loadingText}>Error: {error}</Text>
               <TouchableOpacity onPress={refresh} style={styles.retryButton}>

@@ -286,33 +286,7 @@ const SettingsScreen = ({ navigation }) => {
     </View>
   );
 
-  if (loading) {
-    return (
-      <ImageBackground
-        source={{ uri: backgroundUri }}
-        style={styles.background}
-        resizeMode="cover"
-      >
-        <View style={styles.overlay}>
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.headerButton}
-            >
-              <Ionicons name="arrow-back" size={24} color="#F7F7F7" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Settings</Text>
-            <View style={styles.headerButton} />
-          </View>
-          <View style={styles.content}>
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Loading settings...</Text>
-            </View>
-          </View>
-        </View>
-      </ImageBackground>
-    );
-  }
+
 
   return (
     <ImageBackground
@@ -626,16 +600,7 @@ const styles = StyleSheet.create({
   fontColorButtonTextActive: {
     color: '#172F50',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: RFValue(16),
-    fontFamily: 'MRegular',
-    color: '#7A7A7A',
-  },
+
 });
 
 export default SettingsScreen; 

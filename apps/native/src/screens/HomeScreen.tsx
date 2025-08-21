@@ -244,21 +244,7 @@ const HomeScreen = ({ navigation }) => {
     setUserWidgets(updatedWidgets);
   };
 
-  if (loading) {
-    return (
-      <ImageBackground
-        source={{ uri: backgroundUri }}
-        style={styles.background}
-        resizeMode="cover"
-      >
-        <View style={styles.overlay}>
-          <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Loading...</Text>
-          </View>
-        </View>
-      </ImageBackground>
-    );
-  }
+
 
   return (
     <ImageBackground
@@ -423,16 +409,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    fontSize: RFValue(16),
-    fontFamily: "MRegular",
-    color: "#7A7A7A",
-  },
+
   emptyState: {
     flex: 1,
     justifyContent: "center",
