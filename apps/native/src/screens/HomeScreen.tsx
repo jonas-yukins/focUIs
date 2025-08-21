@@ -229,6 +229,7 @@ const HomeScreen = ({ navigation }) => {
           alignment={userSettings.layout as 'left' | 'center' | 'right'}
           theme={userSettings.theme as 'default' | 'dark' | 'light'}
           fontColor={userSettings.fontColor}
+          verticalAlignment={userSettings.verticalAlignment as 'top' | 'middle' | 'bottom'}
         />
       </View>
     );

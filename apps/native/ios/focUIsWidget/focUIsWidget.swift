@@ -22,9 +22,10 @@ struct UserSettings: Codable {
     let fontSize: Double
     let layout: String // "left" | "center" | "right"
     let fontColor: String // hex or named color like "white"
+    let verticalAlignment: String // "top" | "middle" | "bottom"
 
     static func defaults() -> UserSettings {
-        return UserSettings(theme: "default", fontSize: 16, layout: "center", fontColor: "#FFFFFF")
+        return UserSettings(theme: "default", fontSize: 16, layout: "center", fontColor: "#FFFFFF", verticalAlignment: "middle")
     }
 }
 
@@ -163,13 +164,14 @@ struct focUIsWidgetEntryView : View {
     var body: some View {
         let fontColor = colorFromString(entry.settings.fontColor)
         let alignment = entry.settings.layout
-        let fontSize = entry.settings.fontSize
+        let fontSize = entry.settings.fontSize * 1.4 // Increase font size for widget
+        let verticalAlignment = entry.settings.verticalAlignment
 
         ZStack {
             backgroundView(for: entry.settings.theme)
                 .cornerRadius(16)
 
-            VStack(spacing: 6) {
+            VStack(spacing: 12) { // Increased spacing from 6 to 12
                 ForEach(entry.apps.prefix(6), id: \.id) { app in
                     let deepLink = "focuis://launch-app?name=\(app.displayName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&scheme=\(app.urlScheme?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&package=\(app.packageName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
 
@@ -182,12 +184,13 @@ struct focUIsWidgetEntryView : View {
                     }
                 }
             }
-            .padding(12)
+            .padding(16) // Padding for content only
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: getVerticalAlignment(verticalAlignment))
         }
         .overlay(
             Group {
                 if entry.settings.theme == "default" {
-                    RoundedRectangle(cornerRadius: 16)
+                    ContainerRelativeShape()
                         .stroke(Color.white, lineWidth: 1)
                 }
             }
@@ -249,6 +252,19 @@ struct focUIsWidgetEntryView : View {
         }
         return .white
     }
+
+    private func getVerticalAlignment(_ alignment: String) -> Alignment {
+        switch alignment {
+        case "top":
+            return .top
+        case "middle":
+            return .center
+        case "bottom":
+            return .bottom
+        default:
+            return .center
+        }
+    }
 }
 
 // MARK: - Helpers
@@ -277,15 +293,11 @@ struct focUIsWidget1: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: SectionedProvider(sectionIndex: 1)) { entry in
-            if #available(iOS 17.0, *) {
-                focUIsWidgetEntryView(entry: entry)
-                    .containerBackground(.fill.tertiary, for: .widget)
-            } else {
-                focUIsWidgetEntryView(entry: entry)
-                    .padding()
-                    .background()
-            }
+            focUIsWidgetEntryView(entry: entry)
+                .background(Color.clear)
+                .containerBackground(.clear, for: .widget) // Only for iOS 17+
         }
+        .contentMarginsDisabled() // Remove system margins to allow edge-to-edge background
         .configurationDisplayName("focUIs widget 1")
         .description("Apps in section 1")
         .supportedFamilies([.systemLarge])
@@ -297,15 +309,11 @@ struct focUIsWidget2: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: SectionedProvider(sectionIndex: 2)) { entry in
-            if #available(iOS 17.0, *) {
-                focUIsWidgetEntryView(entry: entry)
-                    .containerBackground(.fill.tertiary, for: .widget)
-            } else {
-                focUIsWidgetEntryView(entry: entry)
-                    .padding()
-                    .background()
-            }
+            focUIsWidgetEntryView(entry: entry)
+                .background(Color.clear)
+                .containerBackground(.clear, for: .widget) // Only for iOS 17+
         }
+        .contentMarginsDisabled() // Remove system margins to allow edge-to-edge background
         .configurationDisplayName("focUIs widget 2")
         .description("Apps in section 2")
         .supportedFamilies([.systemLarge])
@@ -317,15 +325,11 @@ struct focUIsWidget3: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: SectionedProvider(sectionIndex: 3)) { entry in
-            if #available(iOS 17.0, *) {
-                focUIsWidgetEntryView(entry: entry)
-                    .containerBackground(.fill.tertiary, for: .widget)
-            } else {
-                focUIsWidgetEntryView(entry: entry)
-                    .padding()
-                    .background()
-            }
+            focUIsWidgetEntryView(entry: entry)
+                .background(Color.clear)
+                .containerBackground(.clear, for: .widget) // Only for iOS 17+
         }
+        .contentMarginsDisabled() // Remove system margins to allow edge-to-edge background
         .configurationDisplayName("focUIs widget 3")
         .description("Apps in section 3")
         .supportedFamilies([.systemLarge])
@@ -337,15 +341,11 @@ struct focUIsWidget4: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: SectionedProvider(sectionIndex: 4)) { entry in
-            if #available(iOS 17.0, *) {
-                focUIsWidgetEntryView(entry: entry)
-                    .containerBackground(.fill.tertiary, for: .widget)
-            } else {
-                focUIsWidgetEntryView(entry: entry)
-                    .padding()
-                    .background()
-            }
+            focUIsWidgetEntryView(entry: entry)
+                .background(Color.clear)
+                .containerBackground(.clear, for: .widget) // Only for iOS 17+
         }
+        .contentMarginsDisabled() // Remove system margins to allow edge-to-edge background
         .configurationDisplayName("focUIs widget 4")
         .description("Apps in section 4")
         .supportedFamilies([.systemLarge])
@@ -357,15 +357,11 @@ struct focUIsWidget5: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: SectionedProvider(sectionIndex: 5)) { entry in
-            if #available(iOS 17.0, *) {
-                focUIsWidgetEntryView(entry: entry)
-                    .containerBackground(.fill.tertiary, for: .widget)
-            } else {
-                focUIsWidgetEntryView(entry: entry)
-                    .padding()
-                    .background()
-            }
+            focUIsWidgetEntryView(entry: entry)
+                .background(Color.clear)
+                .containerBackground(.clear, for: .widget) // Only for iOS 17+
         }
+        .contentMarginsDisabled() // Remove system margins to allow edge-to-edge background
         .configurationDisplayName("focUIs widget 5")
         .description("Apps in section 5")
         .supportedFamilies([.systemLarge])
@@ -377,15 +373,11 @@ struct focUIsWidget6: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: SectionedProvider(sectionIndex: 6)) { entry in
-            if #available(iOS 17.0, *) {
-                focUIsWidgetEntryView(entry: entry)
-                    .containerBackground(.fill.tertiary, for: .widget)
-            } else {
-                focUIsWidgetEntryView(entry: entry)
-                    .padding()
-                    .background()
-            }
+            focUIsWidgetEntryView(entry: entry)
+                .background(Color.clear)
+                .containerBackground(.clear, for: .widget) // Only for iOS 17+
         }
+        .contentMarginsDisabled() // Remove system margins to allow edge-to-edge background
         .configurationDisplayName("focUIs widget 6")
         .description("Apps in section 6")
         .supportedFamilies([.systemLarge])

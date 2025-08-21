@@ -29,6 +29,7 @@ export interface LocalUserSettings {
   fontSize: number;
   layout: string;
   fontColor: string;
+  verticalAlignment: string; // NEW: 'top' | 'middle' | 'bottom'
 }
 
 // Default values
@@ -36,7 +37,8 @@ const DEFAULT_USER_SETTINGS: LocalUserSettings = {
   theme: 'default',
   fontSize: 16,
   layout: 'center',
-  fontColor: '#FFFFFF'
+  fontColor: '#FFFFFF',
+  verticalAlignment: 'middle' // NEW: default to middle
 };
 
 class LocalStorageService {
