@@ -13,13 +13,9 @@ import {
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@packages/backend/convex/_generated/api";
 import useAvailableApps, { AvailableApp } from '../hooks/useAvailableApps';
 import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
-
-const SELECTED_APPS_KEY = 'SELECTED_APPS';
+import localStorageService, { LocalAppSelection } from '../services/LocalStorageService';
 
 const AppSelectionScreen = ({ navigation }) => {
   const backgroundUri = useBackgroundAsset();
@@ -28,67 +24,28 @@ const AppSelectionScreen = ({ navigation }) => {
   const [selectedApps, setSelectedApps] = useState<Set<string>>(new Set());
   const [isPersisting, setIsPersisting] = useState(false);
 
-  // Convex mutations
-  const upsertApp = useMutation(api.notes.upsertApp);
-  const toggleAppSelection = useMutation(api.notes.toggleAppSelection);
-
-  // Load existing user apps from Convex
-  const existingUserApps = useQuery(api.notes.getAllUserApps) || [];
-
-  // Load selected apps from AsyncStorage on mount (for backward compatibility)
+  // Load selected apps from local storage on mount
   useEffect(() => {
     const loadSelectedApps = async () => {
       try {
-        const stored = await AsyncStorage.getItem(SELECTED_APPS_KEY);
-        if (stored) {
-          const storedApps = new Set(JSON.parse(stored) as string[]);
-          setSelectedApps(storedApps);
-          
-          // Migrate stored apps to Convex if they exist
-          if (storedApps.size > 0) {
-            for (const appId of storedApps) {
-              const app = apps.find(a => a.id === appId);
-              if (app) {
-                await upsertApp({
-                  appName: app.name,
-                  packageName: app.packageName || app.name,
-                  displayName: app.name,
-                  isSelected: true,
-                  order: 0,
-                  urlScheme: app.urlScheme,
-                  appStoreUrl: app.appStoreUrl,
-                  isThirdParty: app.isThirdParty,
-                });
-              }
-            }
-            // Clear AsyncStorage after migration
-            await AsyncStorage.removeItem(SELECTED_APPS_KEY);
-          }
-        }
+        // Clean up legacy data first
+        await localStorageService.cleanupLegacyData();
+        
+        const storedApps = await localStorageService.getSelectedApps();
+        const selectedSet = new Set(storedApps.map(app => app.appId));
+        setSelectedApps(selectedSet);
       } catch (err) {
         console.error('Failed to load selected apps from storage', err);
       }
     };
     loadSelectedApps();
-  }, [apps, upsertApp]);
-
-  // Update selected apps state based on Convex data
-  useEffect(() => {
-    const selectedSet = new Set(
-      existingUserApps
-        .filter(app => app.isSelected)
-        .map(app => app.packageName || app.appName) // Use packageName or fallback to appName
-    );
-    setSelectedApps(selectedSet);
-  }, [existingUserApps]);
+  }, []);
 
   const handleToggle = async (appId: string) => {
     const app = apps.find(a => a.id === appId);
     if (!app) return;
 
-    // Use packageName as the identifier for consistency with backend
-    const identifier = app.packageName || app.name;
-    const isCurrentlySelected = selectedApps.has(identifier);
+    const isCurrentlySelected = selectedApps.has(appId);
 
     setIsPersisting(true);
     try {
@@ -96,27 +53,22 @@ const AppSelectionScreen = ({ navigation }) => {
       setSelectedApps(prev => {
         const next = new Set(prev);
         if (isCurrentlySelected) {
-          next.delete(identifier);
+          next.delete(appId);
         } else {
-          next.add(identifier);
+          next.add(appId);
         }
         return next;
       });
 
-      // Save to Convex backend
-      await upsertApp({
-        appName: app.name,
-        packageName: app.packageName || app.name,
+      // Save to local storage
+      await localStorageService.toggleAppSelection(appId, {
+        appId: app.id,
         displayName: app.name,
-        isSelected: !isCurrentlySelected,
-        order: existingUserApps.length,
+        packageName: app.packageName,
         urlScheme: app.urlScheme,
         appStoreUrl: app.appStoreUrl,
         isThirdParty: app.isThirdParty,
       });
-
-      // Note: Widget reorganization will happen automatically when the user navigates back to HomeScreen
-      // The HomeScreen has logic to auto-organize apps into widgets when needed
       
     } catch (err) {
       console.error('Failed to save app selection', err);
@@ -124,9 +76,9 @@ const AppSelectionScreen = ({ navigation }) => {
       setSelectedApps(prev => {
         const next = new Set(prev);
         if (isCurrentlySelected) {
-          next.delete(identifier);
+          next.delete(appId);
         } else {
-          next.add(identifier);
+          next.add(appId);
         }
         return next;
       });
@@ -141,7 +93,6 @@ const AppSelectionScreen = ({ navigation }) => {
   );
 
   const renderAppItem = ({ item }: { item: AvailableApp }) => {
-    const identifier = item.packageName || item.name;
     return (
       <View style={styles.appItem}>
         <View style={styles.appInfo}>
@@ -149,10 +100,10 @@ const AppSelectionScreen = ({ navigation }) => {
           {item.category && <Text style={styles.appCategory}>{item.category}</Text>}
         </View>
         <Switch
-          value={selectedApps.has(identifier)}
+          value={selectedApps.has(item.id)}
           onValueChange={() => handleToggle(item.id)}
           trackColor={{ false: '#3D3D3D', true: '#172F50' }}
-          thumbColor={selectedApps.has(identifier) ? '#E1E1E1' : '#F7F7F7'}
+          thumbColor={selectedApps.has(item.id) ? '#E1E1E1' : '#F7F7F7'}
         />
       </View>
     );
@@ -186,11 +137,7 @@ const AppSelectionScreen = ({ navigation }) => {
           />
         </View>
         <View style={styles.content}>
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Loading apps...</Text>
-            </View>
-          ) : error ? (
+          {error ? (
             <View style={styles.loadingContainer}>
               <Text style={styles.loadingText}>Error: {error}</Text>
               <TouchableOpacity onPress={refresh} style={styles.retryButton}>

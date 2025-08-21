@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -10,54 +10,53 @@ import {
   ImageBackground,
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
-import { useAuth } from "@clerk/clerk-expo";
-import { api } from "@packages/backend/convex/_generated/api";
-import { useQuery, useMutation } from "convex/react";
 import { Ionicons } from "@expo/vector-icons";
 import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
-
-interface UserSettings {
-  _id: string;
-  _creationTime: number;
-  fontSize?: number;
-  theme?: string;
-  layout?: string;
-  fontColor?: string;
-  userId: string;
-}
+import localStorageService, { LocalUserSettings } from '../services/LocalStorageService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SettingsScreen = ({ navigation }) => {
-  const { signOut } = useAuth();
-  const userSettings = useQuery(api.notes.getUserSettings) as UserSettings | null;
-  const updateUserSettings = useMutation(api.notes.updateUserSettings);
   const backgroundUri = useBackgroundAsset();
 
-  // Use local state, initialize from userSettings
-  const [fontSize, setFontSize] = useState(userSettings?.fontSize || 20);
-  const [theme, setTheme] = useState(userSettings?.theme || "default");
-  const [layout, setLayout] = useState(userSettings?.layout || "center");
+  // Use local state, initialize with defaults
+  const [fontSize, setFontSize] = useState(20);
+  const [theme, setTheme] = useState("default");
+  const [layout, setLayout] = useState("center");
   const [saving, setSaving] = useState(false);
-  const [fontColor, setFontColor] = useState(userSettings?.fontColor || 'white');
+  const [fontColor, setFontColor] = useState('white');
+  const [loading, setLoading] = useState(true);
 
-  // Update local state when userSettings changes (for Clerk hot reload)
-  React.useEffect(() => {
-    if (userSettings) {
-      setFontSize(userSettings.fontSize || 16);
-      setTheme(userSettings.theme || "default");
-      setLayout(userSettings.layout || "center");
-      // Auto-set fontColor based on theme
-      if ((userSettings.theme === 'default' || userSettings.theme === 'dark') || !userSettings.theme) {
-        setFontColor('white');
-      } else if (userSettings.theme === 'light') {
-        setFontColor('black');
-      } else {
-        setFontColor(userSettings.fontColor || 'white');
+  // Load settings from local storage on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        setLoading(true);
+        const settings = await localStorageService.getUserSettings();
+        
+        setFontSize(settings.fontSize || 20);
+        setTheme(settings.theme || "default");
+        setLayout(settings.layout || "center");
+        
+        // Auto-set fontColor based on theme
+        if ((settings.theme === 'default' || settings.theme === 'dark') || !settings.theme) {
+          setFontColor('white');
+        } else if (settings.theme === 'light') {
+          setFontColor('black');
+        } else {
+          setFontColor(settings.fontColor || 'white');
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [userSettings]);
+    };
+    
+    loadSettings();
+  }, []);
 
   // When theme changes, auto-set fontColor (but allow user to override)
-  React.useEffect(() => {
+  useEffect(() => {
     if (theme === 'default' || theme === 'dark') {
       setFontColor('white');
     } else if (theme === 'light') {
@@ -69,7 +68,7 @@ const SettingsScreen = ({ navigation }) => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateUserSettings({ fontSize, theme, layout, fontColor });
+      await localStorageService.saveUserSettings({ fontSize, theme, layout, fontColor });
       Alert.alert("Settings Saved", "Your preferences have been updated.");
       navigation.goBack();
     } catch (error) {
@@ -94,10 +93,36 @@ const SettingsScreen = ({ navigation }) => {
             setTheme("default");
             setLayout("center");
             try {
-              await updateUserSettings({ fontSize: 20, theme: "default", layout: "center" });
+              await localStorageService.saveUserSettings({ fontSize: 20, theme: "default", layout: "center", fontColor: "white" });
               Alert.alert("Styling Reset", "All styling has been reset to default.");
+              navigation.goBack(); // Navigate back after reset
             } catch (error) {
               Alert.alert("Error", "Failed to reset styling");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Clear All Apps handler
+  const handleClearAllApps = () => {
+    Alert.alert(
+      "Clear All Apps",
+      "Are you sure you want to clear all selected apps? This will remove all app selections and widget configurations. This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear All",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Clear only app-related data, not settings
+              await AsyncStorage.multiRemove(['selectedApps', 'widgetConfig']);
+              Alert.alert("Apps Cleared", "All selected apps have been cleared.");
+              navigation.goBack(); // Navigate back after clearing
+            } catch (error) {
+              Alert.alert("Error", "Failed to clear apps");
             }
           },
         },
@@ -109,27 +134,6 @@ const SettingsScreen = ({ navigation }) => {
   const handleFontSizeChange = (newSize) => setFontSize(newSize);
   const handleThemeChange = (newTheme) => setTheme(newTheme);
   const handleLayoutChange = (newLayout) => setLayout(newLayout);
-
-  const handleSignOut = async () => {
-    Alert.alert(
-      "Sign Out",
-      "Are you sure you want to sign out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Sign Out",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await signOut();
-            } catch (error) {
-              Alert.alert("Error", "Failed to sign out");
-            }
-          },
-        },
-      ]
-    );
-  };
 
   const renderSettingItem = ({ title, subtitle, onPress, showArrow = true }) => (
     <TouchableOpacity style={styles.settingItem} onPress={onPress}>
@@ -282,6 +286,8 @@ const SettingsScreen = ({ navigation }) => {
     </View>
   );
 
+
+
   return (
     <ImageBackground
       source={{ uri: backgroundUri }}
@@ -309,41 +315,36 @@ const SettingsScreen = ({ navigation }) => {
         </View>
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Appearance */}
-          <View style={[styles.section, { backgroundColor: 'transparent' }]}>
+          <View style={[styles.section, { backgroundColor: 'transparent', marginBottom: 10 }]}>
             {renderFontSizeSelector()}
             {renderThemeSelector()}
             {renderFontColorSelector()}
             {renderAlignmentSelector()}
           </View>
 
-          {/* Sign Out Button */}
-          <View style={[styles.section, { backgroundColor: 'transparent', marginBottom: 20 }]}>
-            <View style={styles.horizontalButtonContainer}>
-              <TouchableOpacity
-                style={[styles.signOutButton, { marginRight: 8, flex: 1 }]}
-                onPress={handleResetStyling}
-                activeOpacity={0.7}
-                accessibilityLabel="Reset all styling to default"
-                accessibilityRole="button"
-              >
-                <Text style={styles.resetStylingButtonText}>Reset Styling</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.signOutButton, { flex: 1 }]}
-                onPress={handleSignOut}
-                activeOpacity={0.7}
-                accessibilityLabel="Sign out of your account"
-                accessibilityRole="button"
-              >
-                <Text style={styles.signOutButtonText}>Sign Out</Text>
-              </TouchableOpacity>
-            </View>
+          {/* Reset Styling Button */}
+          <View style={[styles.section, { backgroundColor: 'transparent', marginBottom: 10 }]}>
+            <TouchableOpacity
+              style={[styles.signOutButton, { marginBottom: 8 }]}
+              onPress={handleResetStyling}
+              activeOpacity={0.7}
+              accessibilityLabel="Reset all styling to default"
+              accessibilityRole="button"
+            >
+              <Text style={styles.resetStylingButtonText}>Reset Styling</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.signOutButton, {}]}
+              onPress={handleClearAllApps}
+              activeOpacity={0.7}
+              accessibilityLabel="Clear all selected apps"
+              accessibilityRole="button"
+            >
+              <Text style={styles.clearDataButtonText}>Clear All Apps</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Version at the bottom */}
-          <View style={{ alignItems: 'center', marginTop: 24, marginBottom: 24 }}>
-            <Text style={styles.versionText}>Version 1.0.0</Text>
-          </View>
+
         </ScrollView>
       </View>
     </ImageBackground>
@@ -509,7 +510,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent", // transparent when unfocused
     flex: 1,
     marginHorizontal: 5,
-    minWidth: 90, // make buttons wider
+    minWidth: 95, // make buttons wider so "Center" fits
   },
   layoutButtonActive: {
     backgroundColor: "#E1E1E1", // gray when focused
@@ -541,6 +542,11 @@ const styles = StyleSheet.create({
     fontSize: RFValue(16),
     fontFamily: "MRegular",
     color: "#DC3545", // error red from palette
+  },
+  clearDataButtonText: {
+    fontSize: RFValue(16),
+    fontFamily: "MRegular",
+    color: "#DC3545", // same red as reset styling
   },
   versionContainer: {
     alignItems: 'center',
@@ -594,6 +600,7 @@ const styles = StyleSheet.create({
   fontColorButtonTextActive: {
     color: '#172F50',
   },
+
 });
 
 export default SettingsScreen; 

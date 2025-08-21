@@ -2,7 +2,6 @@ import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaView } from "react-native-safe-area-context";
-import LoginScreen from "../screens/LoginScreen";
 import HomeScreen from "../screens/HomeScreen";
 import AppSelectionScreen from "../screens/AppSelectionScreen";
 import SettingsScreen from "../screens/SettingsScreen";
@@ -17,10 +16,9 @@ const Navigation = () => {
       <NavigationContainer>
         <Stack.Navigator
           id={undefined}
-          initialRouteName="LoginScreen"
+          initialRouteName="HomeScreen"
           screenOptions={{ headerShown: false }}
         >
-          <Stack.Screen name="LoginScreen" component={LoginScreen} />
           <Stack.Screen name="HomeScreen" component={HomeScreen} />
           <Stack.Screen name="AppSelectionScreen" component={AppSelectionScreen} />
           <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
