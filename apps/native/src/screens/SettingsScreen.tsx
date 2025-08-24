@@ -290,7 +290,7 @@ const SettingsScreen = ({ navigation }) => {
   );
 
   const renderVerticalAlignmentSelector = () => (
-    <View style={styles.section}>
+    <View style={[styles.section, { marginBottom: 0 }]}>
       <Text style={styles.sectionTitle}>Vertical Layout</Text>
       <View style={styles.layoutContainer}>
         {[
