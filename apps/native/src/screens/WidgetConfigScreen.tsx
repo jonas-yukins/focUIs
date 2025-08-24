@@ -9,6 +9,7 @@ import {
   ScrollView,
   ImageBackground,
   Platform,
+  Modal,
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { Ionicons } from "@expo/vector-icons";
@@ -48,6 +49,9 @@ const WidgetConfigScreen = ({ navigation }) => {
   // --- Move To Section State ---
   const [moveMode, setMoveMode] = useState(false);
   const [selectedApp, setSelectedApp] = useState<{ sectionIndex: number; appIndex: number } | null>(null);
+  
+  // --- Info Popup State ---
+  const [showInfoPopup, setShowInfoPopup] = useState(false);
 
   // Load data from local storage on mount
   useEffect(() => {
@@ -360,9 +364,19 @@ const WidgetConfigScreen = ({ navigation }) => {
               >
                 {sections.map((section, sectionIndex) => (
                   <View key={sectionIndex} style={{ flex: 1, backgroundColor: "transparent" }}>
-                    <Text style={styles.dragDropTitle}>
-                      Screen {sectionIndex + 1}
-                    </Text>
+                    <View style={styles.widgetTitleContainer}>
+                      <Text style={styles.dragDropTitle}>
+                        Section {sectionIndex + 1}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => setShowInfoPopup(true)}
+                        style={styles.infoButton}
+                      >
+                        <View style={styles.infoIconContainer}>
+                          <Ionicons name="information-circle-outline" size={20} color="#7A7A7A" />
+                        </View>
+                      </TouchableOpacity>
+                    </View>
                     <Sortable
                       data={section}
                       renderItem={renderAppItem(sectionIndex)}
@@ -402,6 +416,39 @@ const WidgetConfigScreen = ({ navigation }) => {
             </View>
           </View>
         )}
+        
+        {/* Info Popup Modal */}
+        <Modal
+          visible={showInfoPopup}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowInfoPopup(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowInfoPopup(false)}
+          >
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Ionicons name="information-circle" size={24} color="#F7F7F7" />
+                <Text style={styles.modalTitle}>App Sections</Text>
+              </View>
+              <Text style={styles.modalText}>
+                Apps are organized into sections to fit within the home screen widget display. Each section can contain up to 6 apps.
+              </Text>
+              <Text style={styles.modalText}>
+                To access a specific section on your home screen, add the corresponding widget to your device's home screen.
+              </Text>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => setShowInfoPopup(false)}
+              >
+                <Text style={styles.modalButtonText}>Got it</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
       </View>
     </ImageBackground>
   );
@@ -447,11 +494,27 @@ const styles = StyleSheet.create({
   sectionContainer: {
     marginBottom: 20,
   },
+  widgetTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    justifyContent: 'flex-start',
+  },
   dragDropTitle: {
     fontSize: RFValue(16),
     fontFamily: "MSemiBold",
     color: "#7A7A7A",
-    marginBottom: 12,
+    marginRight: 8,
+  },
+  infoButton: {
+    padding: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoIconContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 1,
   },
   sortableList: {
     flex: 1,
@@ -567,6 +630,58 @@ const styles = StyleSheet.create({
     borderColor: '#6D8AAF',
   },
   emptyStateButtonText: {
+    fontSize: RFValue(16),
+    fontFamily: "MSemiBold",
+    color: "#F7F7F7",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  modalContent: {
+    backgroundColor: 'rgba(23, 47, 80, 0.95)',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 320,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: '#6D8AAF',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: RFValue(18),
+    fontFamily: "MBold",
+    color: "#F7F7F7",
+    marginLeft: 8,
+  },
+  modalText: {
+    fontSize: RFValue(14),
+    fontFamily: "MRegular",
+    color: "#C8D2E0",
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  modalButton: {
+    backgroundColor: '#6D8AAF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  modalButtonText: {
     fontSize: RFValue(16),
     fontFamily: "MSemiBold",
     color: "#F7F7F7",
