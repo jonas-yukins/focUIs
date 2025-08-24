@@ -17,8 +17,8 @@
 		DDF1E1EF2E3BFE8B0044FD3A /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DDF1E1EE2E3BFE8B0044FD3A /* SwiftUI.framework */; };
 		DDF1E1FE2E3BFE8D0044FD3A /* focUIsWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DDF1E1EB2E3BFE8B0044FD3A /* focUIsWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-        F1A7C0012D0EEE9900AAA111 /* MainApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A7C0002D0EEE9900AAA111 /* MainApplication.swift */; };
-        F1A7C0032D0EEF1B00AAA111 /* WidgetReloader.m in Sources */ = {isa = PBXBuildFile; fileRef = F1A7C0022D0EEF1B00AAA111 /* WidgetReloader.m */; };
+		F1A7C0012D0EEE9900AAA111 /* MainApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A7C0002D0EEE9900AAA111 /* MainApplication.swift */; };
+		F1A7C0032D0EEF1B00AAA111 /* WidgetReloader.m in Sources */ = {isa = PBXBuildFile; fileRef = F1A7C0022D0EEF1B00AAA111 /* WidgetReloader.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,9 +63,9 @@
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = focUIs/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* focUIs-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "focUIs-Bridging-Header.h"; path = "focUIs/focUIs-Bridging-Header.h"; sourceTree = "<group>"; };
+		F1A7C0002D0EEE9900AAA111 /* MainApplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MainApplication.swift; path = focUIs/MainApplication.swift; sourceTree = "<group>"; };
+		F1A7C0022D0EEF1B00AAA111 /* WidgetReloader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = WidgetReloader.m; path = focUIs/WidgetReloader.m; sourceTree = "<group>"; };
 		FE9C3BFB28458BBFDDEEC296 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = focUIs/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-        F1A7C0002D0EEE9900AAA111 /* MainApplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MainApplication.swift; path = focUIs/MainApplication.swift; sourceTree = "<group>"; };
-        F1A7C0022D0EEF1B00AAA111 /* WidgetReloader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = WidgetReloader.m; path = focUIs/WidgetReloader.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -400,7 +400,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-focUIs/expo-configure-project.sh\"\n\n# Create output file for dependency tracking\necho \"Expo configure project completed at $(date)\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-focUIs/expo-configure-project.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -411,8 +411,8 @@
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
 				1BB9DC7FEEADBA1D32A11598 /* ExpoModulesProvider.swift in Sources */,
-                F1A7C0012D0EEE9900AAA111 /* MainApplication.swift in Sources */,
-                F1A7C0032D0EEF1B00AAA111 /* WidgetReloader.m in Sources */,
+				F1A7C0012D0EEE9900AAA111 /* MainApplication.swift in Sources */,
+				F1A7C0032D0EEF1B00AAA111 /* WidgetReloader.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -496,8 +496,8 @@
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jonasyukins.focuis;
 				PRODUCT_NAME = focUIs;
-				SWIFT_OBJC_BRIDGING_HEADER = "focUIs/focUIs-Bridging-Header.h";
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OBJC_BRIDGING_HEADER = "focUIs/focUIs-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -533,6 +533,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				ENABLE_PARALLELIZATION_IN_COMMAND_LINE_BUILDS = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -567,7 +568,6 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				USE_HERMES = true;
-				ENABLE_PARALLELIZATION_IN_COMMAND_LINE_BUILDS = YES;
 			};
 			name = Debug;
 		};
@@ -602,6 +602,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
 				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_PARALLELIZATION_IN_COMMAND_LINE_BUILDS = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -627,7 +628,6 @@
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;
-				ENABLE_PARALLELIZATION_IN_COMMAND_LINE_BUILDS = YES;
 			};
 			name = Release;
 		};

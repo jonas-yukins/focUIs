@@ -104,5 +104,7 @@
     <string>Light</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Allow focUIs to save wallpapers to your photo library.</string>
   </dict>
 </plist>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   View,
@@ -8,19 +8,89 @@ import {
   Platform,
   Linking,
   ImageBackground,
+  Dimensions,
+  Image,
+  Alert,
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { Ionicons } from "@expo/vector-icons";
+import PagerView from 'react-native-pager-view';
+import * as MediaLibrary from 'expo-media-library';
+import * as FileSystem from 'expo-file-system';
+import { Asset } from 'expo-asset';
 import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
 
 const SetupScreen = ({ navigation }) => {
   const backgroundUri = useBackgroundAsset();
+  const [currentWallpaperIndex, setCurrentWallpaperIndex] = useState(0);
+  const [permissionResponse, requestPermission] = MediaLibrary.usePermissions({ writeOnly: true });
+  
+  // Wallpaper options with actual images
+  const wallpapers = [
+    {
+      id: 1,
+      name: "Light Pink",
+      type: "image",
+      image: require('../../assets/wallpapers/light_pink_wallpaper.jpg')
+    },
+    {
+      id: 2,
+      name: "Black",
+      type: "image", 
+      image: require('../../assets/wallpapers/black_wallpaper.jpg')
+    },
+    {
+      id: 3,
+      name: "White",
+      type: "image",
+      image: require('../../assets/wallpapers/white_wallpaper.jpg')
+    },
+    {
+      id: 4,
+      name: "Dark Gray",
+      type: "image",
+      image: require('../../assets/wallpapers/dark_gray_wallpaper.jpg')
+    }
+  ];
   
   const openWidgetSettings = () => {
     if (Platform.OS === 'ios') {
       Linking.openURL('App-Prefs:root=NOTIFICATION_ID&path=com.apple.preference.notifications');
     } else if (Platform.OS === 'android') {
-      Linking.openURL('android-app://com.android.settings/.widget.SettingsAppWidgetProviderActivity');
+      Linking.openURL('android-app://com.android.settings/.widget.SettingsAppProviderActivity');
+    }
+  };
+
+  const saveWallpaperToPhotos = async () => {
+    try {
+      // Check and request write-only permissions
+      if (permissionResponse?.status !== 'granted') {
+        await requestPermission();
+        return;
+      }
+      
+      const selectedWallpaper = wallpapers[currentWallpaperIndex];
+      
+      // Use Asset module to download the asset to cache directory
+      const asset = Asset.fromModule(selectedWallpaper.image);
+      await asset.downloadAsync();
+      
+      // Save to media library using the downloaded asset URI
+      const savedAsset = await MediaLibrary.saveToLibraryAsync(asset.localUri);
+      
+      Alert.alert(
+        'Success!',
+        `${selectedWallpaper.name} wallpaper has been saved to your photo library.`,
+        [{ text: 'OK' }]
+      );
+      
+    } catch (error) {
+      console.error('Error saving wallpaper:', error);
+      Alert.alert(
+        'Error',
+        'Failed to save wallpaper. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
@@ -42,33 +112,38 @@ const SetupScreen = ({ navigation }) => {
       <Text style={styles.sectionTitle}>Add focUIs Widget</Text>
       {renderStep(
         "1",
-        "Long-press your home screen",
-        "Press and hold anywhere on your home screen until the icons start jiggling."
+        "Open the app widget screen",
+        "Long-press on home screen, then tap the edit button in the top left corner."
       )}
       {renderStep(
         "2",
-        "Tap the '+' button",
-        "Tap the '+' button in the top-left corner of the screen."
+        "Select add widget",
+        "Tap the '+' button to add a new widget to your home screen."
       )}
       {renderStep(
         "3",
-        "Search for focUIs",
-        "Scroll or search for 'focUIs' in the widget list."
+        "Find focUIs widget",
+        "Scroll down or search for 'focUIs' in the widget list, then select it."
       )}
       {renderStep(
         "4",
-        "Choose widget size",
-        "Select a widget size (small, medium, or large) that fits your needs."
+        "Choose widget 1",
+        "Swipe to widget 1 (the main focUIs widget), then tap 'Add Widget'."
       )}
       {renderStep(
         "5",
-        "Add and place widget",
-        "Tap 'Add Widget', then place it where you want on your home screen."
+        "Widget is now active",
+        "The focUIs widget will now appear on your home screen and start working."
       )}
       {renderStep(
         "6",
-        "Finish setup",
-        "Tap 'Done' in the top-right corner to complete the setup."
+        "Hide widget titles",
+        "Long-press on the home screen, tap 'Edit', then tap 'Customize'."
+      )}
+      {renderStep(
+        "7",
+        "Select large size",
+        "Choose 'Large' size to hide all widget titles for a cleaner look."
       )}
     </View>
   );
@@ -152,6 +227,11 @@ const SetupScreen = ({ navigation }) => {
             "Apply to home screen",
             "Tap 'Set as Home Screen Only' to apply."
           )}
+          {renderStep(
+            "4",
+            "Customize home screen",
+            "Select 'Customize Home Screen' and set blur to off."
+          )}
         </>
       ) : (
         <>
@@ -170,22 +250,48 @@ const SetupScreen = ({ navigation }) => {
             "Apply to home screen",
             "Apply it to the home screen only."
           )}
+          {renderStep(
+            "4",
+            "Customize home screen",
+            "Select 'Customize Home Screen' and set blur to off."
+          )}
         </>
       )}
-      <View style={styles.colorSection}>
-        <Text style={styles.colorTitle}>Suggested Colors:</Text>
-        <View style={styles.colorRow}>
-          <View style={[styles.colorSwatch, { backgroundColor: '#E1E1E1' }]} />
-          <Text style={styles.colorText}>#E1E1E1 – Light Gray</Text>
+      <View style={styles.wallpaperSection}>
+        <Text style={styles.wallpaperTitle}>Choose Your Wallpaper:</Text>
+        <View style={styles.carouselContainer}>
+          <PagerView
+            style={styles.carousel}
+            initialPage={0}
+            onPageSelected={(e) => setCurrentWallpaperIndex(e.nativeEvent.position)}
+          >
+            {wallpapers.map((wallpaper, index) => (
+              <View key={wallpaper.id} style={styles.wallpaperSlide}>
+                <View style={styles.wallpaperPreview}>
+                  <Image 
+                    source={wallpaper.image} 
+                    style={styles.wallpaperImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.wallpaperOverlay}>
+                    <Text style={styles.wallpaperName}>{wallpaper.name}</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </PagerView>
         </View>
-        <View style={styles.colorRow}>
-          <View style={[styles.colorSwatch, { backgroundColor: '#172F50' }]} />
-          <Text style={styles.colorText}>#172F50 – Deep Navy</Text>
-        </View>
-        <View style={styles.colorRow}>
-          <View style={[styles.colorSwatch, { backgroundColor: '#F7F7F7' }]} />
-          <Text style={styles.colorText}>#F7F7F7 – Extra Light Gray</Text>
-        </View>
+        <TouchableOpacity 
+          style={styles.saveButton} 
+          onPress={saveWallpaperToPhotos}
+        >
+          <Ionicons 
+            name="download-outline" 
+            size={20} 
+            color="#FFFFFF" 
+          />
+          <Text style={styles.saveButtonText}>Save Wallpaper</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -478,32 +584,68 @@ const styles = StyleSheet.create({
     marginLeft: 38,
     marginBottom: 2,
   },
-  colorSection: {
-    marginTop: 10,
+  wallpaperSection: {
+    marginTop: 16,
   },
-  colorTitle: {
+  wallpaperTitle: {
     fontFamily: 'MSemiBold',
     fontSize: RFValue(14),
     color: '#F7F7F7',
-    marginBottom: 6,
+    marginBottom: 12,
   },
-  colorRow: {
+  carouselContainer: {
+    height: 120,
+    marginBottom: 16,
+  },
+  carousel: {
+    flex: 1,
+  },
+  wallpaperSlide: {
+    flex: 1,
+    paddingHorizontal: 8,
+  },
+  wallpaperPreview: {
+    flex: 1,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#C8D2E0',
+    overflow: 'hidden',
+  },
+  wallpaperImage: {
+    width: '100%',
+    height: '100%',
+  },
+  wallpaperOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(23, 47, 80, 0.8)',
+    padding: 8,
+    alignItems: 'center',
+  },
+
+  wallpaperName: {
+    fontFamily: 'MSemiBold',
+    fontSize: RFValue(14),
+    color: '#F7F7F7',
+    textAlign: 'center',
+  },
+  saveButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    justifyContent: 'center',
+    backgroundColor: '#172F50',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignSelf: 'center',
   },
-  colorSwatch: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: '#B3B3B3',
-  },
-  colorText: {
-    fontFamily: 'MRegular',
-    fontSize: RFValue(13),
-    color: '#C8D2E0',
+  saveButtonText: {
+    fontFamily: 'MSemiBold',
+    fontSize: RFValue(14),
+    color: '#FFFFFF',
+    marginLeft: 8,
   },
   completionSection: {
     backgroundColor: "#E8F5E8",

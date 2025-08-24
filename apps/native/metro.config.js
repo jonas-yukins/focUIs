@@ -37,4 +37,20 @@ config.cacheStores = [
   }),
 ];
 
+// Ensure image assets are properly handled
+config.resolver.assetExts = [
+  ...config.resolver.assetExts,
+  'jpg',
+  'jpeg',
+  'png',
+  'gif',
+  'webp',
+  'svg',
+];
+
+// Ensure source extensions don't include image files
+config.resolver.sourceExts = config.resolver.sourceExts.filter(ext => 
+  !['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)
+);
+
 module.exports = config;
