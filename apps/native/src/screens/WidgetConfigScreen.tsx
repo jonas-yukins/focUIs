@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Sortable, SortableItem, SortableRenderItemProps } from "react-native-reanimated-dnd";
 import PagerView from 'react-native-pager-view';
 import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
-import localStorageService, { LocalAppSelection, LocalWidgetConfig, LocalUserSettings } from '../services/LocalStorageService';
+import localStorageService, { LocalAppSelection, LocalWidgetConfig } from '../services/LocalStorageService';
 
 const { width, height } = Dimensions.get("window");
 
@@ -35,12 +35,6 @@ interface DraggableApp {
 const WidgetConfigScreen = ({ navigation }) => {
   const backgroundUri = useBackgroundAsset();
   const [selectedApps, setSelectedApps] = useState<LocalAppSelection[]>([]);
-  const [userSettings, setUserSettings] = useState<LocalUserSettings>({
-    theme: 'default',
-    fontSize: 16,
-    layout: 'center',
-    fontColor: '#FFFFFF'
-  });
   const [loading, setLoading] = useState(true);
 
   const [sections, setSections] = useState<DraggableApp[][]>([]);
@@ -60,13 +54,8 @@ const WidgetConfigScreen = ({ navigation }) => {
     const loadData = async () => {
       try {
         setLoading(true);
-        const [apps, settings] = await Promise.all([
-          localStorageService.getSelectedApps(),
-          localStorageService.getUserSettings()
-        ]);
-        
+        const apps = await localStorageService.getSelectedApps();
         setSelectedApps(apps);
-        setUserSettings(settings);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -479,7 +468,7 @@ const styles = StyleSheet.create({
   dragHandle: {
     padding: 12,
     borderRadius: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    backgroundColor: "transparent",
   },
   dragIconContainer: {
     flexDirection: "row",
@@ -518,7 +507,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
     padding: 6,
     borderRadius: 16,
-    backgroundColor: 'rgba(74, 144, 226, 0.08)',
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
