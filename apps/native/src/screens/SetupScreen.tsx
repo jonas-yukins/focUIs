@@ -11,8 +11,11 @@ import {
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { Ionicons } from "@expo/vector-icons";
+import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
 
 const SetupScreen = ({ navigation }) => {
+  const backgroundUri = useBackgroundAsset();
+  
   const openWidgetSettings = () => {
     if (Platform.OS === 'ios') {
       Linking.openURL('App-Prefs:root=NOTIFICATION_ID&path=com.apple.preference.notifications');
@@ -301,7 +304,7 @@ const SetupScreen = ({ navigation }) => {
 
   return (
     <ImageBackground
-      source={require("../../assets/background_gradient.png")}
+      source={{ uri: backgroundUri }}
       style={styles.background}
       resizeMode="cover"
     >
