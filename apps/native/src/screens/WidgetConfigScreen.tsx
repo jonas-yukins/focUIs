@@ -35,7 +35,7 @@ interface DraggableApp {
 const WidgetConfigScreen = ({ navigation }) => {
   const backgroundUri = useBackgroundAsset();
   const [selectedApps, setSelectedApps] = useState<LocalAppSelection[]>([]);
-  const [loading, setLoading] = useState(true);
+
 
   const [sections, setSections] = useState<DraggableApp[][]>([]);
   const sectionsRef = useRef<DraggableApp[][]>([]);
@@ -53,13 +53,10 @@ const WidgetConfigScreen = ({ navigation }) => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        setLoading(true);
         const apps = await localStorageService.getSelectedApps();
         setSelectedApps(apps);
       } catch (error) {
         console.error('Error loading data:', error);
-      } finally {
-        setLoading(false);
       }
     };
     
@@ -322,63 +319,89 @@ const WidgetConfigScreen = ({ navigation }) => {
             <Ionicons name="arrow-back" size={24} color="#F7F7F7" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Configure Apps</Text>
-          <TouchableOpacity
-            onPress={saveAppOrder}
-            style={styles.headerButton}
-            accessibilityLabel="Save app order"
-            accessibilityRole="button"
-          >
-            <Ionicons name="checkmark" size={26} color="#28A745" />
-          </TouchableOpacity>
+          <View style={styles.headerButton}>
+            <TouchableOpacity
+              onPress={selectedApps.length > 0 ? saveAppOrder : undefined}
+              accessibilityLabel="Save app order"
+              accessibilityRole="button"
+              disabled={selectedApps.length === 0}
+            >
+              <Ionicons 
+                name="checkmark" 
+                size={26} 
+                color={selectedApps.length > 0 ? "#28A745" : "transparent"} 
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Horizontal Pager for Sections */}
         <View style={styles.dragDropContainer}>
-          <PagerView
-            style={{ flex: 1 }}
-            initialPage={0}
-            onPageSelected={e => setCurrentPage(e.nativeEvent.position)}
-          >
-            {sections.map((section, sectionIndex) => (
-              <View key={sectionIndex} style={{ flex: 1, backgroundColor: "transparent" }}>
-                <Text style={styles.dragDropTitle}>
-                  Screen {sectionIndex + 1}
-                </Text>
-                <Sortable
-                  data={section}
-                  renderItem={renderAppItem(sectionIndex)}
-                  itemHeight={80}
-                  style={styles.sortableList}
-                  contentContainerStyle={styles.sortableListContent}
-                  itemKeyExtractor={(item) => item.id}
-                >
-                  {/* In the PagerView section, when rendering each Sortable, pass fontSize={widgetFontSize} to the widget preview component (focUIsWidget or WidgetPreview) if used.
-                  If you use a custom preview, pass fontSize={widgetFontSize} to the Text displaying app names. */}
-                </Sortable>
+          {selectedApps.length === 0 ? (
+            <View style={[styles.emptyStateContainer, { paddingBottom: 100 }]}>
+              <Ionicons name="apps-outline" size={64} color="#B3B3B3" style={styles.emptyStateIcon} />
+              <Text style={styles.emptyStateTitle}>No Apps Selected</Text>
+              <Text style={styles.emptyStateSubtitle}>
+                Go back and select some apps to configure them here
+              </Text>
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={styles.emptyStateButton}
+              >
+                <Text style={styles.emptyStateButtonText}>Go Back</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <PagerView
+                style={{ flex: 1 }}
+                initialPage={0}
+                onPageSelected={e => setCurrentPage(e.nativeEvent.position)}
+              >
+                {sections.map((section, sectionIndex) => (
+                  <View key={sectionIndex} style={{ flex: 1, backgroundColor: "transparent" }}>
+                    <Text style={styles.dragDropTitle}>
+                      Screen {sectionIndex + 1}
+                    </Text>
+                    <Sortable
+                      data={section}
+                      renderItem={renderAppItem(sectionIndex)}
+                      itemHeight={80}
+                      style={styles.sortableList}
+                      contentContainerStyle={styles.sortableListContent}
+                      itemKeyExtractor={(item) => item.id}
+                    >
+                      {/* In the PagerView section, when rendering each Sortable, pass fontSize={widgetFontSize} to the widget preview component (focUIsWidget or WidgetPreview) if used.
+                      If you use a custom preview, pass fontSize={widgetFontSize} to the Text displaying app names. */}
+                    </Sortable>
+                  </View>
+                ))}
+              </PagerView>
+              {/* Page Indicator Dots */}
+              <View style={styles.dotsContainer}>
+                {sections.map((_, idx) => (
+                  <View
+                    key={idx}
+                    style={[
+                      styles.dot,
+                      currentPage === idx ? styles.activeDot : styles.inactiveDot,
+                    ]}
+                  />
+                ))}
               </View>
-            ))}
-          </PagerView>
-          {/* Page Indicator Dots */}
-          <View style={styles.dotsContainer}>
-            {sections.map((_, idx) => (
-              <View
-                key={idx}
-                style={[
-                  styles.dot,
-                  currentPage === idx ? styles.activeDot : styles.inactiveDot,
-                ]}
-              />
-            ))}
-          </View>
+            </>
+          )}
         </View>
         {/* Instructions Section */}
-        <View style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 48, alignItems: 'center' }}>
-          <View style={{ backgroundColor: 'rgba(23, 47, 80, 0.92)', borderRadius: 16, padding: 16, width: '100%', maxWidth: 400, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
-            <Text style={{ color: '#F7F7F7', fontSize: 14, textAlign: 'center', lineHeight: 20 }}>
-              Drag the right icon to reorder. Tap the switch to swap. Press ✓ to save.
-            </Text>
+        {selectedApps.length > 0 && (
+          <View style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 48, alignItems: 'center' }}>
+            <View style={{ backgroundColor: 'rgba(23, 47, 80, 0.92)', borderRadius: 16, padding: 16, width: '100%', maxWidth: 400, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
+              <Text style={{ color: '#F7F7F7', fontSize: 14, textAlign: 'center', lineHeight: 20 }}>
+                Drag the right icon to reorder. Tap the switch to swap. Press ✓ to save.
+              </Text>
+            </View>
           </View>
-        </View>
+        )}
       </View>
     </ImageBackground>
   );
@@ -510,6 +533,43 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  emptyStateIcon: {
+    marginBottom: 16,
+  },
+  emptyStateTitle: {
+    fontSize: RFValue(24),
+    fontFamily: "MBold",
+    color: "#F7F7F7",
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptyStateSubtitle: {
+    fontSize: RFValue(16),
+    fontFamily: "MRegular",
+    color: "#B3B3B3",
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  emptyStateButton: {
+    backgroundColor: 'rgba(23, 47, 80, 0.9)',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#6D8AAF',
+  },
+  emptyStateButtonText: {
+    fontSize: RFValue(16),
+    fontFamily: "MSemiBold",
+    color: "#F7F7F7",
   },
 });
 
