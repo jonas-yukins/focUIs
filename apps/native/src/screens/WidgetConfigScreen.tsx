@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: 'rgba(23, 47, 80, 0.7)',
-    paddingTop: 50,
+    paddingTop: 60,
     paddingBottom: 20,
     paddingHorizontal: 20,
     flexDirection: "row",
