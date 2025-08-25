@@ -29,7 +29,8 @@ const HomeScreen = ({ navigation }) => {
     theme: 'default',
     fontSize: 16,
     layout: 'center',
-    fontColor: '#FFFFFF'
+    fontColor: '#FFFFFF',
+    verticalAlignment: 'middle'
   });
   const [loading, setLoading] = useState(true);
 
@@ -272,36 +273,37 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.quickAccessContainer}>
           <View style={styles.quickAccessButtons}>
             <TouchableOpacity
+              onPress={() => navigation.navigate("SetupScreen")}
+              style={styles.quickAccessButton}
+            >
+              <Ionicons name="information-circle-outline" size={24} color="#F7F7F7" />
+              <Text style={styles.quickAccessButtonText}>Guide</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               onPress={() => navigation.navigate("AppSelectionScreen")}
               style={styles.quickAccessButton}
             >
               <Ionicons name="apps-outline" size={24} color="#F7F7F7" />
-              <Text style={styles.quickAccessButtonText}>Select Apps</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => navigation.navigate("SetupScreen")}
-              style={styles.quickAccessButton}
-            >
-              <Ionicons name="phone-portrait-outline" size={24} color="#F7F7F7" />
-              <Text style={styles.quickAccessButtonText}>Setup Guide</Text>
+              <Text style={styles.quickAccessButtonText}>Apps</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => navigation.navigate("WidgetConfigScreen")}
               style={styles.quickAccessButton}
             >
-              <Ionicons name="grid-outline" size={24} color="#F7F7F7" />
-              <Text style={styles.quickAccessButtonText}>Edit Widget</Text>
+              <Ionicons name="create-outline" size={24} color="#F7F7F7" />
+              <Text style={styles.quickAccessButtonText}>Edit</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Content */}
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {selectedApps.length === 0 ? (
+        {selectedApps.length === 0 ? (
+          <View style={styles.emptyStateContainer}>
             <View style={styles.emptyState}>
+              <Ionicons name="phone-portrait-outline" size={64} color="#B3B3B3" style={styles.emptyStateIcon} />
               <Text style={styles.emptyStateTitle}>No Apps Selected</Text>
               <Text style={styles.emptyStateText}>
-                Tap the settings button to select which apps to display
+                Tap the button below to select which apps to display
               </Text>
               <TouchableOpacity
                 onPress={() => navigation.navigate("AppSelectionScreen")}
@@ -310,26 +312,26 @@ const HomeScreen = ({ navigation }) => {
                 <Text style={styles.emptyStateButtonText}>Select Apps</Text>
               </TouchableOpacity>
             </View>
-          ) : (
-            <>
-              {/* Widget Previews Section */}
-              {userWidgets.length > 0 && (
-                <View style={styles.section}>
-                  <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Widget Previews</Text>
-                  </View>
-                  <FlatList
-                    data={userWidgets}
-                    keyExtractor={(item) => item.widgetId}
-                    renderItem={renderWidgetItem}
-                    contentContainerStyle={styles.widgetsList}
-                    scrollEnabled={false}
-                  />
+          </View>
+        ) : (
+          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            {/* Widget Previews Section */}
+            {userWidgets.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Widget Previews</Text>
                 </View>
-              )}
-            </>
-          )}
-        </ScrollView>
+                <FlatList
+                  data={userWidgets}
+                  keyExtractor={(item) => item.widgetId}
+                  renderItem={renderWidgetItem}
+                  contentContainerStyle={styles.widgetsList}
+                  scrollEnabled={false}
+                />
+              </View>
+            )}
+          </ScrollView>
+        )}
       </View>
     </ImageBackground>
   );
@@ -411,11 +413,22 @@ const styles = StyleSheet.create({
     padding: 20,
   },
 
-  emptyState: {
-    flex: 1,
+  emptyStateContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 40,
+    paddingHorizontal: 32,
+    paddingTop: 10,
+  },
+  emptyState: {
+    alignItems: "center",
+  },
+  emptyStateIcon: {
+    marginBottom: 16,
   },
   emptyStateTitle: {
     fontSize: RFValue(24),
@@ -433,14 +446,16 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   emptyStateButton: {
-    backgroundColor: "#172F50",
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 8,
+    backgroundColor: 'rgba(23, 47, 80, 0.9)',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#6D8AAF',
   },
   emptyStateButtonText: {
     fontSize: RFValue(16),
-    fontFamily: "MMedium",
+    fontFamily: "MSemiBold",
     color: "#F7F7F7",
   },
   section: {
@@ -479,6 +494,6 @@ const styles = StyleSheet.create({
   widgetContainer: {
     marginBottom: 10,
   },
-});
-
+  });
+  
 export default HomeScreen; 

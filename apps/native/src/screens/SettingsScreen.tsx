@@ -290,7 +290,7 @@ const SettingsScreen = ({ navigation }) => {
   );
 
   const renderVerticalAlignmentSelector = () => (
-    <View style={styles.section}>
+    <View style={[styles.section, { marginBottom: 0 }]}>
       <Text style={styles.sectionTitle}>Vertical Layout</Text>
       <View style={styles.layoutContainer}>
         {[
@@ -565,10 +565,12 @@ const styles = StyleSheet.create({
     color: "#172F50", // dark blue for visibility on gray background
   },
   signOutButton: {
-    padding: 15,
-    borderRadius: 8,
-    borderWidth: 0, // remove outline
-    backgroundColor: 'rgba(23, 47, 80, 0.6)', // match section background
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     alignItems: "center",
     marginVertical: 5,
   },
@@ -579,12 +581,12 @@ const styles = StyleSheet.create({
   },
   resetStylingButtonText: {
     fontSize: RFValue(16),
-    fontFamily: "MRegular",
+    fontFamily: "MSemiBold",
     color: "#DC3545", // error red from palette
   },
   clearDataButtonText: {
     fontSize: RFValue(16),
-    fontFamily: "MRegular",
+    fontFamily: "MSemiBold",
     color: "#DC3545", // same red as reset styling
   },
   versionContainer: {

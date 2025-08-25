@@ -40,7 +40,13 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-media-library",
+        {
+          "savePhotosPermission": "Allow focUIs to save wallpapers to your photo library."
+        }
+      ]
     ],
     "extra": {
       "eas": {

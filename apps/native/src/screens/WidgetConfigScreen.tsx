@@ -9,13 +9,14 @@ import {
   ScrollView,
   ImageBackground,
   Platform,
+  Modal,
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { Ionicons } from "@expo/vector-icons";
 import { Sortable, SortableItem, SortableRenderItemProps } from "react-native-reanimated-dnd";
 import PagerView from 'react-native-pager-view';
 import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
-import localStorageService, { LocalAppSelection, LocalWidgetConfig, LocalUserSettings } from '../services/LocalStorageService';
+import localStorageService, { LocalAppSelection, LocalWidgetConfig } from '../services/LocalStorageService';
 
 const { width, height } = Dimensions.get("window");
 
@@ -35,13 +36,7 @@ interface DraggableApp {
 const WidgetConfigScreen = ({ navigation }) => {
   const backgroundUri = useBackgroundAsset();
   const [selectedApps, setSelectedApps] = useState<LocalAppSelection[]>([]);
-  const [userSettings, setUserSettings] = useState<LocalUserSettings>({
-    theme: 'default',
-    fontSize: 16,
-    layout: 'center',
-    fontColor: '#FFFFFF'
-  });
-  const [loading, setLoading] = useState(true);
+
 
   const [sections, setSections] = useState<DraggableApp[][]>([]);
   const sectionsRef = useRef<DraggableApp[][]>([]);
@@ -54,23 +49,18 @@ const WidgetConfigScreen = ({ navigation }) => {
   // --- Move To Section State ---
   const [moveMode, setMoveMode] = useState(false);
   const [selectedApp, setSelectedApp] = useState<{ sectionIndex: number; appIndex: number } | null>(null);
+  
+  // --- Info Popup State ---
+  const [showInfoPopup, setShowInfoPopup] = useState(false);
 
   // Load data from local storage on mount
   useEffect(() => {
     const loadData = async () => {
       try {
-        setLoading(true);
-        const [apps, settings] = await Promise.all([
-          localStorageService.getSelectedApps(),
-          localStorageService.getUserSettings()
-        ]);
-        
+        const apps = await localStorageService.getSelectedApps();
         setSelectedApps(apps);
-        setUserSettings(settings);
       } catch (error) {
         console.error('Error loading data:', error);
-      } finally {
-        setLoading(false);
       }
     };
     
@@ -333,63 +323,132 @@ const WidgetConfigScreen = ({ navigation }) => {
             <Ionicons name="arrow-back" size={24} color="#F7F7F7" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Configure Apps</Text>
-          <TouchableOpacity
-            onPress={saveAppOrder}
-            style={styles.headerButton}
-            accessibilityLabel="Save app order"
-            accessibilityRole="button"
-          >
-            <Ionicons name="checkmark" size={26} color="#28A745" />
-          </TouchableOpacity>
+          <View style={styles.headerButton}>
+            <TouchableOpacity
+              onPress={selectedApps.length > 0 ? saveAppOrder : undefined}
+              accessibilityLabel="Save app order"
+              accessibilityRole="button"
+              disabled={selectedApps.length === 0}
+            >
+              <Ionicons 
+                name="checkmark" 
+                size={26} 
+                color={selectedApps.length > 0 ? "#28A745" : "transparent"} 
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Horizontal Pager for Sections */}
         <View style={styles.dragDropContainer}>
-          <PagerView
-            style={{ flex: 1 }}
-            initialPage={0}
-            onPageSelected={e => setCurrentPage(e.nativeEvent.position)}
-          >
-            {sections.map((section, sectionIndex) => (
-              <View key={sectionIndex} style={{ flex: 1, backgroundColor: "transparent" }}>
-                <Text style={styles.dragDropTitle}>
-                  Screen {sectionIndex + 1}
-                </Text>
-                <Sortable
-                  data={section}
-                  renderItem={renderAppItem(sectionIndex)}
-                  itemHeight={80}
-                  style={styles.sortableList}
-                  contentContainerStyle={styles.sortableListContent}
-                  itemKeyExtractor={(item) => item.id}
-                >
-                  {/* In the PagerView section, when rendering each Sortable, pass fontSize={widgetFontSize} to the widget preview component (focUIsWidget or WidgetPreview) if used.
-                  If you use a custom preview, pass fontSize={widgetFontSize} to the Text displaying app names. */}
-                </Sortable>
+          {selectedApps.length === 0 ? (
+            <View style={[styles.emptyStateContainer, { paddingBottom: 100 }]}>
+              <Ionicons name="apps-outline" size={64} color="#B3B3B3" style={styles.emptyStateIcon} />
+              <Text style={styles.emptyStateTitle}>No Apps Selected</Text>
+              <Text style={styles.emptyStateSubtitle}>
+                Go back and select some apps to configure them here
+              </Text>
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={styles.emptyStateButton}
+              >
+                <Text style={styles.emptyStateButtonText}>Go Back</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <PagerView
+                style={{ flex: 1 }}
+                initialPage={0}
+                onPageSelected={e => setCurrentPage(e.nativeEvent.position)}
+              >
+                {sections.map((section, sectionIndex) => (
+                  <View key={sectionIndex} style={{ flex: 1, backgroundColor: "transparent" }}>
+                    <View style={styles.widgetTitleContainer}>
+                      <Text style={styles.dragDropTitle}>
+                        Section {sectionIndex + 1}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => setShowInfoPopup(true)}
+                        style={styles.infoButton}
+                      >
+                        <View style={styles.infoIconContainer}>
+                          <Ionicons name="information-circle-outline" size={20} color="#7A7A7A" />
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                    <Sortable
+                      data={section}
+                      renderItem={renderAppItem(sectionIndex)}
+                      itemHeight={80}
+                      style={styles.sortableList}
+                      contentContainerStyle={styles.sortableListContent}
+                      itemKeyExtractor={(item) => item.id}
+                    >
+                      {/* In the PagerView section, when rendering each Sortable, pass fontSize={widgetFontSize} to the widget preview component (focUIsWidget or WidgetPreview) if used.
+                      If you use a custom preview, pass fontSize={widgetFontSize} to the Text displaying app names. */}
+                    </Sortable>
+                  </View>
+                ))}
+              </PagerView>
+              {/* Page Indicator Dots */}
+              <View style={styles.dotsContainer}>
+                {sections.map((_, idx) => (
+                  <View
+                    key={idx}
+                    style={[
+                      styles.dot,
+                      currentPage === idx ? styles.activeDot : styles.inactiveDot,
+                    ]}
+                  />
+                ))}
               </View>
-            ))}
-          </PagerView>
-          {/* Page Indicator Dots */}
-          <View style={styles.dotsContainer}>
-            {sections.map((_, idx) => (
-              <View
-                key={idx}
-                style={[
-                  styles.dot,
-                  currentPage === idx ? styles.activeDot : styles.inactiveDot,
-                ]}
-              />
-            ))}
-          </View>
+            </>
+          )}
         </View>
         {/* Instructions Section */}
-        <View style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 48, alignItems: 'center' }}>
-          <View style={{ backgroundColor: 'rgba(23, 47, 80, 0.92)', borderRadius: 16, padding: 16, width: '100%', maxWidth: 400, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
-            <Text style={{ color: '#F7F7F7', fontSize: 14, textAlign: 'center', lineHeight: 20 }}>
-              Drag the right icon to reorder. Tap the switch to swap. Press ✓ to save.
-            </Text>
+        {selectedApps.length > 0 && (
+          <View style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 48, alignItems: 'center' }}>
+            <View style={{ backgroundColor: 'rgba(23, 47, 80, 0.92)', borderRadius: 16, padding: 16, width: '100%', maxWidth: 400, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
+              <Text style={{ color: '#F7F7F7', fontSize: 14, textAlign: 'center', lineHeight: 20 }}>
+                Drag the right icon to reorder. Tap the switch to swap. Press ✓ to save.
+              </Text>
+            </View>
           </View>
-        </View>
+        )}
+        
+        {/* Info Popup Modal */}
+        <Modal
+          visible={showInfoPopup}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowInfoPopup(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowInfoPopup(false)}
+          >
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Ionicons name="information-circle" size={24} color="#F7F7F7" />
+                <Text style={styles.modalTitle}>App Sections</Text>
+              </View>
+              <Text style={styles.modalText}>
+                Apps are organized into sections to fit within the home screen widget display. Each section can contain up to 6 apps.
+              </Text>
+              <Text style={styles.modalText}>
+                To access a specific section on your home screen, add the corresponding widget to your device's home screen.
+              </Text>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => setShowInfoPopup(false)}
+              >
+                <Text style={styles.modalButtonText}>Got it</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
       </View>
     </ImageBackground>
   );
@@ -435,11 +494,27 @@ const styles = StyleSheet.create({
   sectionContainer: {
     marginBottom: 20,
   },
+  widgetTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    justifyContent: 'flex-start',
+  },
   dragDropTitle: {
     fontSize: RFValue(16),
     fontFamily: "MSemiBold",
     color: "#7A7A7A",
-    marginBottom: 12,
+    marginRight: 8,
+  },
+  infoButton: {
+    padding: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoIconContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 1,
   },
   sortableList: {
     flex: 1,
@@ -479,7 +554,7 @@ const styles = StyleSheet.create({
   dragHandle: {
     padding: 12,
     borderRadius: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    backgroundColor: "transparent",
   },
   dragIconContainer: {
     flexDirection: "row",
@@ -518,9 +593,98 @@ const styles = StyleSheet.create({
     marginRight: 12,
     padding: 6,
     borderRadius: 16,
-    backgroundColor: 'rgba(74, 144, 226, 0.08)',
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  emptyStateIcon: {
+    marginBottom: 16,
+  },
+  emptyStateTitle: {
+    fontSize: RFValue(24),
+    fontFamily: "MBold",
+    color: "#F7F7F7",
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptyStateSubtitle: {
+    fontSize: RFValue(16),
+    fontFamily: "MRegular",
+    color: "#B3B3B3",
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  emptyStateButton: {
+    backgroundColor: 'rgba(23, 47, 80, 0.9)',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#6D8AAF',
+  },
+  emptyStateButtonText: {
+    fontSize: RFValue(16),
+    fontFamily: "MSemiBold",
+    color: "#F7F7F7",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  modalContent: {
+    backgroundColor: 'rgba(23, 47, 80, 0.95)',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 320,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: '#6D8AAF',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: RFValue(18),
+    fontFamily: "MBold",
+    color: "#F7F7F7",
+    marginLeft: 8,
+  },
+  modalText: {
+    fontSize: RFValue(14),
+    fontFamily: "MRegular",
+    color: "#C8D2E0",
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  modalButton: {
+    backgroundColor: '#6D8AAF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  modalButtonText: {
+    fontSize: RFValue(16),
+    fontFamily: "MSemiBold",
+    color: "#F7F7F7",
   },
 });
 
