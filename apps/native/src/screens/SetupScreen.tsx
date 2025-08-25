@@ -127,8 +127,8 @@ const SetupScreen = ({ navigation }) => {
       )}
       {renderStep(
         "4",
-        "Choose widget 1",
-        "Swipe to widget 1 (the main focUIs widget), then tap 'Add Widget'."
+        "Choose widget",
+        "Swipe to desired widget section, then tap 'Add Widget'."
       )}
       {renderStep(
         "5",
@@ -280,6 +280,17 @@ const SetupScreen = ({ navigation }) => {
               </View>
             ))}
           </PagerView>
+          <View style={styles.dotContainer}>
+            {wallpapers.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.dot,
+                  index === currentWallpaperIndex && styles.activeDot
+                ]}
+              />
+            ))}
+          </View>
         </View>
         <TouchableOpacity 
           style={styles.saveButton} 
@@ -332,6 +343,9 @@ const SetupScreen = ({ navigation }) => {
   const renderBlockNotifications = () => (
     <View style={styles.instructionSection}>
       <Text style={styles.sectionTitle}>Optional: Block Notifications from Non-Essential Apps</Text>
+      <Text style={{marginTop: 10, marginBottom: 15, color: '#C8D2E0', fontFamily: 'MRegular', fontSize: RFValue(13)}}>
+        This helps keep your device distraction-free by only allowing important notifications.
+      </Text>
       {Platform.OS === 'ios' ? (
         <>
           {renderStep(
@@ -369,9 +383,6 @@ const SetupScreen = ({ navigation }) => {
           )}
         </>
       )}
-      <Text style={{marginTop: 10, color: '#C8D2E0', fontFamily: 'MRegular', fontSize: RFValue(13)}}>
-        This helps keep your device distraction-free by only allowing important notifications.
-      </Text>
     </View>
   );
 
@@ -461,9 +472,21 @@ const SetupScreen = ({ navigation }) => {
               <Text style={styles.completionTitle}>You're All Set!</Text>
             </View>
             <Text style={styles.completionText}>
-              You've created a digital space that's minimal, focused, and free of distractions. 
+              You've created a digital space that's minimal, focused, and free of distractions.
+            </Text>
+            <Text style={[styles.completionText, { marginTop: 20 }]}>
               Return to the focUIs app anytime to update your selected apps or widget setup.
             </Text>
+          </View>
+
+          {/* Back to Home Button */}
+          <View style={styles.backToHomeContainer}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.backToHomeButton}
+            >
+              <Text style={styles.backToHomeButtonText}>Back to Home</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Action buttons */}
@@ -600,6 +623,22 @@ const styles = StyleSheet.create({
   carousel: {
     flex: 1,
   },
+  dotContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#C8D2E0',
+    marginHorizontal: 4,
+  },
+  activeDot: {
+    backgroundColor: '#F7F7F7',
+  },
   wallpaperSlide: {
     flex: 1,
     paddingHorizontal: 8,
@@ -647,11 +686,29 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginLeft: 8,
   },
+  backToHomeContainer: {
+    alignItems: "center",
+    marginTop: 10,
+    marginBottom: 30,
+  },
+  backToHomeButton: {
+    backgroundColor: 'rgba(23, 47, 80, 0.9)',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#6D8AAF',
+  },
+  backToHomeButtonText: {
+    fontSize: RFValue(16),
+    fontFamily: "MSemiBold",
+    color: "#F7F7F7",
+  },
   completionSection: {
-    backgroundColor: "#E8F5E8",
+    backgroundColor: 'rgba(23, 47, 80, 0.7)',
     borderRadius: 12,
     padding: 20,
-    marginBottom: 30,
+    marginBottom: 20,
     alignItems: "center",
   },
   completionHeader: {
@@ -662,13 +719,13 @@ const styles = StyleSheet.create({
   completionTitle: {
     fontSize: RFValue(20),
     fontFamily: "MBold",
-    color: "#2E7D32",
+    color: "#F7F7F7",
     marginLeft: 8,
   },
   completionText: {
     fontSize: RFValue(14),
     fontFamily: "MRegular",
-    color: "#2E7D32",
+    color: "#C8D2E0",
     textAlign: "center",
     lineHeight: 20,
   },
