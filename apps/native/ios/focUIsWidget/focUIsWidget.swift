@@ -14,6 +14,7 @@ struct AppData: Codable, Identifiable {
     let displayName: String
     let packageName: String
     let urlScheme: String?
+    let appStoreUrl: String?
 }
 
 // Shared user settings structure
@@ -89,7 +90,8 @@ struct SectionedProvider: TimelineProvider {
                     return nil
                 }
                 let urlScheme = dict["urlScheme"] as? String
-                return AppData(id: id, displayName: displayName, packageName: packageName, urlScheme: urlScheme)
+                let appStoreUrl = dict["appStoreUrl"] as? String
+                return AppData(id: id, displayName: displayName, packageName: packageName, urlScheme: urlScheme, appStoreUrl: appStoreUrl)
             }
             if !apps.isEmpty { return apps }
         }
@@ -122,7 +124,8 @@ struct SectionedProvider: TimelineProvider {
                         return nil
                     }
                     let urlScheme = dict["urlScheme"] as? String
-                    return AppData(id: id, displayName: displayName, packageName: packageName, urlScheme: urlScheme)
+                    let appStoreUrl = dict["appStoreUrl"] as? String
+                    return AppData(id: id, displayName: displayName, packageName: packageName, urlScheme: urlScheme, appStoreUrl: appStoreUrl)
                 }
                 if !apps.isEmpty { return apps }
             }
@@ -133,7 +136,7 @@ struct SectionedProvider: TimelineProvider {
     
     private func getDefaultApps() -> [AppData] {
         return [
-            AppData(id: "1", displayName: "Messages", packageName: "com.apple.MobileSMS", urlScheme: "sms://")
+            AppData(id: "1", displayName: "Messages", packageName: "com.apple.MobileSMS", urlScheme: "sms://", appStoreUrl: nil)
         ]
     }
 
@@ -173,7 +176,7 @@ struct focUIsWidgetEntryView : View {
 
             VStack(spacing: 12) { // Increased spacing from 6 to 12
                 ForEach(entry.apps.prefix(6), id: \.id) { app in
-                    let deepLink = "focuis://launch-app?name=\(app.displayName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&scheme=\(app.urlScheme?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&package=\(app.packageName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+                    let deepLink = "focuis://launch-app?name=\(app.displayName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&scheme=\(app.urlScheme?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&package=\(app.packageName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&appStoreUrl=\(app.appStoreUrl?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
 
                     if let url = URL(string: deepLink) {
                         Link(destination: url) {
@@ -388,6 +391,6 @@ struct focUIsWidget6: Widget {
     focUIsWidget1()
 } timeline: {
     SimpleEntry(date: .now, apps: [
-        AppData(id: "1", displayName: "Messages", packageName: "com.apple.MobileSMS", urlScheme: "sms://")
+        AppData(id: "1", displayName: "Messages", packageName: "com.apple.MobileSMS", urlScheme: "sms://", appStoreUrl: nil)
     ], settings: UserSettings.defaults())
 }

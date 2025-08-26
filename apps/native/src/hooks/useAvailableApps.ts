@@ -12,7 +12,6 @@ export interface AvailableApp {
   version?: string;
   isSystemApp?: boolean;
   category?: string;
-  isInstalled?: boolean; // iOS only - determined by canOpenURL
   isThirdParty?: boolean; // iOS only - indicates if it's a third-party app
 }
 
@@ -22,7 +21,6 @@ interface UseAvailableAppsReturn {
   error: string | null;
   refresh: () => Promise<void>;
   launchApp: (app: AvailableApp) => Promise<boolean>;
-  checkAppInstalled: (app: AvailableApp) => Promise<boolean>;
 }
 
 const useAvailableApps = (): UseAvailableAppsReturn => {
@@ -63,36 +61,9 @@ const useAvailableApps = (): UseAvailableAppsReturn => {
         appStoreUrl: app.appStoreUrl,
         category: app.category,
         isThirdParty: app.isThirdParty || false,
-        isInstalled: false, // Will be checked individually
       }));
 
-      // Check which apps are installed using canOpenURL
-      const checkedApps = await Promise.all(
-        iosApps.map(async (app) => {
-          if (app.urlScheme) {
-            if (app.isThirdParty) {
-              // For third-party apps, we'll assume they might be installed
-              // since canOpenURL often returns false even for installed apps
-              console.log(`${app.name} is a third-party app, assuming it might be installed`);
-              return { ...app, isInstalled: true };
-            } else {
-              // For built-in apps, we can still check canOpenURL
-              try {
-                console.log(`Checking if ${app.name} is installed with scheme: ${app.urlScheme}`);
-                const canOpen = await Linking.canOpenURL(app.urlScheme);
-                console.log(`${app.name} canOpenURL result:`, canOpen);
-                return { ...app, isInstalled: canOpen };
-              } catch (err) {
-                console.error(`Error checking ${app.name}:`, err);
-                return { ...app, isInstalled: false };
-              }
-            }
-          }
-          return app;
-        })
-      );
-
-      return checkedApps;
+      return iosApps;
     } catch (err) {
       console.error('Error getting iOS apps:', err);
       throw new Error('Failed to get iOS apps');
@@ -134,42 +105,14 @@ const useAvailableApps = (): UseAvailableAppsReturn => {
       } else if (Platform.OS === 'ios' && app.urlScheme) {
         console.log(`Attempting to launch ${app.name} with scheme: ${app.urlScheme}`);
         
-        // For third-party apps, we'll try to launch directly without checking canOpenURL
-        // because iOS restrictions often make canOpenURL return false even for installed apps
-        if (app.isThirdParty) {
-          console.log(`${app.name} is a third-party app, attempting direct launch`);
-          try {
-            await Linking.openURL(app.urlScheme);
+        try {
+          await Linking.openURL(app.urlScheme);
+          return true;
+        } catch (launchError) {
+          console.log(`Failed to launch ${app.name} with scheme, trying App Store`);
+          if (app.appStoreUrl) {
+            await Linking.openURL(app.appStoreUrl);
             return true;
-          } catch (launchError) {
-            console.log(`Failed to launch ${app.name} directly, trying App Store`);
-            if (app.appStoreUrl) {
-              await Linking.openURL(app.appStoreUrl);
-              return true;
-            }
-          }
-        } else {
-          // For built-in apps, we can still check canOpenURL
-          const canOpen = await Linking.canOpenURL(app.urlScheme);
-          console.log(`Can open ${app.name}:`, canOpen);
-          
-          if (canOpen) {
-            try {
-              await Linking.openURL(app.urlScheme);
-              return true;
-            } catch (launchError) {
-              console.log(`Failed to launch ${app.name} with scheme, trying App Store`);
-              if (app.appStoreUrl) {
-                await Linking.openURL(app.appStoreUrl);
-                return true;
-              }
-            }
-          } else {
-            
-            if (app.appStoreUrl) {
-              await Linking.openURL(app.appStoreUrl);
-              return true;
-            }
           }
         }
       }
@@ -180,22 +123,7 @@ const useAvailableApps = (): UseAvailableAppsReturn => {
     }
   }, []);
 
-  const checkAppInstalled = useCallback(async (app: AvailableApp): Promise<boolean> => {
-    try {
-      if (Platform.OS === 'android' && app.packageName) {
-        const { InstalledAppsModule } = NativeModules;
-        if (InstalledAppsModule) {
-          return await InstalledAppsModule.isAppInstalled(app.packageName);
-        }
-      } else if (Platform.OS === 'ios' && app.urlScheme) {
-        return await Linking.canOpenURL(app.urlScheme);
-      }
-      return false;
-    } catch (err) {
-      console.error('Error checking if app is installed:', err);
-      return false;
-    }
-  }, []);
+
 
   useEffect(() => {
     loadApps();
@@ -207,7 +135,6 @@ const useAvailableApps = (): UseAvailableAppsReturn => {
     error,
     refresh: loadApps,
     launchApp,
-    checkAppInstalled,
   };
 };
 

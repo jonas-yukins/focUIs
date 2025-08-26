@@ -101,15 +101,29 @@ public class AppDelegate: ExpoAppDelegate {
     let name = queryItems.first(where: { $0.name == "name" })?.value ?? ""
     let scheme = queryItems.first(where: { $0.name == "scheme" })?.value ?? ""
     let package = queryItems.first(where: { $0.name == "package" })?.value ?? ""
+    let appStoreUrl = queryItems.first(where: { $0.name == "appStoreUrl" })?.value ?? ""
     
-    print("AppDelegate: Launching app - Name: \(name), Scheme: \(scheme), Package: \(package)")
+    print("AppDelegate: Launching app - Name: \(name), Scheme: \(scheme), Package: \(package), AppStoreUrl: \(appStoreUrl)")
     
     // Launch the intended app
     if let appScheme = scheme.isEmpty ? nil : scheme, let appUrl = URL(string: appScheme) {
       DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-        print("AppDelegate: Launching URL: \(appUrl)")
+        print("AppDelegate: Attempting to launch app with scheme: \(appUrl)")
         UIApplication.shared.open(appUrl, options: [:]) { success in
-          print("AppDelegate: URL launch result: \(success)")
+          if success {
+            print("AppDelegate: App launched successfully!")
+          } else {
+            // The launch failed (app is not installed). Implement fallback.
+            print("AppDelegate: App not installed. Opening App Store...")
+            if !appStoreUrl.isEmpty, let storeUrl = URL(string: appStoreUrl) {
+              print("AppDelegate: Opening App Store URL: \(storeUrl)")
+              UIApplication.shared.open(storeUrl, options: [:]) { storeSuccess in
+                print("AppDelegate: App Store launch result: \(storeSuccess)")
+              }
+            } else {
+              print("AppDelegate: No App Store URL available for fallback")
+            }
+          }
         }
       }
     } else {

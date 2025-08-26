@@ -23,7 +23,7 @@ interface App {
 interface WidgetPreviewProps {
   widgetId: string;
   apps: App[];
-  onAppPress: (app: App) => void;
+  onAppPress?: (app: App) => void;
   onDragStart?: () => void;
   onDragEnd?: () => void;
   isDragging?: boolean;
@@ -117,16 +117,14 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
       {/* Apps Grid */}
       <View style={[styles.appsGrid, { alignItems, ...verticalStyles }]}> {/* Dynamic alignment */}
         {displayApps.map((app, index) => (
-          <TouchableOpacity
+          <View
             key={app._id}
             style={[styles.appItem, { alignItems, justifyContent: 'center' }]} // Dynamic alignment
-            onPress={() => onAppPress(app)}
-            activeOpacity={0.7}
           >
             <Text style={[styles.appName, { fontSize, textAlign, color: fontColor }]} numberOfLines={1}>
               {app.displayName}
             </Text>
-          </TouchableOpacity>
+          </View>
         ))}
         {/* Empty slots for visual consistency */}
         {Array.from({ length: Math.max(0, 6 - displayApps.length) }).map((_, index) => (

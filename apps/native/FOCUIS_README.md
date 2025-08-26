@@ -14,9 +14,8 @@ The focUIs app provides users with a distraction-free interface to launch their 
 
 ### iOS Implementation
 - Uses a static JSON list of popular apps (`popularApps.json`)
-- Leverages `Linking.canOpenURL()` to check if apps are installed
 - Uses `Linking.openURL()` to launch apps via URL schemes
-- Falls back to App Store if an app is not installed
+- Falls back to App Store if an app is not installed (handled by completion handler)
 - Compliant with App Store guidelines
 
 ## Architecture
@@ -31,7 +30,6 @@ interface UseAvailableAppsReturn {
   error: string | null;
   refresh: () => Promise<void>;
   launchApp: (app: AvailableApp) => Promise<boolean>;
-  checkAppInstalled: (app: AvailableApp) => Promise<boolean>;
 }
 ```
 

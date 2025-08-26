@@ -6,10 +6,6 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
-  Alert,
-  Linking,
-  Platform,
-  NativeModules,
   ScrollView,
   ImageBackground, // <-- Add this import
 } from "react-native";
@@ -27,7 +23,7 @@ const HomeScreen = ({ navigation }) => {
   const [userWidgets, setUserWidgets] = useState<LocalWidgetConfig[]>([]);
   const [userSettings, setUserSettings] = useState<LocalUserSettings>({
     theme: 'default',
-    fontSize: 16,
+    fontSize: 20,
     layout: 'center',
     fontColor: '#FFFFFF',
     verticalAlignment: 'middle'
@@ -114,86 +110,7 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  const handleAppPress = async (app) => {
-    try {
-      if (Platform.OS === 'android' && app.packageName) {
-        // For Android, use the native module
-        const { InstalledAppsModule } = NativeModules;
-        if (InstalledAppsModule) {
-          await InstalledAppsModule.launchApp(app.packageName);
-          return;
-        } else {
-          // Fallback to intent URL
-          const url = `intent://${app.packageName}#Intent;scheme=package;end`;
-          const supported = await Linking.canOpenURL(url);
-          if (supported) {
-            await Linking.openURL(url);
-            return;
-          }
-        }
-      } else if (Platform.OS === 'ios' && app.urlScheme) {
-        console.log(`Attempting to launch ${app.displayName} with scheme: ${app.urlScheme}`);
-        
-        // For third-party apps, try to launch directly without checking canOpenURL
-        // because iOS restrictions often make canOpenURL return false even for installed apps
-        if (app.isThirdParty) {
-          console.log(`${app.displayName} is a third-party app, attempting direct launch`);
-          try {
-            await Linking.openURL(app.urlScheme);
-            return;
-          } catch (launchError) {
-            console.log(`Failed to launch ${app.displayName} directly, trying App Store`);
-            if (app.appStoreUrl) {
-              await Linking.openURL(app.appStoreUrl);
-              return;
-            }
-          }
-        } else {
-          // For built-in apps, we can still check canOpenURL
-          const canOpen = await Linking.canOpenURL(app.urlScheme);
-          console.log(`Can open ${app.displayName}:`, canOpen);
-          
-          if (canOpen) {
-            try {
-              await Linking.openURL(app.urlScheme);
-              return;
-            } catch (launchError) {
-              console.log(`Failed to launch ${app.displayName} with scheme, trying App Store`);
-              if (app.appStoreUrl) {
-                await Linking.openURL(app.appStoreUrl);
-                return;
-              }
-            }
-          } else {
-            // App not installed, try to open App Store
-            if (app.appStoreUrl) {
-              await Linking.openURL(app.appStoreUrl);
-              return;
-            }
-          }
-        }
-      }
-      
-      // If we get here, we couldn't launch the app
-      Alert.alert(
-        "App Not Found",
-        `Unable to open ${app.displayName}. The app may not be installed.`,
-        [
-          { text: "Cancel", style: "cancel" },
-          { 
-            text: "Settings", 
-            onPress: () => navigation.navigate("AppSelectionScreen") 
-          }
-        ]
-      );
-    } catch (error) {
-      console.error('Error launching app:', error);
-      Alert.alert(
-        "Error",
-        `Unable to open ${app.displayName}. Please check if the app is installed.`
-      );
-    }
-  };
+
 
   const getAppsForWidget = (widget) => {
     const widgetApps = selectedApps.filter(app => 
@@ -223,7 +140,6 @@ const HomeScreen = ({ navigation }) => {
         <WidgetPreview
           widgetId={item.widgetId}
           apps={widgetApps}
-          onAppPress={handleAppPress}
           isDragging={false}
           showTitle={false}
           fontSize={userSettings.fontSize}
