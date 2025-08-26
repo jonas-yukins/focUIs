@@ -25,6 +25,7 @@ interface App {
   displayName: string;
   packageName?: string;
   urlScheme?: string;
+  appStoreUrl?: string;
 }
 
 interface DraggableApp {
@@ -70,17 +71,18 @@ const WidgetConfigScreen = ({ navigation }) => {
   // Initialize apps list
   useEffect(() => {
     if (selectedApps && selectedApps.length > 0) {
-      const apps: DraggableApp[] = selectedApps
-        .map((app, index) => ({
-          id: app.appId,
-          app: {
-            _id: app.appId,
-            displayName: app.displayName,
-            packageName: app.packageName,
-            urlScheme: app.urlScheme,
-          },
-          order: app.order || index,
-        }))
+              const apps: DraggableApp[] = selectedApps
+          .map((app, index) => ({
+            id: app.appId,
+            app: {
+              _id: app.appId,
+              displayName: app.displayName,
+              packageName: app.packageName,
+              urlScheme: app.urlScheme,
+              appStoreUrl: app.appStoreUrl,
+            },
+            order: app.order || index,
+          }))
         .sort((a, b) => a.order - b.order);
 
       const chunkedApps = [];
@@ -182,14 +184,15 @@ const WidgetConfigScreen = ({ navigation }) => {
       }
       await localStorageService.reorganizeWidgets(widgets);
       
-      // Save apps to UserDefaults for widget access
-      try {
-        const widgetApps = allApps.map(app => ({
-          id: app.id,
-          displayName: app.app.displayName,
-          packageName: app.app.packageName || '',
-          urlScheme: app.app.urlScheme || null
-        }));
+              // Save apps to UserDefaults for widget access
+        try {
+          const widgetApps = allApps.map(app => ({
+            id: app.id,
+            displayName: app.app.displayName,
+            packageName: app.app.packageName || '',
+            urlScheme: app.app.urlScheme || null,
+            appStoreUrl: app.app.appStoreUrl || null
+          }));
         
         // Use AsyncStorage to save the apps data
         const AsyncStorage = require('@react-native-async-storage/async-storage').default;
@@ -466,7 +469,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: 'rgba(23, 47, 80, 0.7)',
-    paddingTop: 50,
+    paddingTop: 60,
     paddingBottom: 20,
     paddingHorizontal: 20,
     flexDirection: "row",

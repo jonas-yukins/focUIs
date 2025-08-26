@@ -35,7 +35,7 @@ export interface LocalUserSettings {
 // Default values
 const DEFAULT_USER_SETTINGS: LocalUserSettings = {
   theme: 'default',
-  fontSize: 16,
+  fontSize: 20,
   layout: 'center',
   fontColor: '#FFFFFF',
   verticalAlignment: 'middle' // NEW: default to middle
@@ -201,7 +201,8 @@ class LocalStorageService {
         id: app.appId,
         displayName: app.displayName,
         packageName: app.packageName || '',
-        urlScheme: app.urlScheme || null
+        urlScheme: app.urlScheme || null,
+        appStoreUrl: app.appStoreUrl || null
       }));
       
       let wrote = false;
@@ -284,6 +285,7 @@ class LocalStorageService {
             displayName: app.displayName,
             packageName: app.packageName || '',
             urlScheme: app.urlScheme || null,
+            appStoreUrl: app.appStoreUrl || null,
           }));
 
         const key = `selectedApps_section_${index + 1}`;
@@ -305,6 +307,7 @@ class LocalStorageService {
             displayName: app.displayName,
             packageName: app.packageName || '',
             urlScheme: app.urlScheme || null,
+            appStoreUrl: app.appStoreUrl || null,
           }));
         if (useSharedGroupPreferences) {
           await SharedGroupPreferences.setItem('selectedApps', JSON.stringify(section1Apps), 'group.com.jonasyukins.focuis');
