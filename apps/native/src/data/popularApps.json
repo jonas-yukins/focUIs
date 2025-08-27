@@ -132,7 +132,7 @@
   {
     "id": "settings",
     "name": "Settings",
-    "urlScheme": "App-Prefs:root=General",
+    "urlScheme": "App-prefs://",
     "appStoreUrl": null,
     "category": "utilities"
   },
