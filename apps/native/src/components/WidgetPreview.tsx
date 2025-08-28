@@ -30,7 +30,6 @@ interface WidgetPreviewProps {
   showTitle?: boolean;
   fontSize?: number;
   alignment?: 'left' | 'center' | 'right'; // NEW PROP
-  theme?: 'default' | 'dark' | 'light'; // legacy
   fontColor?: string; // NEW PROP
   verticalAlignment?: 'top' | 'middle' | 'bottom'; // NEW PROP
   // NEW settings
@@ -73,23 +72,15 @@ const getVerticalAlignmentStyles = (verticalAlignment: 'top' | 'middle' | 'botto
   }
 };
 
-// Derive colors from new background/outline settings, with legacy theme fallback
+// Derive colors from canonical background/outline settings
 const getWidgetColors = (
   backgroundStyle: 'default' | 'blue' | 'white' | 'pink' | 'gray' = 'default',
   outlineEnabled: boolean = true,
-  outlineColor: 'white' | 'black' = 'white',
-  legacyTheme?: 'default' | 'dark' | 'light'
+  outlineColor: 'white' | 'black' = 'white'
 ) => {
-  let bg = backgroundStyle;
-  let outlineOn = outlineEnabled;
-  let outlineClr = outlineColor;
-
-  // Legacy fallback if backgroundStyle is undefined
-  if (!backgroundStyle && legacyTheme) {
-    if (legacyTheme === 'dark') { bg = 'blue'; outlineOn = false; outlineClr = 'white'; }
-    else if (legacyTheme === 'light') { bg = 'white'; outlineOn = false; outlineClr = 'black'; }
-    else { bg = 'default'; outlineOn = true; outlineClr = 'white'; }
-  }
+  const bg = backgroundStyle;
+  const outlineOn = outlineEnabled;
+  const outlineClr = outlineColor;
 
   const backgroundColor =
     bg === 'blue' ? '#10243c' :
@@ -112,7 +103,6 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
   showTitle = true,
   fontSize = 20,
   alignment = 'center', // Default to center
-  theme = 'default', // legacy default
   fontColor = '#FFFFFF', // Default to white
   verticalAlignment = 'middle', // Default to middle
   backgroundStyle = 'default',
@@ -122,7 +112,7 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
   const displayApps = apps.slice(0, 6); // Show max 6 apps
   const hasMoreApps = apps.length > 6;
   const { alignItems, textAlign } = getAlignmentStyles(alignment);
-  const { backgroundColor, borderColor, borderWidth } = getWidgetColors(backgroundStyle, outlineEnabled, outlineColor, theme);
+  const { backgroundColor, borderColor, borderWidth } = getWidgetColors(backgroundStyle, outlineEnabled, outlineColor);
   const verticalStyles = getVerticalAlignmentStyles(verticalAlignment);
 
   return (

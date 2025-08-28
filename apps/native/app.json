@@ -27,6 +27,7 @@
     },
 
     "android": {
+      "package": "com.jonasyukins.focuis",
       "adaptiveIcon": {
         "foregroundImage": "./assets/focUIs_logo3.png",
         "backgroundColor": "#172F50"

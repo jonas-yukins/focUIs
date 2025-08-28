@@ -28,9 +28,6 @@ const AppSelectionScreen = ({ navigation }) => {
   useEffect(() => {
     const loadSelectedApps = async () => {
       try {
-        // Clean up legacy data first
-        await localStorageService.cleanupLegacyData();
-        
         const storedApps = await localStorageService.getSelectedApps();
         const selectedSet = new Set(storedApps.map(app => app.appId));
         setSelectedApps(selectedSet);

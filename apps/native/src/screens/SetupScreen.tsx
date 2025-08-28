@@ -559,46 +559,36 @@ const SetupScreen = ({ navigation }) => {
   );
 
   const renderScrollableListInstructions = () => (
-    <CollapsibleSection title="Optional: Scrollable List" defaultOpen={false}>
-      <Text style={{marginTop: 10, marginBottom: 15, color: '#C8D2E0', fontFamily: 'MRegular', fontSize: RFValue(13)}}>
-        If you have many apps, you can stack widgets to make the list scrollable.
-      </Text>
-      {Platform.OS === 'ios' ? (
-        <>
-          {renderStep(
-            "1",
-            "Open the add widget screen",
-            "Long-press the Home Screen, then tap Edit or the '+' in the top‑left."
-          )}
-          {renderStep(
-            "2",
-            "Find focUIs",
-            "Scroll down or search for 'focUIs'."
-          )}
-          {renderStep(
-            "3",
-            "Create a stack",
-            "Swipe to your desired widget, then press‑and‑drag it onto the existing focUIs widget."
-          )}
-          {renderStep(
-            "4",
-            "Disable Smart Rotate and suggestions",
-            "Turn off 'Smart Rotate' and 'Widget Suggestions'."
-          )}
-          {renderStep(
-            "5",
-            "Use the stack",
-            "Swipe up or down on the widget stack to move between sections."
-          )}
-        </>
-      ) : (
-        <>
-          {renderStep(
-            "1",
-            "Note on Android",
-            "Stacked widgets may not be supported on your launcher. Try a launcher that supports stacking or use multiple pages."
-          )}
-        </>
+    <CollapsibleSection title="Optional: Smart Stack (Scrollable)" defaultOpen={false}>
+      {renderStep(
+        "1",
+        "Enter jiggle mode",
+        "Long‑press an empty area on the Home Screen until items jiggle, then tap '+'."
+      )}
+      {renderStep(
+        "2",
+        "Add a Smart Stack (Large)",
+        "Search 'Smart Stack' → select Large → tap Add Widget → place it and tap Done."
+      )}
+      {renderStep(
+        "3",
+        "Open Edit Stack",
+        "Long‑press the Smart Stack → Edit Stack."
+      )}
+      {renderStep(
+        "4",
+        "Add focUIs (Large)",
+        "Tap '+' → search 'focUIs' → select Large → Add Widget to the stack."
+      )}
+      {renderStep(
+        "5",
+        "Clean up and lock",
+        "Delete any other widgets from stack, then turn off Smart Rotate and Widget Suggestions."
+      )}
+      {renderStep(
+        "6",
+        "Use the stack",
+        "Swipe up/down on the stack to move between focUIs sections."
       )}
     </CollapsibleSection>
   );

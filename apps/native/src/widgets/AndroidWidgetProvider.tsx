@@ -13,8 +13,10 @@ interface AndroidWidgetProps {
     isThirdParty?: boolean;
   }>;
   alignment?: 'left' | 'center' | 'right'; // NEW PROP
-  theme?: 'default' | 'dark' | 'light'; // NEW PROP
   fontColor?: string; // NEW PROP
+  backgroundStyle?: 'default' | 'blue' | 'white' | 'pink' | 'gray';
+  outlineEnabled?: boolean;
+  outlineColor?: 'white' | 'black';
 }
 
 // Helper function to get alignment styles
@@ -41,24 +43,28 @@ const getAlignmentStyles = (alignment: 'left' | 'center' | 'right' = 'center') =
   return { justifyContent, alignItems, textAlign };
 };
 
-// Add helper for theme-based colors
-const getWidgetColors = (theme: 'default' | 'dark' | 'light' = 'default') => {
-  switch (theme) {
-    case 'dark':
-      return { backgroundColor: '#000000', borderColor: 'transparent', borderWidth: 0 };
-    case 'light':
-      return { backgroundColor: '#FFFFFF', borderColor: 'transparent', borderWidth: 0 };
-    case 'default':
-    default:
-      return { backgroundColor: 'transparent', borderColor: '#FFFFFF', borderWidth: 1 };
-  }
+// Derive colors from canonical background/outline settings
+const getWidgetColors = (
+  backgroundStyle: 'default' | 'blue' | 'white' | 'pink' | 'gray' = 'default',
+  outlineEnabled: boolean = true,
+  outlineColor: 'white' | 'black' = 'white'
+) => {
+  const backgroundColor =
+    backgroundStyle === 'blue' ? '#10243c' :
+    backgroundStyle === 'white' ? '#F7F7F7' :
+    backgroundStyle === 'pink' ? '#f6ebef' :
+    backgroundStyle === 'gray' ? '#242424' :
+    'transparent';
+  const borderColor = outlineEnabled ? (outlineColor === 'black' ? '#000000' : '#FFFFFF') : 'transparent';
+  const borderWidth = outlineEnabled ? 1 : 0;
+  return { backgroundColor, borderColor, borderWidth };
 };
 
-const AndroidWidgetProvider: React.FC<AndroidWidgetProps> = ({ widgetId, apps, alignment = 'center', theme = 'default', fontColor = '#FFFFFF' }) => {
+const AndroidWidgetProvider: React.FC<AndroidWidgetProps> = ({ widgetId, apps, alignment = 'center', fontColor = '#FFFFFF', backgroundStyle = 'default', outlineEnabled = true, outlineColor = 'white' }) => {
   const displayApps = apps.slice(0, 6); // Show max 6 apps
   const hasMoreApps = apps.length > 6;
   const { justifyContent, alignItems, textAlign } = getAlignmentStyles(alignment);
-  const { backgroundColor, borderColor, borderWidth } = getWidgetColors(theme);
+  const { backgroundColor, borderColor, borderWidth } = getWidgetColors(backgroundStyle, outlineEnabled, outlineColor);
 
   const handleAppPress = (app: any) => {
     // This will be handled by the Android widget provider

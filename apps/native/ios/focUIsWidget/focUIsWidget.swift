@@ -19,24 +19,22 @@ struct AppData: Codable, Identifiable {
 
 // Shared user settings structure
 struct UserSettings: Codable {
-    let theme: String // "default" | "dark" | "light"
     let fontSize: Double
     let layout: String // "left" | "center" | "right"
     let fontColor: String // hex or named color like "white"
     let verticalAlignment: String // "top" | "middle" | "bottom"
     // New optional fields for decoupled background/outline
-    let backgroundStyle: String? // "transparent" | "dark" | "light"
+    let backgroundStyle: String? // "default" | "blue" | "white" | "pink" | "gray"
     let outlineEnabled: Bool?
     let outlineColor: String? // "white" | "black"
 
     static func defaults() -> UserSettings {
         return UserSettings(
-            theme: "default",
             fontSize: 16,
             layout: "center",
             fontColor: "#FFFFFF",
             verticalAlignment: "middle",
-            backgroundStyle: "transparent",
+            backgroundStyle: "default",
             outlineEnabled: true,
             outlineColor: "white"
         )
@@ -72,75 +70,14 @@ struct SectionedProvider: TimelineProvider {
 
         let sectionKey = "selectedApps_section_\(section)"
 
-        // Prefer section-specific key as JSON string
-        if let jsonString = userDefaults.string(forKey: sectionKey) {
-            if let data = jsonString.data(using: .utf8) {
-                do {
-                    let apps = try JSONDecoder().decode([AppData].self, from: data)
-                    return apps
-                } catch {
-                    print("Widget: Failed to decode JSON string for section \(section): \(error)")
-                }
-            }
-        }
-
-        // Fallback to section data as Data
-        if let data = userDefaults.data(forKey: sectionKey) {
+        // Canonical format: section-specific key stored as a JSON string
+        if let jsonString = userDefaults.string(forKey: sectionKey),
+           let data = jsonString.data(using: .utf8) {
             do {
                 let apps = try JSONDecoder().decode([AppData].self, from: data)
                 return apps
             } catch {
-                print("Widget: Failed to decode UserDefaults data for section \(section): \(error)")
-            }
-        }
-
-        // Fallback to array-of-dictionaries (plist) storage
-        if let array = userDefaults.array(forKey: sectionKey) as? [[String: Any]] {
-            let apps = array.compactMap { dict -> AppData? in
-                guard let id = dict["id"] as? String,
-                      let displayName = dict["displayName"] as? String,
-                      let packageName = dict["packageName"] as? String else {
-                    return nil
-                }
-                let urlScheme = dict["urlScheme"] as? String
-                let appStoreUrl = dict["appStoreUrl"] as? String
-                return AppData(id: id, displayName: displayName, packageName: packageName, urlScheme: urlScheme, appStoreUrl: appStoreUrl)
-            }
-            if !apps.isEmpty { return apps }
-        }
-
-        // Fallback to legacy key for section 1
-        if section == 1 {
-            if let jsonString = userDefaults.string(forKey: "selectedApps") {
-                if let data = jsonString.data(using: .utf8) {
-                    do {
-                        let apps = try JSONDecoder().decode([AppData].self, from: data)
-                        return apps
-                    } catch {
-                        print("Widget: Failed to decode legacy JSON string: \(error)")
-                    }
-                }
-            }
-            if let data = userDefaults.data(forKey: "selectedApps") {
-                do {
-                    let apps = try JSONDecoder().decode([AppData].self, from: data)
-                    return apps
-                } catch {
-                    print("Widget: Failed to decode legacy data: \(error)")
-                }
-            }
-            if let array = userDefaults.array(forKey: "selectedApps") as? [[String: Any]] {
-                let apps = array.compactMap { dict -> AppData? in
-                    guard let id = dict["id"] as? String,
-                          let displayName = dict["displayName"] as? String,
-                          let packageName = dict["packageName"] as? String else {
-                        return nil
-                    }
-                    let urlScheme = dict["urlScheme"] as? String
-                    let appStoreUrl = dict["appStoreUrl"] as? String
-                    return AppData(id: id, displayName: displayName, packageName: packageName, urlScheme: urlScheme, appStoreUrl: appStoreUrl)
-                }
-                if !apps.isEmpty { return apps }
+                print("Widget: Failed to decode JSON string for section \(section): \(error)")
             }
         }
 
@@ -157,10 +94,9 @@ struct SectionedProvider: TimelineProvider {
         guard let userDefaults = UserDefaults(suiteName: "group.com.jonasyukins.focuis") else {
             return UserSettings.defaults()
         }
-        if let jsonString = userDefaults.string(forKey: "userSettings"), let data = jsonString.data(using: .utf8), let decoded = try? JSONDecoder().decode(UserSettings.self, from: data) {
-            return decoded
-        }
-        if let data = userDefaults.data(forKey: "userSettings"), let decoded = try? JSONDecoder().decode(UserSettings.self, from: data) {
+        if let jsonString = userDefaults.string(forKey: "userSettings"),
+           let data = jsonString.data(using: .utf8),
+           let decoded = try? JSONDecoder().decode(UserSettings.self, from: data) {
             return decoded
         }
         return UserSettings.defaults()
@@ -217,8 +153,8 @@ struct focUIsWidgetEntryView : View {
 
     @ViewBuilder
     private func backgroundView(for settings: UserSettings) -> some View {
-        // Map the new backgroundStyle values to their actual colors
-        let style = settings.backgroundStyle ?? (settings.theme == "dark" ? "blue" : settings.theme == "light" ? "white" : "default")
+        // Map backgroundStyle values to colors (theme removed)
+        let style = settings.backgroundStyle ?? "default"
         switch style {
         case "default":
             Color.black
@@ -436,10 +372,9 @@ struct SpacerProvider: TimelineProvider {
         guard let userDefaults = UserDefaults(suiteName: "group.com.jonasyukins.focuis") else {
             return UserSettings.defaults()
         }
-        if let jsonString = userDefaults.string(forKey: "userSettings"), let data = jsonString.data(using: .utf8), let decoded = try? JSONDecoder().decode(UserSettings.self, from: data) {
-            return decoded
-        }
-        if let data = userDefaults.data(forKey: "userSettings"), let decoded = try? JSONDecoder().decode(UserSettings.self, from: data) {
+        if let jsonString = userDefaults.string(forKey: "userSettings"),
+           let data = jsonString.data(using: .utf8),
+           let decoded = try? JSONDecoder().decode(UserSettings.self, from: data) {
             return decoded
         }
         return UserSettings.defaults()
@@ -460,8 +395,8 @@ struct focUIsSpacerEntryView: View {
 
     @ViewBuilder
     private func backgroundView(for settings: UserSettings) -> some View {
-        // Map the new backgroundStyle values to their actual colors
-        let style = settings.backgroundStyle ?? (settings.theme == "dark" ? "blue" : settings.theme == "light" ? "white" : "default")
+        // Map backgroundStyle values to colors (theme removed)
+        let style = settings.backgroundStyle ?? "default"
         switch style {
         case "default":
             Color.black

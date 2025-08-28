@@ -21,7 +21,6 @@ const SettingsScreen = ({ navigation }) => {
 
   // Use local state, initialize with defaults
   const [fontSize, setFontSize] = useState(20);
-  const [theme, setTheme] = useState("default");
   const [layout, setLayout] = useState("center");
   const [saving, setSaving] = useState(false);
   const [fontColor, setFontColor] = useState('white');
@@ -39,19 +38,17 @@ const SettingsScreen = ({ navigation }) => {
         setLoading(true);
         const settings = await localStorageService.getUserSettings();
         
-        setFontSize(settings.fontSize || 20);
-        setTheme(settings.theme || "default");
-        setLayout(settings.layout || "center");
-        setVerticalAlignment(settings.verticalAlignment || "middle"); // NEW
-        setBackgroundStyle((settings as any).backgroundStyle || (settings.theme === 'dark' ? 'blue' : settings.theme === 'light' ? 'white' : 'default'));
-        setOutlineEnabled((settings as any).outlineEnabled ?? (settings.theme === 'default'));
-        setOutlineColor((settings as any).outlineColor || (settings.theme === 'light' ? 'black' : 'white'));
-        
-        // Auto-set fontColor based on theme
-        if ((settings.theme === 'default' || settings.theme === 'dark') || !settings.theme) {
-          setFontColor('white');
-        } else if (settings.theme === 'light') {
+        setFontSize(settings.fontSize ?? 20);
+        setLayout(settings.layout ?? "center");
+        setVerticalAlignment(settings.verticalAlignment ?? "middle"); // NEW
+        setBackgroundStyle((settings as any).backgroundStyle ?? 'default');
+        setOutlineEnabled((settings as any).outlineEnabled ?? true);
+        setOutlineColor((settings as any).outlineColor ?? 'white');
+        // Auto-set fontColor primarily from backgroundStyle; fallback to stored fontColor
+        if ((settings as any).backgroundStyle === 'pink' || (settings as any).backgroundStyle === 'white') {
           setFontColor('black');
+        } else if ((settings as any).backgroundStyle === 'blue' || (settings as any).backgroundStyle === 'gray' || (settings as any).backgroundStyle === 'default') {
+          setFontColor('white');
         } else {
           setFontColor(settings.fontColor || 'white');
         }
@@ -65,31 +62,22 @@ const SettingsScreen = ({ navigation }) => {
     loadSettings();
   }, []);
 
-  // When theme or backgroundStyle changes, auto-set fontColor (but allow user to override)
+  // When backgroundStyle changes, auto-set fontColor (but allow user to override)
   useEffect(() => {
     if (backgroundStyle === 'pink' || backgroundStyle === 'white') {
       setFontColor('black');
-    } else if (backgroundStyle === 'blue' || backgroundStyle === 'gray' || backgroundStyle === 'default') {
+    } else {
       setFontColor('white');
-    } else if (theme === 'default' || theme === 'dark') {
-      setFontColor('white');
-    } else if (theme === 'light') {
-      setFontColor('black');
     }
-  }, [theme, backgroundStyle]);
-
-  // Keep legacy theme roughly in sync with new backgroundStyle for backwards compat
-  useEffect(() => {
-    if (backgroundStyle === 'blue') setTheme('dark');
-    else if (backgroundStyle === 'white') setTheme('light');
-    else setTheme('default');
   }, [backgroundStyle]);
+
+  // Removed legacy theme sync. Theme removed from model.
 
   // Save handler for checkmark
   const handleSave = async () => {
     setSaving(true);
     try {
-      await localStorageService.saveUserSettings({ fontSize, theme, layout, fontColor, verticalAlignment, backgroundStyle, outlineEnabled, outlineColor });
+      await localStorageService.saveUserSettings({ fontSize, layout, fontColor, verticalAlignment, backgroundStyle, outlineEnabled, outlineColor });
       Alert.alert("Settings Saved", "Your preferences have been updated.");
       navigation.goBack();
     } catch (error) {
@@ -111,14 +99,13 @@ const SettingsScreen = ({ navigation }) => {
           style: "destructive",
           onPress: async () => {
             setFontSize(20);
-            setTheme("default");
             setLayout("center");
             setVerticalAlignment("middle"); // NEW
             setBackgroundStyle('default');
             setOutlineEnabled(true);
             setOutlineColor('white');
             try {
-              await localStorageService.saveUserSettings({ fontSize: 20, theme: "default", layout: "center", fontColor: "white", verticalAlignment: "middle", backgroundStyle: 'default', outlineEnabled: true, outlineColor: 'white' });
+              await localStorageService.saveUserSettings({ fontSize: 20, layout: "center", fontColor: "white", verticalAlignment: "middle", backgroundStyle: 'default', outlineEnabled: true, outlineColor: 'white' });
               Alert.alert("Styling Reset", "All styling has been reset to default.");
               navigation.goBack(); // Navigate back after reset
             } catch (error) {
@@ -157,7 +144,6 @@ const SettingsScreen = ({ navigation }) => {
 
   // Remove mutation from selectors, just update local state
   const handleFontSizeChange = (newSize) => setFontSize(newSize);
-  const handleThemeChange = (newTheme) => setTheme(newTheme);
   const handleLayoutChange = (newLayout) => setLayout(newLayout);
 
   const renderSettingItem = ({ title, subtitle, onPress, showArrow = true }) => (
@@ -300,8 +286,6 @@ const SettingsScreen = ({ navigation }) => {
       recommendedColor = 'black';
     } else if (backgroundStyle === 'blue' || backgroundStyle === 'gray' || backgroundStyle === 'default') {
       recommendedColor = 'white';
-    } else if (theme === 'light') {
-      recommendedColor = 'black';
     }
     return (
       <View style={styles.section}>
@@ -330,7 +314,7 @@ const SettingsScreen = ({ navigation }) => {
           ))}
         </View>
         <Text style={{ color: '#7A7A7A', fontSize: 12, marginTop: 8, textAlign: 'center' }}>
-          Recommended for this theme: <Text style={{ color: recommendedColor === 'white' ? '#FFFFFF' : '#000000', fontWeight: 'bold' }}>{recommendedColor.charAt(0).toUpperCase() + recommendedColor.slice(1)}</Text>
+          Recommended for this background: <Text style={{ color: recommendedColor === 'white' ? '#FFFFFF' : '#000000', fontWeight: 'bold' }}>{recommendedColor.charAt(0).toUpperCase() + recommendedColor.slice(1)}</Text>
         </Text>
       </View>
     );
