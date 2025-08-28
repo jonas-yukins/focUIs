@@ -30,6 +30,8 @@ const SettingsScreen = ({ navigation }) => {
   const [backgroundStyle, setBackgroundStyle] = useState<'default' | 'blue' | 'white' | 'pink' | 'gray'>('default');
   const [outlineEnabled, setOutlineEnabled] = useState<boolean>(true);
   const [outlineColor, setOutlineColor] = useState<'white' | 'black'>('white');
+  // Track if user has interacted with background carousel to enable dynamic suggestions
+  const [hasSwipedBackground, setHasSwipedBackground] = useState<boolean>(false);
 
   // Load settings from local storage on mount
   useEffect(() => {
@@ -44,13 +46,17 @@ const SettingsScreen = ({ navigation }) => {
         setBackgroundStyle((settings as any).backgroundStyle ?? 'default');
         setOutlineEnabled((settings as any).outlineEnabled ?? true);
         setOutlineColor((settings as any).outlineColor ?? 'white');
-        // Auto-set fontColor primarily from backgroundStyle; fallback to stored fontColor
-        if ((settings as any).backgroundStyle === 'pink' || (settings as any).backgroundStyle === 'white') {
-          setFontColor('black');
-        } else if ((settings as any).backgroundStyle === 'blue' || (settings as any).backgroundStyle === 'gray' || (settings as any).backgroundStyle === 'default') {
+        // Use stored fontColor exactly on initial load (better UX). Normalize hex to names.
+        const storedFontColor = (settings as any).fontColor;
+        if (storedFontColor === '#FFFFFF') {
           setFontColor('white');
+        } else if (storedFontColor === '#000000') {
+          setFontColor('black');
+        } else if (storedFontColor === 'white' || storedFontColor === 'black') {
+          setFontColor(storedFontColor);
         } else {
-          setFontColor(settings.fontColor || 'white');
+          // Fallback to a sensible default if missing/unknown
+          setFontColor('white');
         }
       } catch (error) {
         console.error('Error loading settings:', error);
@@ -62,14 +68,26 @@ const SettingsScreen = ({ navigation }) => {
     loadSettings();
   }, []);
 
-  // When backgroundStyle changes, auto-set fontColor (but allow user to override)
+  // When backgroundStyle changes after user interaction, auto-set recommended fontColor
   useEffect(() => {
+    if (!hasSwipedBackground) return;
     if (backgroundStyle === 'pink' || backgroundStyle === 'white') {
       setFontColor('black');
     } else {
       setFontColor('white');
     }
-  }, [backgroundStyle]);
+  }, [backgroundStyle, hasSwipedBackground]);
+
+  // When backgroundStyle changes after user interaction, auto-set recommended outlineColor if outline is enabled
+  useEffect(() => {
+    if (!hasSwipedBackground || !outlineEnabled) return;
+    // default=white, white=black, blue=white, pink=black, gray=white
+    if (backgroundStyle === 'white' || backgroundStyle === 'pink') {
+      setOutlineColor('black');
+    } else {
+      setOutlineColor('white');
+    }
+  }, [backgroundStyle, hasSwipedBackground, outlineEnabled]);
 
   // Removed legacy theme sync. Theme removed from model.
 
@@ -206,6 +224,10 @@ const SettingsScreen = ({ navigation }) => {
             onPageSelected={(e) => {
               const idx = e.nativeEvent.position;
               const sel = options[idx];
+              // Mark that user has interacted with background carousel
+              if (sel && sel.id !== backgroundStyle) {
+                setHasSwipedBackground(true);
+              }
               if (sel) setBackgroundStyle(sel.id as any);
             }}
           >
@@ -274,6 +296,10 @@ const SettingsScreen = ({ navigation }) => {
               </TouchableOpacity>
             ))}
           </View>
+          {/* Recommendation, gated by interaction like font color */}
+          <Text style={{ color: '#7A7A7A', fontSize: 12, marginTop: 8, textAlign: 'center' }}>
+            Recommended for this background: <Text style={{ color: (backgroundStyle === 'white' || backgroundStyle === 'pink') ? '#000000' : '#FFFFFF', fontWeight: 'bold' }}>{(backgroundStyle === 'white' || backgroundStyle === 'pink') ? 'Black' : 'White'}</Text>
+          </Text>
         </View>
       )}
     </View>

@@ -117,29 +117,29 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
 
   return (
     <View style={[styles.container, isDragging && styles.dragging, { backgroundColor, borderColor, borderWidth }]}>
-      {/* Widget Header - Only show if showTitle is true */}
+      
       {showTitle && (
-        <View style={[styles.header, { justifyContent: 'space-between', alignItems }]}> {/* Dynamic alignment */}
-          <View style={[styles.headerLeft, { justifyContent: 'flex-start', alignItems }]}> {/* Dynamic alignment */}
+        <View style={[styles.header, { justifyContent: 'space-between', alignItems }]}> 
+          <View style={[styles.headerLeft, { justifyContent: 'flex-start', alignItems }]}> 
             <Ionicons name="phone-portrait-outline" size={16} color={fontColor} />
             <Text style={[styles.widgetTitle, { textAlign, color: fontColor }]}>{widgetId.replace('_', ' ').toUpperCase()}</Text>
           </View>
         </View>
       )}
 
-      {/* Apps Grid */}
-      <View style={[styles.appsGrid, { alignItems, ...verticalStyles }]}> {/* Dynamic alignment */}
+      
+      <View style={[styles.appsGrid, { alignItems, ...verticalStyles }]}> 
         {displayApps.map((app, index) => (
           <View
             key={app._id}
-            style={[styles.appItem, { alignItems, justifyContent: 'center' }]} // Dynamic alignment
+            style={[styles.appItem, { alignItems, justifyContent: 'center' }]}
           >
             <Text style={[styles.appName, { fontSize, textAlign, color: fontColor }]} numberOfLines={1}>
               {app.displayName}
             </Text>
           </View>
         ))}
-        {/* Empty slots for visual consistency */}
+        
         {Array.from({ length: Math.max(0, 6 - displayApps.length) }).map((_, index) => (
           <View key={`empty-${index}`} style={styles.emptySlot}>
             <Text style={[styles.emptyText, { color: fontColor }]}>+</Text>
