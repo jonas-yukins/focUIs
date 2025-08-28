@@ -22,11 +22,13 @@ const HomeScreen = ({ navigation }) => {
   const [selectedApps, setSelectedApps] = useState<LocalAppSelection[]>([]);
   const [userWidgets, setUserWidgets] = useState<LocalWidgetConfig[]>([]);
   const [userSettings, setUserSettings] = useState<LocalUserSettings>({
-    theme: 'default',
     fontSize: 20,
     layout: 'center',
     fontColor: '#FFFFFF',
-    verticalAlignment: 'middle'
+    verticalAlignment: 'middle',
+    backgroundStyle: 'default',
+    outlineEnabled: true,
+    outlineColor: 'white',
   });
   const [loading, setLoading] = useState(true);
 
@@ -36,9 +38,6 @@ const HomeScreen = ({ navigation }) => {
   const loadData = async () => {
     try {
       setLoading(true);
-      
-      // Clean up legacy data first
-      await localStorageService.cleanupLegacyData();
       
       const [apps, widgets, settings] = await Promise.all([
         localStorageService.getSelectedApps(),
@@ -144,9 +143,11 @@ const HomeScreen = ({ navigation }) => {
           showTitle={false}
           fontSize={userSettings.fontSize}
           alignment={userSettings.layout as 'left' | 'center' | 'right'}
-          theme={userSettings.theme as 'default' | 'dark' | 'light'}
           fontColor={userSettings.fontColor}
           verticalAlignment={userSettings.verticalAlignment as 'top' | 'middle' | 'bottom'}
+          backgroundStyle={(userSettings as any).backgroundStyle as any}
+          outlineEnabled={(userSettings as any).outlineEnabled as any}
+          outlineColor={(userSettings as any).outlineColor as any}
         />
       </View>
     );

@@ -19,14 +19,25 @@ struct AppData: Codable, Identifiable {
 
 // Shared user settings structure
 struct UserSettings: Codable {
-    let theme: String // "default" | "dark" | "light"
     let fontSize: Double
     let layout: String // "left" | "center" | "right"
     let fontColor: String // hex or named color like "white"
     let verticalAlignment: String // "top" | "middle" | "bottom"
+    // New optional fields for decoupled background/outline
+    let backgroundStyle: String? // "default" | "blue" | "white" | "pink" | "gray"
+    let outlineEnabled: Bool?
+    let outlineColor: String? // "white" | "black"
 
     static func defaults() -> UserSettings {
-        return UserSettings(theme: "default", fontSize: 16, layout: "center", fontColor: "#FFFFFF", verticalAlignment: "middle")
+        return UserSettings(
+            fontSize: 16,
+            layout: "center",
+            fontColor: "#FFFFFF",
+            verticalAlignment: "middle",
+            backgroundStyle: "default",
+            outlineEnabled: true,
+            outlineColor: "white"
+        )
     }
 }
 
@@ -59,75 +70,14 @@ struct SectionedProvider: TimelineProvider {
 
         let sectionKey = "selectedApps_section_\(section)"
 
-        // Prefer section-specific key as JSON string
-        if let jsonString = userDefaults.string(forKey: sectionKey) {
-            if let data = jsonString.data(using: .utf8) {
-                do {
-                    let apps = try JSONDecoder().decode([AppData].self, from: data)
-                    return apps
-                } catch {
-                    print("Widget: Failed to decode JSON string for section \(section): \(error)")
-                }
-            }
-        }
-
-        // Fallback to section data as Data
-        if let data = userDefaults.data(forKey: sectionKey) {
+        // Canonical format: section-specific key stored as a JSON string
+        if let jsonString = userDefaults.string(forKey: sectionKey),
+           let data = jsonString.data(using: .utf8) {
             do {
                 let apps = try JSONDecoder().decode([AppData].self, from: data)
                 return apps
             } catch {
-                print("Widget: Failed to decode UserDefaults data for section \(section): \(error)")
-            }
-        }
-
-        // Fallback to array-of-dictionaries (plist) storage
-        if let array = userDefaults.array(forKey: sectionKey) as? [[String: Any]] {
-            let apps = array.compactMap { dict -> AppData? in
-                guard let id = dict["id"] as? String,
-                      let displayName = dict["displayName"] as? String,
-                      let packageName = dict["packageName"] as? String else {
-                    return nil
-                }
-                let urlScheme = dict["urlScheme"] as? String
-                let appStoreUrl = dict["appStoreUrl"] as? String
-                return AppData(id: id, displayName: displayName, packageName: packageName, urlScheme: urlScheme, appStoreUrl: appStoreUrl)
-            }
-            if !apps.isEmpty { return apps }
-        }
-
-        // Fallback to legacy key for section 1
-        if section == 1 {
-            if let jsonString = userDefaults.string(forKey: "selectedApps") {
-                if let data = jsonString.data(using: .utf8) {
-                    do {
-                        let apps = try JSONDecoder().decode([AppData].self, from: data)
-                        return apps
-                    } catch {
-                        print("Widget: Failed to decode legacy JSON string: \(error)")
-                    }
-                }
-            }
-            if let data = userDefaults.data(forKey: "selectedApps") {
-                do {
-                    let apps = try JSONDecoder().decode([AppData].self, from: data)
-                    return apps
-                } catch {
-                    print("Widget: Failed to decode legacy data: \(error)")
-                }
-            }
-            if let array = userDefaults.array(forKey: "selectedApps") as? [[String: Any]] {
-                let apps = array.compactMap { dict -> AppData? in
-                    guard let id = dict["id"] as? String,
-                          let displayName = dict["displayName"] as? String,
-                          let packageName = dict["packageName"] as? String else {
-                        return nil
-                    }
-                    let urlScheme = dict["urlScheme"] as? String
-                    let appStoreUrl = dict["appStoreUrl"] as? String
-                    return AppData(id: id, displayName: displayName, packageName: packageName, urlScheme: urlScheme, appStoreUrl: appStoreUrl)
-                }
-                if !apps.isEmpty { return apps }
+                print("Widget: Failed to decode JSON string for section \(section): \(error)")
             }
         }
 
@@ -144,10 +94,9 @@ struct SectionedProvider: TimelineProvider {
         guard let userDefaults = UserDefaults(suiteName: "group.com.jonasyukins.focuis") else {
             return UserSettings.defaults()
         }
-        if let jsonString = userDefaults.string(forKey: "userSettings"), let data = jsonString.data(using: .utf8), let decoded = try? JSONDecoder().decode(UserSettings.self, from: data) {
-            return decoded
-        }
-        if let data = userDefaults.data(forKey: "userSettings"), let decoded = try? JSONDecoder().decode(UserSettings.self, from: data) {
+        if let jsonString = userDefaults.string(forKey: "userSettings"),
+           let data = jsonString.data(using: .utf8),
+           let decoded = try? JSONDecoder().decode(UserSettings.self, from: data) {
             return decoded
         }
         return UserSettings.defaults()
@@ -171,7 +120,7 @@ struct focUIsWidgetEntryView : View {
         let verticalAlignment = entry.settings.verticalAlignment
 
         ZStack {
-            backgroundView(for: entry.settings.theme)
+            backgroundView(for: entry.settings)
                 .cornerRadius(16)
 
             VStack(spacing: 12) { // Increased spacing from 6 to 12
@@ -192,21 +141,31 @@ struct focUIsWidgetEntryView : View {
         }
         .overlay(
             Group {
-                if entry.settings.theme == "default" {
+                let outlineOn = entry.settings.outlineEnabled ?? (entry.settings.backgroundStyle == "default")
+                if outlineOn {
+                    let outlineColorStr = entry.settings.outlineColor ?? (entry.settings.backgroundStyle == "white" || entry.settings.backgroundStyle == "pink" ? "black" : "white")
                     ContainerRelativeShape()
-                        .stroke(Color.white, lineWidth: 1)
+                        .stroke(colorFromString(outlineColorStr), lineWidth: 1)
                 }
             }
         )
     }
 
     @ViewBuilder
-    private func backgroundView(for theme: String) -> some View {
-        switch theme {
-        case "dark":
+    private func backgroundView(for settings: UserSettings) -> some View {
+        // Map backgroundStyle values to colors (theme removed)
+        let style = settings.backgroundStyle ?? "default"
+        switch style {
+        case "default":
             Color.black
-        case "light":
+        case "white":
             Color.white
+        case "blue":
+            Color(red: 16/255, green: 36/255, blue: 60/255) // #10243c
+        case "pink":
+            Color(red: 246/255, green: 235/255, blue: 239/255) // #f6ebef
+        case "gray":
+            Color(red: 36/255, green: 36/255, blue: 36/255) // #242424
         default:
             Color.clear
         }
@@ -384,6 +343,90 @@ struct focUIsWidget6: Widget {
         .configurationDisplayName("focUIs widget 6")
         .description("Apps in section 6")
         .supportedFamilies([.systemLarge])
+    }
+}
+
+// MARK: - Spacer Widget (iOS Medium)
+
+struct SpacerEntry: TimelineEntry {
+    let date: Date
+    let settings: UserSettings
+}
+
+struct SpacerProvider: TimelineProvider {
+    func placeholder(in context: Context) -> SpacerEntry {
+        SpacerEntry(date: Date(), settings: UserSettings.defaults())
+    }
+
+    func getSnapshot(in context: Context, completion: @escaping (SpacerEntry) -> ()) {
+        completion(SpacerEntry(date: Date(), settings: getUserSettingsFromUserDefaults()))
+    }
+
+    func getTimeline(in context: Context, completion: @escaping (Timeline<SpacerEntry>) -> ()) {
+        let settings = getUserSettingsFromUserDefaults()
+        let entry = SpacerEntry(date: Date(), settings: settings)
+        completion(Timeline(entries: [entry], policy: .never))
+    }
+
+    private func getUserSettingsFromUserDefaults() -> UserSettings {
+        guard let userDefaults = UserDefaults(suiteName: "group.com.jonasyukins.focuis") else {
+            return UserSettings.defaults()
+        }
+        if let jsonString = userDefaults.string(forKey: "userSettings"),
+           let data = jsonString.data(using: .utf8),
+           let decoded = try? JSONDecoder().decode(UserSettings.self, from: data) {
+            return decoded
+        }
+        return UserSettings.defaults()
+    }
+}
+
+struct focUIsSpacerEntryView: View {
+    var entry: SpacerEntry
+
+    var body: some View {
+        // Use the same background mapping as section widgets, but no outline
+        ZStack {
+            backgroundView(for: entry.settings)
+                .cornerRadius(16)
+        }
+        .padding(0)
+    }
+
+    @ViewBuilder
+    private func backgroundView(for settings: UserSettings) -> some View {
+        // Map backgroundStyle values to colors (theme removed)
+        let style = settings.backgroundStyle ?? "default"
+        switch style {
+        case "default":
+            Color.black
+        case "white":
+            Color.white
+        case "blue":
+            Color(red: 16/255, green: 36/255, blue: 60/255) // #10243c
+        case "pink":
+            Color(red: 246/255, green: 235/255, blue: 239/255) // #f6ebef
+        case "gray":
+            Color(red: 36/255, green: 36/255, blue: 36/255) // #242424
+        default:
+            Color.clear
+        }
+    }
+}
+
+struct focUIsSpacerWidget: Widget {
+    let kind: String = "focUIsSpacerWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: SpacerProvider()) { entry in
+            focUIsSpacerEntryView(entry: entry)
+                .background(Color.clear)
+                .containerBackground(.clear, for: .widget)
+        }
+        .contentMarginsDisabled()
+        .configurationDisplayName("focUIs Spacer")
+        .description("Fills leftover space above or below your focUIs widget.")
+        .supportedFamilies([.systemMedium])
     }
 }
 

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useFocusEffect } from '@react-navigation/native';
 import {
   StyleSheet,
   View,
@@ -19,39 +20,125 @@ import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 import { Asset } from 'expo-asset';
 import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
+import localStorageService from '../services/LocalStorageService';
+
+const CollapsibleSection = ({ title, children, defaultOpen = true }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <View style={styles.instructionSection}>
+      <TouchableOpacity onPress={() => setIsOpen(!isOpen)} style={styles.sectionHeaderTouchable}>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionHeaderTitle}>{title}</Text>
+          <View style={styles.chevronContainer}>
+            <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={20} color="#666666" />
+          </View>
+        </View>
+      </TouchableOpacity>
+      {isOpen && (
+        <View style={styles.sectionContent}>
+          {children}
+        </View>
+      )}
+    </View>
+  );
+};
 
 const SetupScreen = ({ navigation }) => {
   const backgroundUri = useBackgroundAsset();
   const [currentWallpaperIndex, setCurrentWallpaperIndex] = useState(0);
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions({ writeOnly: true });
+  const pagerRef = React.useRef(null);
   
   // Wallpaper options with actual images
   const wallpapers = [
     {
       id: 1,
-      name: "Light Pink",
-      type: "image",
-      image: require('../../assets/wallpapers/light_pink_wallpaper.jpg')
-    },
-    {
-      id: 2,
       name: "Black",
       type: "image", 
       image: require('../../assets/wallpapers/black_wallpaper.jpg')
     },
     {
-      id: 3,
+      id: 2,
       name: "White",
       type: "image",
       image: require('../../assets/wallpapers/white_wallpaper.jpg')
     },
     {
+      id: 3,
+      name: "Blue Gradient",
+      type: "image",
+      image: require('../../assets/wallpapers/blue_gradient_wallpaper.jpg')
+    },
+    {
       id: 4,
-      name: "Dark Gray",
+      name: "Pink",
+      type: "image",
+      image: require('../../assets/wallpapers/light_pink_wallpaper.jpg')
+    },
+    {
+      id: 5,
+      name: "Gray",
       type: "image",
       image: require('../../assets/wallpapers/dark_gray_wallpaper.jpg')
-    }
+    },
   ];
+
+  const backgroundToWallpaperIndex = (style: 'default' | 'blue' | 'white' | 'pink' | 'gray'): number => {
+    // Map to index in wallpapers order above (now aligned with background carousel)
+    switch (style) {
+      case 'default':
+        return 0; // Default
+      case 'white':
+        return 1; // White
+      case 'blue':
+        return 2; // Blue
+      case 'pink':
+        return 3; // Pink
+      case 'gray':
+        return 4; // Gray
+      default:
+        return 0;
+    }
+  };
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const settings = await localStorageService.getUserSettings();
+        const idx = backgroundToWallpaperIndex((settings as any).backgroundStyle || 'default');
+        if (idx >= 0) {
+          setCurrentWallpaperIndex(idx);
+          // Set the pager to the correct page after a short delay to ensure it's mounted
+          setTimeout(() => {
+            pagerRef.current?.setPage(idx);
+          }, 100);
+        }
+      } catch (error) {
+        console.error('Error loading wallpaper index:', error);
+      }
+    })();
+  }, []);
+
+  // Listen for settings changes when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      (async () => {
+        try {
+          const settings = await localStorageService.getUserSettings();
+          const idx = backgroundToWallpaperIndex((settings as any).backgroundStyle || 'default');
+          if (idx >= 0) {
+            setCurrentWallpaperIndex(idx);
+            // Set the pager to the correct page when screen comes into focus
+            setTimeout(() => {
+              pagerRef.current?.setPage(idx);
+            }, 100);
+          }
+        } catch (error) {
+          console.error('Error loading wallpaper index on focus:', error);
+        }
+      })();
+    }, [])
+  );
   
   const openWidgetSettings = () => {
     if (Platform.OS === 'ios') {
@@ -94,6 +181,38 @@ const SetupScreen = ({ navigation }) => {
     }
   };
 
+  const openIosSettings = async () => {
+    if (Platform.OS !== 'ios') return;
+    try {
+      const candidates = [
+        'App-prefs://',
+        'app-settings:'
+      ];
+      for (const candidate of candidates) {
+        const can = await Linking.canOpenURL(candidate);
+        if (can) {
+          await Linking.openURL(candidate);
+          return;
+        }
+      }
+      Alert.alert('Unavailable', 'Unable to open Settings. Please navigate there manually.');
+    } catch (e) {
+      Alert.alert('Unavailable', 'Unable to open Settings. Please navigate there manually.');
+    }
+  };
+
+  const SettingsButton = ({ label = 'Open Settings' }) => (
+    Platform.OS === 'ios' ? (
+      <TouchableOpacity
+        onPress={openIosSettings}
+        style={styles.settingsButton}
+      >
+        <Ionicons name="settings-outline" size={18} color="#FFFFFF" />
+        <Text style={styles.settingsButtonText}>{label}</Text>
+      </TouchableOpacity>
+    ) : null
+  );
+
   const renderStep = (number, title, description, icon = null) => (
     <View style={styles.stepContainer}>
       <View style={styles.stepHeader}>
@@ -108,8 +227,7 @@ const SetupScreen = ({ navigation }) => {
   );
 
   const renderIOSWidgetInstructions = () => (
-    <View style={styles.instructionSection}>
-      <Text style={styles.sectionTitle}>Add focUIs Widget</Text>
+    <CollapsibleSection title="Add focUIs Widget">
       {renderStep(
         "1",
         "Open the app widget screen",
@@ -145,12 +263,11 @@ const SetupScreen = ({ navigation }) => {
         "Select large size",
         "Choose 'Large' size to hide all widget titles for a cleaner look."
       )}
-    </View>
+    </CollapsibleSection>
   );
 
   const renderAndroidWidgetInstructions = () => (
-    <View style={styles.instructionSection}>
-      <Text style={styles.sectionTitle}>Add focUIs Widget</Text>
+    <CollapsibleSection title="Add focUIs Widget">
       {renderStep(
         "1",
         "Long-press home screen",
@@ -176,12 +293,11 @@ const SetupScreen = ({ navigation }) => {
         "Resize if needed",
         "Adjust the widget size if needed by dragging the corners."
       )}
-    </View>
+    </CollapsibleSection>
   );
 
   const renderAppSelectionInstructions = () => (
-    <View style={styles.instructionSection}>
-      <Text style={styles.sectionTitle}>Choose Your Apps</Text>
+    <CollapsibleSection title="Choose Your Apps">
       {renderStep(
         "1",
         "Open focUIs app",
@@ -204,12 +320,11 @@ const SetupScreen = ({ navigation }) => {
         "Apps appear in widget",
         "Your selected apps will automatically appear in the widget and home view."
       )}
-    </View>
+    </CollapsibleSection>
   );
 
   const renderWallpaperInstructions = () => (
-    <View style={styles.instructionSection}>
-      <Text style={styles.sectionTitle}>Change Your Wallpaper</Text>
+    <CollapsibleSection title="Change Your Wallpaper">
       {Platform.OS === 'ios' ? (
         <>
           {renderStep(
@@ -257,12 +372,18 @@ const SetupScreen = ({ navigation }) => {
           )}
         </>
       )}
+      {Platform.OS === 'ios' && (
+        <View style={styles.settingsButtonWrapperCentered}>
+          <SettingsButton label="Open Settings" />
+        </View>
+      )}
       <View style={styles.wallpaperSection}>
         <Text style={styles.wallpaperTitle}>Choose Your Wallpaper:</Text>
         <View style={styles.carouselContainer}>
           <PagerView
+            ref={pagerRef}
             style={styles.carousel}
-            initialPage={0}
+            initialPage={currentWallpaperIndex}
             onPageSelected={(e) => setCurrentWallpaperIndex(e.nativeEvent.position)}
           >
             {wallpapers.map((wallpaper, index) => (
@@ -304,45 +425,176 @@ const SetupScreen = ({ navigation }) => {
           <Text style={styles.saveButtonText}>Save Wallpaper</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </CollapsibleSection>
   );
 
-  const renderOptionalSteps = () => (
-    <View style={styles.instructionSection}>
-      <Text style={styles.sectionTitle}>Optional: Hide Other Apps</Text>
+  const renderDarkModeInstructions = () => (
+    <CollapsibleSection title="Enable Dark Mode">
       {Platform.OS === 'ios' ? (
         <>
           {renderStep(
             "1",
-            "Long-press app icon",
-            "Long-press any app icon you want to hide."
+            "Open Display & Brightness",
+            "Go to Settings → Display & Brightness."
           )}
           {renderStep(
             "2",
-            "Remove from home screen",
-            "Tap 'Remove App' → 'Remove from Home Screen'."
+            "Select Dark and turn off Automatic",
+            "Choose 'Dark' under Appearance, then switch 'Automatic' off."
           )}
         </>
       ) : (
         <>
           {renderStep(
             "1",
-            "Long-press app",
-            "Long-press any app you want to hide."
+            "Open Display settings",
+            "Go to Settings → Display."
           )}
           {renderStep(
             "2",
-            "Remove or hide",
-            "Tap 'Remove' or 'Hide App' (option varies by launcher)."
+            "Enable Dark theme and disable scheduling",
+            "Turn on 'Dark theme' and set 'Schedule' to off."
           )}
         </>
       )}
-    </View>
+      {Platform.OS === 'ios' && (
+        <SettingsButton label="Open Settings" />
+      )}
+    </CollapsibleSection>
+  );
+
+  const renderReduceAnimationsInstructions = () => (
+    <CollapsibleSection title="Optional: Reduce Animations" defaultOpen={false}>
+      {Platform.OS === 'ios' ? (
+        <>
+          {renderStep(
+            "1",
+            "Open Accessibility",
+            "Go to Settings → Accessibility."
+          )}
+          {renderStep(
+            "2",
+            "Open Per‑App Settings",
+            "Tap 'Per‑App Settings'."
+          )}
+          {renderStep(
+            "3",
+            "Add app",
+            "Tap 'Add App'."
+          )}
+          {renderStep(
+            "4",
+            "Choose Home Screen & App Library",
+            "Select 'Home Screen & App Library'."
+          )}
+          {renderStep(
+            "5",
+            "Set Reduce Motion",
+            "Tap 'Home Screen & App Library' again, then tap 'Reduce Motion'."
+          )}
+          {renderStep(
+            "6",
+            "Turn it on",
+            "Set 'Reduce Motion' to 'On'."
+          )}
+        </>
+      ) : (
+        <>
+          {renderStep(
+            "1",
+            "Open Accessibility",
+            "Go to Settings → Accessibility."
+          )}
+          {renderStep(
+            "2",
+            "Reduce animations",
+            "Tap 'Reduce animations' (or 'Remove animations') and turn it on."
+          )}
+        </>
+      )}
+      {Platform.OS === 'ios' && (
+        <SettingsButton label="Open Settings" />
+      )}
+    </CollapsibleSection>
+  );
+
+  const renderMinimizeHomescreenInstructions = () => (
+    <CollapsibleSection title="Minimize Homescreen">
+      {renderStep(
+        "1",
+        "Enter edit (jiggle) mode",
+        "Long-press the Home Screen, then tap the row of dots."
+      )}
+      {renderStep(
+        "2",
+        "Hide extra pages",
+        "Uncheck all other Home Screens to hide them."
+      )}
+      {renderStep(
+        "3",
+        "Clear the page",
+        "Remove all apps from the current Home Screen and dock."
+      )}
+      {renderStep(
+        "4",
+        "Add focUIs Spacer widget",
+        "Add the focUIs Spacer widget to help center the main widget."
+      )}
+      {renderStep(
+        "5",
+        "Position the spacer",
+        "Ensure the Spacer widget sits above the main focUIs widget."
+      )}
+      {renderStep(
+        "6",
+        "Quick access",
+        "Add focUIs to the dock for easy access to more apps."
+      )}
+      {renderStep(
+        "7",
+        "Customize the icon",
+        "You can adjust the focUIs app icon in Settings → focUIs."
+      )}
+    </CollapsibleSection>
+  );
+
+  const renderScrollableListInstructions = () => (
+    <CollapsibleSection title="Optional: Smart Stack (Scrollable)" defaultOpen={false}>
+      {renderStep(
+        "1",
+        "Enter jiggle mode",
+        "Long‑press an empty area on the Home Screen until items jiggle, then tap '+'."
+      )}
+      {renderStep(
+        "2",
+        "Add a Smart Stack (Large)",
+        "Search 'Smart Stack' → select Large → tap Add Widget → place it and tap Done."
+      )}
+      {renderStep(
+        "3",
+        "Open Edit Stack",
+        "Long‑press the Smart Stack → Edit Stack."
+      )}
+      {renderStep(
+        "4",
+        "Add focUIs (Large)",
+        "Tap '+' → search 'focUIs' → select Large → Add Widget to the stack."
+      )}
+      {renderStep(
+        "5",
+        "Clean up and lock",
+        "Delete any other widgets from stack, then turn off Smart Rotate and Widget Suggestions."
+      )}
+      {renderStep(
+        "6",
+        "Use the stack",
+        "Swipe up/down on the stack to move between focUIs sections."
+      )}
+    </CollapsibleSection>
   );
 
   const renderBlockNotifications = () => (
-    <View style={styles.instructionSection}>
-      <Text style={styles.sectionTitle}>Optional: Block Notifications from Non-Essential Apps</Text>
+    <CollapsibleSection title="Optional: Block Notifications" defaultOpen={false}>
       <Text style={{marginTop: 10, marginBottom: 15, color: '#C8D2E0', fontFamily: 'MRegular', fontSize: RFValue(13)}}>
         This helps keep your device distraction-free by only allowing important notifications.
       </Text>
@@ -363,6 +615,7 @@ const SetupScreen = ({ navigation }) => {
             "Turn off notifications",
             "Toggle 'Allow Notifications' off for that app."
           )}
+          <SettingsButton label="Open Settings" />
         </>
       ) : (
         <>
@@ -383,41 +636,10 @@ const SetupScreen = ({ navigation }) => {
           )}
         </>
       )}
-    </View>
+    </CollapsibleSection>
   );
 
-  const renderFocusModes = () => (
-    <View style={styles.instructionSection}>
-      <Text style={styles.sectionTitle}>Optional: Use Focus Modes</Text>
-      {Platform.OS === 'ios' ? (
-        <>
-          {renderStep(
-            "1",
-            "Go to Screen Time",
-            "Settings → Screen Time → App Limits."
-          )}
-          {renderStep(
-            "2",
-            "Set up Focus Mode",
-            "Create a Focus Mode that only shows the focUIs screen."
-          )}
-        </>
-      ) : (
-        <>
-          {renderStep(
-            "1",
-            "Digital Wellbeing",
-            "Settings → Digital Wellbeing → Focus Mode."
-          )}
-          {renderStep(
-            "2",
-            "Consider minimal launcher",
-            "Try launchers like Niagara or Ratio for full control."
-          )}
-        </>
-      )}
-    </View>
-  );
+  
 
   return (
     <ImageBackground
@@ -456,14 +678,22 @@ const SetupScreen = ({ navigation }) => {
           {/* Wallpaper Instructions */}
           {renderWallpaperInstructions()}
 
-          {/* Optional Steps */}
-          {renderOptionalSteps()}
+          {/* Dark Mode Instructions */}
+          {renderDarkModeInstructions()}
+
+          {/* Minimize Homescreen */}
+          {renderMinimizeHomescreenInstructions()}
+
+          {/* Optional: Scrollable List */}
+          {renderScrollableListInstructions()}
+
+          {/* Reduce Animations (Optional) */}
+          {renderReduceAnimationsInstructions()}
 
           {/* Block Notifications */}
           {renderBlockNotifications()}
 
-          {/* Focus Modes */}
-          {renderFocusModes()}
+          
 
           {/* Completion */}
           <View style={styles.completionSection}>
@@ -569,6 +799,29 @@ const styles = StyleSheet.create({
     color: '#F7F7F7',
     marginBottom: 12,
   },
+  sectionHeaderTitle: {
+    fontSize: RFValue(18),
+    fontFamily: 'MBold',
+    color: '#F7F7F7',
+    flex: 1,
+  },
+  sectionHeaderTouchable: {
+    paddingVertical: 8,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  chevronContainer: {
+    width: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  sectionContent: {
+    marginTop: 8,
+  },
   stepContainer: {
     marginBottom: 18,
   },
@@ -609,6 +862,11 @@ const styles = StyleSheet.create({
   },
   wallpaperSection: {
     marginTop: 16,
+  },
+  settingsButtonWrapperCentered: {
+    marginTop: 2,
+    marginBottom: 8,
+    alignItems: 'center',
   },
   wallpaperTitle: {
     fontFamily: 'MSemiBold',
@@ -669,6 +927,23 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     color: '#F7F7F7',
     textAlign: 'center',
+  },
+  settingsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#172F50',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    alignSelf: 'center',
+    marginTop: 8,
+  },
+  settingsButtonText: {
+    fontFamily: 'MSemiBold',
+    fontSize: RFValue(13),
+    color: '#FFFFFF',
+    marginLeft: 6,
   },
   saveButton: {
     flexDirection: 'row',

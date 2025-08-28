@@ -1,16 +1,13 @@
 # focUIs App Implementation
 
-This document describes the implementation of the focUIs app, which provides a minimal, text-only interface for launching apps on both Android and iOS platforms.
+This document describes the implementation of the focUIs app, which provides a minimal, text-only interface for launching apps on iOS. Android is currently disabled and will be reconsidered in the future.
 
 ## Overview
 
 The focUIs app provides users with a distraction-free interface to launch their installed applications. Due to platform restrictions, the implementation differs between Android and iOS:
 
-### Android Implementation
-- Uses a native Android module (`InstalledAppsModule.kt`) to fetch the user's installed apps
-- Requests `QUERY_ALL_PACKAGES` permission to access the full list of installed applications
-- Uses Android Intents to launch apps via their package names
-- Provides real-time access to all user-installed apps
+### Android Implementation (disabled)
+Android support has been removed for now. The previous native module and Android project have been deleted. If re-enabled in the future, a fresh Android project and native module can be created.
 
 ### iOS Implementation
 - Uses a static JSON list of popular apps (`popularApps.json`)
@@ -58,11 +55,8 @@ interface UseAvailableAppsReturn {
 
 ## Setup Instructions
 
-### Android Setup
-
-1. **Permissions**: The app requires `QUERY_ALL_PACKAGES` permission in `AndroidManifest.xml`
-2. **Native Module**: The `InstalledAppsModule` is automatically registered via `MainApplication.kt`
-3. **Build**: Use Expo Development Build or eject to bare workflow for native module support
+### Android Setup (disabled)
+Not applicable while Android is disabled.
 
 ### iOS Setup
 
@@ -78,12 +72,7 @@ interface UseAvailableAppsReturn {
    pnpm install
    ```
 
-2. **Run on Android**:
-   ```bash
-   pnpm android
-   ```
-
-3. **Run on iOS**:
+2. **Run on iOS**:
    ```bash
    pnpm ios
    ```
@@ -99,11 +88,8 @@ interface UseAvailableAppsReturn {
 
 ### Platform-Specific Features
 
-#### Android
-- Real-time app discovery
-- System app filtering
-- Package name-based launching
-- Version information display
+#### Android (disabled)
+Not applicable while Android is disabled.
 
 #### iOS
 - Static app list with 50+ popular apps
@@ -115,13 +101,6 @@ interface UseAvailableAppsReturn {
 
 ```
 apps/native/
-├── android/app/src/main/java/com/narbhacks/focuis/
-│   ├── InstalledAppsModule.kt      # Android native module
-│   ├── InstalledAppsPackage.kt     # Package registration
-│   ├── MainActivity.kt             # Main activity
-│   └── MainApplication.kt          # Application class
-├── android/app/src/main/
-│   └── AndroidManifest.xml         # Permissions and app config
 ├── src/
 │   ├── hooks/
 │   │   └── useAvailableApps.ts     # Shared platform abstraction
@@ -152,10 +131,8 @@ apps/native/
 
 ## Troubleshooting
 
-### Android Issues
-- **Permission Denied**: Ensure `QUERY_ALL_PACKAGES` permission is granted
-- **Native Module Not Found**: Verify the module is properly registered in `MainApplication.kt`
-- **Build Errors**: Use Expo Development Build for native module support
+### Android Issues (disabled)
+Not applicable while Android is disabled.
 
 ### iOS Issues
 - **Apps Not Launching**: Verify URL schemes are correct in `popularApps.json`
@@ -168,10 +145,6 @@ When adding new apps to the iOS static list:
 1. Verify the URL scheme works
 2. Include a valid App Store URL
 3. Add appropriate category
-4. Test on both platforms
+4. Test on iOS
 
-When modifying the Android native module:
-1. Test permission handling
-2. Verify app launching functionality
-3. Ensure proper error handling
-4. Test on different Android versions 
+Android native module contribution guidance is omitted while Android is disabled.

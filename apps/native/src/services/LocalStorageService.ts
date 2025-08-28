@@ -25,20 +25,25 @@ export interface LocalWidgetConfig {
 }
 
 export interface LocalUserSettings {
-  theme: string;
   fontSize: number;
   layout: string;
   fontColor: string;
   verticalAlignment: string; // NEW: 'top' | 'middle' | 'bottom'
+  // NEW SETTINGS: decouple background from outline
+  backgroundStyle?: 'default' | 'blue' | 'white' | 'pink' | 'gray';
+  outlineEnabled?: boolean;
+  outlineColor?: 'white' | 'black';
 }
 
 // Default values
 const DEFAULT_USER_SETTINGS: LocalUserSettings = {
-  theme: 'default',
   fontSize: 20,
   layout: 'center',
   fontColor: '#FFFFFF',
-  verticalAlignment: 'middle' // NEW: default to middle
+  verticalAlignment: 'middle', // NEW: default to middle
+  backgroundStyle: 'default',
+  outlineEnabled: true,
+  outlineColor: 'white',
 };
 
 class LocalStorageService {
@@ -59,7 +64,6 @@ class LocalStorageService {
       
       // Also save to iOS widget storage if on iOS
       if (Platform.OS === 'ios') {
-        await this.saveToIOSWidgetStorage(apps);
         await this.saveSectionsToIOSWidgetStorage(apps);
         await this.reloadIOSWidgets();
       }
@@ -132,6 +136,22 @@ class LocalStorageService {
     }
   }
 
+  async updateAppDisplayNames(appNames: { appId: string; displayName: string }[]): Promise<void> {
+    try {
+      const currentApps = await this.getSelectedApps();
+      for (const { appId, displayName } of appNames) {
+        const idx = currentApps.findIndex(app => app.appId === appId);
+        if (idx >= 0) {
+          currentApps[idx].displayName = displayName;
+        }
+      }
+      await this.saveSelectedApps(currentApps);
+    } catch (error) {
+      console.error('Error updating app display names:', error);
+      throw error;
+    }
+  }
+
   // Widget Configurations
   async getWidgetConfigs(): Promise<LocalWidgetConfig[]> {
     try {
@@ -171,7 +191,8 @@ class LocalStorageService {
   async getUserSettings(): Promise<LocalUserSettings> {
     try {
       const stored = await AsyncStorage.getItem(USER_SETTINGS_KEY);
-      return stored ? { ...DEFAULT_USER_SETTINGS, ...JSON.parse(stored) } : DEFAULT_USER_SETTINGS;
+      const merged: LocalUserSettings = stored ? { ...DEFAULT_USER_SETTINGS, ...JSON.parse(stored) } : { ...DEFAULT_USER_SETTINGS };
+      return merged;
     } catch (error) {
       console.error('Error getting user settings:', error);
       return DEFAULT_USER_SETTINGS;
@@ -194,60 +215,39 @@ class LocalStorageService {
     }
   }
 
-  // iOS Widget Storage (for native widgets)
-  private async saveToIOSWidgetStorage(apps: LocalAppSelection[]): Promise<void> {
+  // iOS Widget Storage (legacy single-key writer removed)
+
+  // Write a value to the iOS shared App Group storage, preferring SharedGroupPreferences
+  // and falling back to the WidgetReloader native module. Returns true if something wrote.
+  private async writeToIOSSharedStorage(key: string, value: string): Promise<boolean> {
     try {
-      const widgetApps = apps.map(app => ({
-        id: app.appId,
-        displayName: app.displayName,
-        packageName: app.packageName || '',
-        urlScheme: app.urlScheme || null,
-        appStoreUrl: app.appStoreUrl || null
-      }));
-      
-      let wrote = false;
+      // Try SharedGroupPreferences first
       try {
-        const { SharedGroupPreferences } = require('react-native-shared-group-preferences');
+        const mod = require('react-native-shared-group-preferences');
+        const SharedGroupPreferences = mod?.SharedGroupPreferences;
         if (SharedGroupPreferences?.setItem) {
-          await SharedGroupPreferences.setItem('selectedApps', JSON.stringify(widgetApps), 'group.com.jonasyukins.focuis');
-          wrote = true;
+          await SharedGroupPreferences.setItem(key, value, 'group.com.jonasyukins.focuis');
+          return true;
         }
       } catch (_) {}
 
-      if (!wrote) {
-        const reloader = (NativeModules as any)?.WidgetReloader;
-        if (reloader?.setSharedItem) {
-          await reloader.setSharedItem('selectedApps', JSON.stringify(widgetApps));
-          wrote = true;
-        }
+      // Fallback to WidgetReloader native module
+      const reloader = (NativeModules as any)?.WidgetReloader;
+      if (reloader?.setSharedItem) {
+        await reloader.setSharedItem(key, value);
+        return true;
       }
 
-      if (wrote) {
-        console.log('Widget data saved successfully to shared app group');
-      } else {
-        console.log('No available method to save to shared app group');
-      }
+      return false;
     } catch (error) {
-      console.log('SharedGroupPreferences failed:', error);
-      // Fallback: just log the data that should be saved
-      console.log('Widget apps data that should be saved:', JSON.stringify(apps, null, 2));
+      console.log('Failed to write to iOS shared storage:', { key, error });
+      return false;
     }
   }
 
   // Save per-section app arrays into iOS shared storage so widgets 1..6 can read their own lists
   private async saveSectionsToIOSWidgetStorage(apps: LocalAppSelection[], widgetsOverride?: LocalWidgetConfig[]): Promise<void> {
     try {
-      let useSharedGroupPreferences = false;
-      let SharedGroupPreferences: any = null;
-      try {
-        const mod = require('react-native-shared-group-preferences');
-        if (mod?.SharedGroupPreferences?.setItem) {
-          SharedGroupPreferences = mod.SharedGroupPreferences;
-          useSharedGroupPreferences = true;
-        }
-      } catch (_) {}
-
-      const reloader = (NativeModules as any)?.WidgetReloader;
       const appsPerWidget = 6;
 
       // Determine sections based on either provided widgets or by chunking the ordered apps
@@ -289,36 +289,12 @@ class LocalStorageService {
           }));
 
         const key = `selectedApps_section_${index + 1}`;
-        if (useSharedGroupPreferences) {
-          await SharedGroupPreferences.setItem(key, JSON.stringify(sectionApps), 'group.com.jonasyukins.focuis');
-        } else if (reloader?.setSharedItem) {
-          await reloader.setSharedItem(key, JSON.stringify(sectionApps));
-        }
+        await this.writeToIOSSharedStorage(key, JSON.stringify(sectionApps));
       }
 
-      // For backward compatibility, keep section 1 also at the legacy key
-      if (sections.length > 0) {
-        const section1Ids = sections[0];
-        const section1Apps = section1Ids
-          .map(id => orderedApps.find(a => a.appId === id))
-          .filter((a): a is LocalAppSelection => !!a)
-          .map(app => ({
-            id: app.appId,
-            displayName: app.displayName,
-            packageName: app.packageName || '',
-            urlScheme: app.urlScheme || null,
-            appStoreUrl: app.appStoreUrl || null,
-          }));
-        if (useSharedGroupPreferences) {
-          await SharedGroupPreferences.setItem('selectedApps', JSON.stringify(section1Apps), 'group.com.jonasyukins.focuis');
-        } else if (reloader?.setSharedItem) {
-          await reloader.setSharedItem('selectedApps', JSON.stringify(section1Apps));
-        }
-      }
-
-      console.log('Saved iOS widget sections to SharedGroupPreferences');
+      console.log('Saved iOS widget sections to shared storage');
     } catch (error) {
-      console.log('Failed to save widget sections to SharedGroupPreferences:', error);
+      console.log('Failed to save widget sections to shared storage:', error);
     }
   }
 
@@ -347,36 +323,7 @@ class LocalStorageService {
     }
   }
 
-  // Clean up legacy data and ensure consistent structure
-  async cleanupLegacyData(): Promise<void> {
-    try {
-      const stored = await AsyncStorage.getItem(SELECTED_APPS_KEY);
-      if (stored) {
-        const apps = JSON.parse(stored);
-        const cleanedApps = apps
-          .filter(app => app.appId || app.id) // Remove entries without proper ID
-          .map(app => ({
-            appId: app.appId || app.id, // Normalize to appId
-            displayName: app.displayName,
-            packageName: app.packageName || '',
-            urlScheme: app.urlScheme,
-            appStoreUrl: app.appStoreUrl,
-            isThirdParty: app.isThirdParty,
-            isSelected: true,
-            order: 0
-          }))
-          .filter((app, index, array) => 
-            array.findIndex(a => a.appId === app.appId) === index // Remove duplicates
-          )
-          .map((app, index) => ({ ...app, order: index })); // Reorder
-
-        await this.saveSelectedApps(cleanedApps);
-        console.log('Cleaned up legacy data:', cleanedApps);
-      }
-    } catch (error) {
-      console.error('Error cleaning up legacy data:', error);
-    }
-  }
+  // Removed: cleanupLegacyData (no longer needed since app is not published)
 
   async getStorageKeys(): Promise<string[]> {
     try {
@@ -391,30 +338,12 @@ class LocalStorageService {
   // Persist user settings for iOS WidgetKit to read from the shared app group
   private async saveUserSettingsToIOSWidgetStorage(settings: LocalUserSettings): Promise<void> {
     try {
-      let wrote = false;
-      try {
-        const { SharedGroupPreferences } = require('react-native-shared-group-preferences');
-        if (SharedGroupPreferences?.setItem) {
-          await SharedGroupPreferences.setItem('userSettings', JSON.stringify(settings), 'group.com.jonasyukins.focuis');
-          wrote = true;
-        }
-      } catch (_) {}
-
-      if (!wrote) {
-        const reloader = (NativeModules as any)?.WidgetReloader;
-        if (reloader?.setSharedItem) {
-          await reloader.setSharedItem('userSettings', JSON.stringify(settings));
-          wrote = true;
-        }
-      }
-
-      if (wrote) {
-        console.log('Saved user settings to shared app group for widgets');
-      } else {
-        console.log('No available method to save user settings to shared app group');
-      }
+      const wrote = await this.writeToIOSSharedStorage('userSettings', JSON.stringify(settings));
+      console.log(wrote
+        ? 'Saved user settings to shared storage for widgets'
+        : 'No available method to save user settings to shared storage');
     } catch (error) {
-      console.log('Failed to save user settings to SharedGroupPreferences:', error);
+      console.log('Failed to save user settings to shared storage:', error);
     }
   }
 }
