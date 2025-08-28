@@ -26,7 +26,10 @@ const HomeScreen = ({ navigation }) => {
     fontSize: 20,
     layout: 'center',
     fontColor: '#FFFFFF',
-    verticalAlignment: 'middle'
+    verticalAlignment: 'middle',
+    backgroundStyle: 'default',
+    outlineEnabled: true,
+    outlineColor: 'white',
   });
   const [loading, setLoading] = useState(true);
 
@@ -147,6 +150,9 @@ const HomeScreen = ({ navigation }) => {
           theme={userSettings.theme as 'default' | 'dark' | 'light'}
           fontColor={userSettings.fontColor}
           verticalAlignment={userSettings.verticalAlignment as 'top' | 'middle' | 'bottom'}
+          backgroundStyle={(userSettings as any).backgroundStyle as any}
+          outlineEnabled={(userSettings as any).outlineEnabled as any}
+          outlineColor={(userSettings as any).outlineColor as any}
         />
       </View>
     );

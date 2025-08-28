@@ -30,9 +30,13 @@ interface WidgetPreviewProps {
   showTitle?: boolean;
   fontSize?: number;
   alignment?: 'left' | 'center' | 'right'; // NEW PROP
-  theme?: 'default' | 'dark' | 'light'; // NEW PROP
+  theme?: 'default' | 'dark' | 'light'; // legacy
   fontColor?: string; // NEW PROP
   verticalAlignment?: 'top' | 'middle' | 'bottom'; // NEW PROP
+  // NEW settings
+  backgroundStyle?: 'default' | 'blue' | 'white' | 'pink' | 'gray';
+  outlineEnabled?: boolean;
+  outlineColor?: 'white' | 'black';
 }
 
 // Helper function to get alignment styles
@@ -69,17 +73,33 @@ const getVerticalAlignmentStyles = (verticalAlignment: 'top' | 'middle' | 'botto
   }
 };
 
-// Add helper for theme-based colors
-const getWidgetColors = (theme: 'default' | 'dark' | 'light' = 'default') => {
-  switch (theme) {
-    case 'dark':
-      return { backgroundColor: '#000000', borderColor: 'transparent', borderWidth: 0 };
-    case 'light':
-      return { backgroundColor: '#FFFFFF', borderColor: 'transparent', borderWidth: 0 };
-    case 'default':
-    default:
-      return { backgroundColor: 'transparent', borderColor: '#FFFFFF', borderWidth: 1 };
+// Derive colors from new background/outline settings, with legacy theme fallback
+const getWidgetColors = (
+  backgroundStyle: 'default' | 'blue' | 'white' | 'pink' | 'gray' = 'default',
+  outlineEnabled: boolean = true,
+  outlineColor: 'white' | 'black' = 'white',
+  legacyTheme?: 'default' | 'dark' | 'light'
+) => {
+  let bg = backgroundStyle;
+  let outlineOn = outlineEnabled;
+  let outlineClr = outlineColor;
+
+  // Legacy fallback if backgroundStyle is undefined
+  if (!backgroundStyle && legacyTheme) {
+    if (legacyTheme === 'dark') { bg = 'blue'; outlineOn = false; outlineClr = 'white'; }
+    else if (legacyTheme === 'light') { bg = 'white'; outlineOn = false; outlineClr = 'black'; }
+    else { bg = 'default'; outlineOn = true; outlineClr = 'white'; }
   }
+
+  const backgroundColor =
+    bg === 'blue' ? '#10243c' :
+    bg === 'white' ? '#F7F7F7' :
+    bg === 'pink' ? '#f6ebef' :
+    bg === 'gray' ? '#242424' :
+    'transparent';
+  const borderColor = outlineOn ? (outlineClr === 'black' ? '#000000' : '#FFFFFF') : 'transparent';
+  const borderWidth = outlineOn ? 1 : 0;
+  return { backgroundColor, borderColor, borderWidth };
 };
 
 const WidgetPreview: React.FC<WidgetPreviewProps> = ({
@@ -92,14 +112,17 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
   showTitle = true,
   fontSize = 20,
   alignment = 'center', // Default to center
-  theme = 'default', // Default to default
+  theme = 'default', // legacy default
   fontColor = '#FFFFFF', // Default to white
   verticalAlignment = 'middle', // Default to middle
+  backgroundStyle = 'default',
+  outlineEnabled = true,
+  outlineColor = 'white',
 }) => {
   const displayApps = apps.slice(0, 6); // Show max 6 apps
   const hasMoreApps = apps.length > 6;
   const { alignItems, textAlign } = getAlignmentStyles(alignment);
-  const { backgroundColor, borderColor, borderWidth } = getWidgetColors(theme);
+  const { backgroundColor, borderColor, borderWidth } = getWidgetColors(backgroundStyle, outlineEnabled, outlineColor, theme);
   const verticalStyles = getVerticalAlignmentStyles(verticalAlignment);
 
   return (

@@ -30,6 +30,10 @@ export interface LocalUserSettings {
   layout: string;
   fontColor: string;
   verticalAlignment: string; // NEW: 'top' | 'middle' | 'bottom'
+  // NEW SETTINGS: decouple background from outline
+  backgroundStyle?: 'default' | 'blue' | 'white' | 'pink' | 'gray';
+  outlineEnabled?: boolean;
+  outlineColor?: 'white' | 'black';
 }
 
 // Default values
@@ -38,7 +42,10 @@ const DEFAULT_USER_SETTINGS: LocalUserSettings = {
   fontSize: 20,
   layout: 'center',
   fontColor: '#FFFFFF',
-  verticalAlignment: 'middle' // NEW: default to middle
+  verticalAlignment: 'middle', // NEW: default to middle
+  backgroundStyle: 'default',
+  outlineEnabled: true,
+  outlineColor: 'white',
 };
 
 class LocalStorageService {
@@ -132,6 +139,22 @@ class LocalStorageService {
     }
   }
 
+  async updateAppDisplayNames(appNames: { appId: string; displayName: string }[]): Promise<void> {
+    try {
+      const currentApps = await this.getSelectedApps();
+      for (const { appId, displayName } of appNames) {
+        const idx = currentApps.findIndex(app => app.appId === appId);
+        if (idx >= 0) {
+          currentApps[idx].displayName = displayName;
+        }
+      }
+      await this.saveSelectedApps(currentApps);
+    } catch (error) {
+      console.error('Error updating app display names:', error);
+      throw error;
+    }
+  }
+
   // Widget Configurations
   async getWidgetConfigs(): Promise<LocalWidgetConfig[]> {
     try {
@@ -171,7 +194,31 @@ class LocalStorageService {
   async getUserSettings(): Promise<LocalUserSettings> {
     try {
       const stored = await AsyncStorage.getItem(USER_SETTINGS_KEY);
-      return stored ? { ...DEFAULT_USER_SETTINGS, ...JSON.parse(stored) } : DEFAULT_USER_SETTINGS;
+      const merged: LocalUserSettings = stored ? { ...DEFAULT_USER_SETTINGS, ...JSON.parse(stored) } : { ...DEFAULT_USER_SETTINGS };
+      // Migration: map legacy theme to new background/outline fields if not present
+      if (!merged.backgroundStyle || merged.outlineEnabled === undefined || !merged.outlineColor) {
+        const theme = merged.theme || 'default';
+        let backgroundStyle: 'default' | 'blue' | 'white' | 'pink' | 'gray' = 'default';
+        let outlineEnabled = false;
+        let outlineColor: 'white' | 'black' = 'white';
+        if (theme === 'dark') {
+          backgroundStyle = 'blue';
+          outlineEnabled = false;
+          outlineColor = 'white';
+        } else if (theme === 'light') {
+          backgroundStyle = 'white';
+          outlineEnabled = false;
+          outlineColor = 'black';
+        } else {
+          backgroundStyle = 'default';
+          outlineEnabled = true;
+          outlineColor = 'white';
+        }
+        merged.backgroundStyle = merged.backgroundStyle ?? backgroundStyle;
+        merged.outlineEnabled = merged.outlineEnabled ?? outlineEnabled;
+        merged.outlineColor = merged.outlineColor ?? outlineColor;
+      }
+      return merged;
     } catch (error) {
       console.error('Error getting user settings:', error);
       return DEFAULT_USER_SETTINGS;

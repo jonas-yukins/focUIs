@@ -10,6 +10,7 @@ import {
   ImageBackground,
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
+import PagerView from 'react-native-pager-view';
 import { Ionicons } from "@expo/vector-icons";
 import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
 import localStorageService, { LocalUserSettings } from '../services/LocalStorageService';
@@ -26,6 +27,10 @@ const SettingsScreen = ({ navigation }) => {
   const [fontColor, setFontColor] = useState('white');
   const [verticalAlignment, setVerticalAlignment] = useState('middle'); // NEW
   const [loading, setLoading] = useState(true);
+  // NEW: decoupled background/outline
+  const [backgroundStyle, setBackgroundStyle] = useState<'default' | 'blue' | 'white' | 'pink' | 'gray'>('default');
+  const [outlineEnabled, setOutlineEnabled] = useState<boolean>(true);
+  const [outlineColor, setOutlineColor] = useState<'white' | 'black'>('white');
 
   // Load settings from local storage on mount
   useEffect(() => {
@@ -38,6 +43,9 @@ const SettingsScreen = ({ navigation }) => {
         setTheme(settings.theme || "default");
         setLayout(settings.layout || "center");
         setVerticalAlignment(settings.verticalAlignment || "middle"); // NEW
+        setBackgroundStyle((settings as any).backgroundStyle || (settings.theme === 'dark' ? 'blue' : settings.theme === 'light' ? 'white' : 'default'));
+        setOutlineEnabled((settings as any).outlineEnabled ?? (settings.theme === 'default'));
+        setOutlineColor((settings as any).outlineColor || (settings.theme === 'light' ? 'black' : 'white'));
         
         // Auto-set fontColor based on theme
         if ((settings.theme === 'default' || settings.theme === 'dark') || !settings.theme) {
@@ -57,20 +65,31 @@ const SettingsScreen = ({ navigation }) => {
     loadSettings();
   }, []);
 
-  // When theme changes, auto-set fontColor (but allow user to override)
+  // When theme or backgroundStyle changes, auto-set fontColor (but allow user to override)
   useEffect(() => {
-    if (theme === 'default' || theme === 'dark') {
+    if (backgroundStyle === 'pink' || backgroundStyle === 'white') {
+      setFontColor('black');
+    } else if (backgroundStyle === 'blue' || backgroundStyle === 'gray' || backgroundStyle === 'default') {
+      setFontColor('white');
+    } else if (theme === 'default' || theme === 'dark') {
       setFontColor('white');
     } else if (theme === 'light') {
       setFontColor('black');
     }
-  }, [theme]);
+  }, [theme, backgroundStyle]);
+
+  // Keep legacy theme roughly in sync with new backgroundStyle for backwards compat
+  useEffect(() => {
+    if (backgroundStyle === 'blue') setTheme('dark');
+    else if (backgroundStyle === 'white') setTheme('light');
+    else setTheme('default');
+  }, [backgroundStyle]);
 
   // Save handler for checkmark
   const handleSave = async () => {
     setSaving(true);
     try {
-      await localStorageService.saveUserSettings({ fontSize, theme, layout, fontColor, verticalAlignment });
+      await localStorageService.saveUserSettings({ fontSize, theme, layout, fontColor, verticalAlignment, backgroundStyle, outlineEnabled, outlineColor });
       Alert.alert("Settings Saved", "Your preferences have been updated.");
       navigation.goBack();
     } catch (error) {
@@ -95,8 +114,11 @@ const SettingsScreen = ({ navigation }) => {
             setTheme("default");
             setLayout("center");
             setVerticalAlignment("middle"); // NEW
+            setBackgroundStyle('default');
+            setOutlineEnabled(true);
+            setOutlineColor('white');
             try {
-              await localStorageService.saveUserSettings({ fontSize: 20, theme: "default", layout: "center", fontColor: "white", verticalAlignment: "middle" });
+              await localStorageService.saveUserSettings({ fontSize: 20, theme: "default", layout: "center", fontColor: "white", verticalAlignment: "middle", backgroundStyle: 'default', outlineEnabled: true, outlineColor: 'white' });
               Alert.alert("Styling Reset", "All styling has been reset to default.");
               navigation.goBack(); // Navigate back after reset
             } catch (error) {
@@ -178,48 +200,109 @@ const SettingsScreen = ({ navigation }) => {
     </View>
   );
 
-  const renderThemeSelector = () => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Theme</Text>
-      <View style={styles.themeContainer}>
-        {[
-          { id: "default", name: "Default", color: "transparent", outline: true },
-          { id: "dark", name: "Dark", color: "#0A1424", outline: false },
-          { id: "light", name: "Light", color: "#F7F7F7", outline: false },
-        ].map((themeOption) => (
-          <TouchableOpacity
-            key={themeOption.id}
-            style={[
-              styles.themeButton,
-              theme === themeOption.id && styles.themeButtonActive,
-            ]}
-            onPress={() => handleThemeChange(themeOption.id)}
+  const renderBackgroundSelector = () => {
+    const options = [
+      { id: 'default', name: 'Default', color: '#000000', outline: false },
+      { id: 'white', name: 'White', color: '#F7F7F7', outline: false },
+      { id: 'blue', name: 'Blue', color: '#10243c', outline: false },
+      { id: 'pink', name: 'Pink', color: '#f6ebef', outline: false },
+      { id: 'gray', name: 'Gray', color: '#242424', outline: false },
+    ] as const;
+    const currentIndex = Math.max(0, options.findIndex(o => o.id === backgroundStyle));
+    return (
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Background</Text>
+        <View style={styles.backgroundContent}>
+          <PagerView
+            key={`background-${currentIndex}`}
+            style={styles.carousel}
+            initialPage={currentIndex}
+            onPageSelected={(e) => {
+              const idx = e.nativeEvent.position;
+              const sel = options[idx];
+              if (sel) setBackgroundStyle(sel.id as any);
+            }}
           >
-            <View
-              style={[
-                styles.themeColor,
-                { backgroundColor: themeOption.color },
-                themeOption.outline && { borderWidth: 1.5, borderColor: '#FFFFFF' },
-              ]}
-            />
-            <Text
-              style={[
-                styles.themeButtonText,
-                theme === themeOption.id && styles.themeButtonTextActive,
-              ]}
-            >
-              {themeOption.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
+            {options.map((opt, idx) => (
+              <View key={opt.id} style={styles.backgroundSlide}>
+                <View style={styles.backgroundPreview}>
+                  <View
+                    style={[
+                      styles.backgroundColor,
+                      { backgroundColor: opt.color },
+                      opt.outline && { borderWidth: 2, borderColor: '#C8D2E0' }
+                    ]}
+                  />
+                  <View style={styles.backgroundOverlay}>
+                    <Text style={styles.backgroundName}>{opt.name}</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </PagerView>
+          <View style={styles.dotContainer}>
+            {options.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.dot,
+                  index === currentIndex && styles.activeDot
+                ]}
+              />
+            ))}
+          </View>
+        </View>
       </View>
+    );
+  };
+
+  const renderOutlineSelector = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Outline</Text>
+      <View style={styles.fontColorContainer}>
+        <TouchableOpacity
+          style={[styles.fontColorButton, outlineEnabled && styles.fontColorButtonActive]}
+          onPress={() => setOutlineEnabled(!outlineEnabled)}
+        >
+          <Text style={[styles.fontColorButtonText, outlineEnabled && styles.fontColorButtonTextActive]}>
+            {outlineEnabled ? 'On' : 'Off'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+      {outlineEnabled && (
+        <View style={{ marginTop: 10 }}>
+          <Text style={[styles.settingSubtitle, { color: '#F7F7F7', marginBottom: 8 }]}>Outline Color</Text>
+          <View style={styles.fontColorContainer}>
+            {[{ id: 'white', name: 'White', color: '#FFFFFF' }, { id: 'black', name: 'Black', color: '#000000' }].map((option) => (
+              <TouchableOpacity
+                key={option.id}
+                style={[styles.fontColorButton, outlineColor === option.id && styles.fontColorButtonActive]}
+                onPress={() => setOutlineColor(option.id as 'white' | 'black')}
+              >
+                <View style={[styles.fontColorSwatch, { backgroundColor: option.color }]} />
+                <Text
+                  style={[styles.fontColorButtonText, outlineColor === option.id && styles.fontColorButtonTextActive, { color: option.color }]}
+                >
+                  {option.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
     </View>
   );
 
   const renderFontColorSelector = () => {
-    // Recommend font color for theme, but allow manual selection
+    // Recommend font color based on backgroundStyle and theme
     let recommendedColor = 'white';
-    if (theme === 'light') recommendedColor = 'black';
+    if (backgroundStyle === 'pink' || backgroundStyle === 'white') {
+      recommendedColor = 'black';
+    } else if (backgroundStyle === 'blue' || backgroundStyle === 'gray' || backgroundStyle === 'default') {
+      recommendedColor = 'white';
+    } else if (theme === 'light') {
+      recommendedColor = 'black';
+    }
     return (
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Font Color</Text>
@@ -355,7 +438,8 @@ const SettingsScreen = ({ navigation }) => {
           {/* Appearance */}
           <View style={[styles.section, { backgroundColor: 'transparent', marginBottom: 10 }]}>
             {renderFontSizeSelector()}
-            {renderThemeSelector()}
+            {renderBackgroundSelector()}
+            {renderOutlineSelector()}
             {renderFontColorSelector()}
             {renderAlignmentSelector()}
             {renderVerticalAlignmentSelector()}
@@ -640,6 +724,62 @@ const styles = StyleSheet.create({
   },
   fontColorButtonTextActive: {
     color: '#172F50',
+  },
+  dotContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#C8D2E0',
+    marginHorizontal: 4,
+  },
+  activeDot: {
+    backgroundColor: '#F7F7F7',
+  },
+  carouselContainer: {
+    height: 120,
+  },
+  backgroundContent: {
+    height: 120,
+    marginTop: 10,
+  },
+  carousel: {
+    flex: 1,
+  },
+  backgroundSlide: {
+    flex: 1,
+    paddingHorizontal: 8,
+  },
+  backgroundPreview: {
+    flex: 1,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#C8D2E0',
+    overflow: 'hidden',
+  },
+  backgroundColor: {
+    width: '100%',
+    height: '100%',
+  },
+  backgroundOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(23, 47, 80, 0.8)',
+    padding: 8,
+    alignItems: 'center',
+  },
+  backgroundName: {
+    fontFamily: 'MSemiBold',
+    fontSize: RFValue(14),
+    color: '#F7F7F7',
+    textAlign: 'center',
   },
 
 });

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useFocusEffect } from '@react-navigation/native';
 import {
   StyleSheet,
   View,
@@ -19,6 +20,7 @@ import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 import { Asset } from 'expo-asset';
 import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
+import localStorageService from '../services/LocalStorageService';
 
 const CollapsibleSection = ({ title, children, defaultOpen = true }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -45,34 +47,98 @@ const SetupScreen = ({ navigation }) => {
   const backgroundUri = useBackgroundAsset();
   const [currentWallpaperIndex, setCurrentWallpaperIndex] = useState(0);
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions({ writeOnly: true });
+  const pagerRef = React.useRef(null);
   
   // Wallpaper options with actual images
   const wallpapers = [
     {
       id: 1,
-      name: "Light Pink",
-      type: "image",
-      image: require('../../assets/wallpapers/light_pink_wallpaper.jpg')
-    },
-    {
-      id: 2,
       name: "Black",
       type: "image", 
       image: require('../../assets/wallpapers/black_wallpaper.jpg')
     },
     {
-      id: 3,
+      id: 2,
       name: "White",
       type: "image",
       image: require('../../assets/wallpapers/white_wallpaper.jpg')
     },
     {
+      id: 3,
+      name: "Blue Gradient",
+      type: "image",
+      image: require('../../assets/wallpapers/blue_gradient_wallpaper.jpg')
+    },
+    {
       id: 4,
-      name: "Dark Gray",
+      name: "Pink",
+      type: "image",
+      image: require('../../assets/wallpapers/light_pink_wallpaper.jpg')
+    },
+    {
+      id: 5,
+      name: "Gray",
       type: "image",
       image: require('../../assets/wallpapers/dark_gray_wallpaper.jpg')
-    }
+    },
   ];
+
+  const backgroundToWallpaperIndex = (style: 'default' | 'blue' | 'white' | 'pink' | 'gray'): number => {
+    // Map to index in wallpapers order above (now aligned with background carousel)
+    switch (style) {
+      case 'default':
+        return 0; // Default
+      case 'white':
+        return 1; // White
+      case 'blue':
+        return 2; // Blue
+      case 'pink':
+        return 3; // Pink
+      case 'gray':
+        return 4; // Gray
+      default:
+        return 0;
+    }
+  };
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const settings = await localStorageService.getUserSettings();
+        const idx = backgroundToWallpaperIndex((settings as any).backgroundStyle || 'default');
+        if (idx >= 0) {
+          setCurrentWallpaperIndex(idx);
+          // Set the pager to the correct page after a short delay to ensure it's mounted
+          setTimeout(() => {
+            pagerRef.current?.setPage(idx);
+          }, 100);
+        }
+      } catch (error) {
+        console.error('Error loading wallpaper index:', error);
+      }
+    })();
+  }, []);
+
+  // Listen for settings changes when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      (async () => {
+        try {
+          const settings = await localStorageService.getUserSettings();
+          const idx = backgroundToWallpaperIndex((settings as any).backgroundStyle || 'default');
+          if (idx >= 0) {
+            setCurrentWallpaperIndex(idx);
+            // Set the pager to the correct page when screen comes into focus
+            setTimeout(() => {
+              pagerRef.current?.setPage(idx);
+            }, 100);
+          }
+        } catch (error) {
+          console.error('Error loading wallpaper index on focus:', error);
+        }
+      })();
+    }, [])
+  );
   
   const openWidgetSettings = () => {
     if (Platform.OS === 'ios') {
@@ -315,8 +381,9 @@ const SetupScreen = ({ navigation }) => {
         <Text style={styles.wallpaperTitle}>Choose Your Wallpaper:</Text>
         <View style={styles.carouselContainer}>
           <PagerView
+            ref={pagerRef}
             style={styles.carousel}
-            initialPage={0}
+            initialPage={currentWallpaperIndex}
             onPageSelected={(e) => setCurrentWallpaperIndex(e.nativeEvent.position)}
           >
             {wallpapers.map((wallpaper, index) => (

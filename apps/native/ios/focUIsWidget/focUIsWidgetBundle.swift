@@ -17,5 +17,6 @@ struct focUIsWidgetBundle: WidgetBundle {
         focUIsWidget4()
         focUIsWidget5()
         focUIsWidget6()
+        focUIsSpacerWidget()
     }
 }

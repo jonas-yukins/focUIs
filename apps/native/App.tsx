@@ -32,7 +32,7 @@ export default function App() {
     async function loadAssets() {
       try {
         const [asset] = await Asset.loadAsync([
-          require("./assets/background_gradient.png"),
+          require("./assets/wallpapers/blue_gradient_wallpaper.webp"),
         ]);
         setBackgroundUri(asset.localUri || asset.uri);
         setAssetsLoaded(true);

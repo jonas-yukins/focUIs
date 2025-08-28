@@ -3,6 +3,7 @@ import {
   StyleSheet,
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   Alert,
   Dimensions,
@@ -163,6 +164,9 @@ const WidgetConfigScreen = ({ navigation }) => {
   const saveAppOrder = async () => {
     try {
       const allApps = sections.flat();
+      // Persist any edited display names first
+      const nameUpdates = allApps.map(app => ({ appId: app.id, displayName: app.app.displayName }));
+      await localStorageService.updateAppDisplayNames(nameUpdates);
       const appOrders = allApps.map(app => ({
         appId: app.id,
         newOrder: app.order,
@@ -260,7 +264,23 @@ const WidgetConfigScreen = ({ navigation }) => {
         >
           <View style={styles.taskContent}>
             <View style={styles.taskInfo}>
-              <Text style={styles.taskTitle}>{item.app.displayName}</Text>
+              <TextInput
+                style={[styles.taskTitle, styles.editableInput]}
+                value={item.app.displayName}
+                onChangeText={(text) => {
+                  setSections(currentSections => {
+                    const newSections = currentSections.map(section => section.map(app => ({ ...app })));
+                    const section = newSections[sectionIndex];
+                    const target = section[appIndex];
+                    section[appIndex] = { ...target, app: { ...target.app, displayName: text } };
+                    return newSections;
+                  });
+                }}
+                placeholder="App name"
+                placeholderTextColor="#B3B3B3"
+                autoCorrect={false}
+                autoCapitalize="none"
+              />
             </View>
             {showSwapIcon && (
               <TouchableOpacity
@@ -553,6 +573,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 0,
+  },
+  editableInput: {
+    backgroundColor: '#2B2B2B',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
   },
   dragHandle: {
     padding: 12,
