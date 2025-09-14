@@ -45,15 +45,21 @@ const getAlignmentStyles = (alignment: 'left' | 'center' | 'right' = 'center') =
 
 // Derive colors from canonical background/outline settings
 const getWidgetColors = (
-  backgroundStyle: 'default' | 'blue' | 'white' | 'pink' | 'gray' = 'default',
+  backgroundStyle: 'default' | 'blue' | 'white' | 'pink' | 'gray' | 'camel' | 'mintGreen' | 'orange' | 'raspberry' | 'sageGreen' | 'warmYellow' = 'default',
   outlineEnabled: boolean = true,
   outlineColor: 'white' | 'black' = 'white'
 ) => {
   const backgroundColor =
     backgroundStyle === 'blue' ? '#10243c' :
     backgroundStyle === 'white' ? '#F7F7F7' :
-    backgroundStyle === 'pink' ? '#f6ebef' :
+    backgroundStyle === 'pink' ? '#FFB7D5' :
     backgroundStyle === 'gray' ? '#242424' :
+    backgroundStyle === 'camel' ? '#c09a6b' :
+    backgroundStyle === 'mintGreen' ? '#34CEB2' :
+    backgroundStyle === 'orange' ? '#E1863F' :
+    backgroundStyle === 'raspberry' ? '#E30B5C' :
+    backgroundStyle === 'sageGreen' ? '#B6C5B0' :
+    backgroundStyle === 'warmYellow' ? '#FEFACD' :
     'transparent';
   const borderColor = outlineEnabled ? (outlineColor === 'black' ? '#000000' : '#FFFFFF') : 'transparent';
   const borderWidth = outlineEnabled ? 1 : 0;

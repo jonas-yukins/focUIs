@@ -30,7 +30,7 @@ export interface LocalUserSettings {
   fontColor: string;
   verticalAlignment: string; // NEW: 'top' | 'middle' | 'bottom'
   // NEW SETTINGS: decouple background from outline
-  backgroundStyle?: 'default' | 'blue' | 'white' | 'pink' | 'gray';
+  backgroundStyle?: 'default' | 'blue' | 'white' | 'pink' | 'gray' | 'camel' | 'mintGreen' | 'orange' | 'raspberry' | 'sageGreen' | 'warmYellow';
   outlineEnabled?: boolean;
   outlineColor?: 'white' | 'black';
 }

@@ -27,7 +27,7 @@ const SettingsScreen = ({ navigation }) => {
   const [verticalAlignment, setVerticalAlignment] = useState('middle'); // NEW
   const [loading, setLoading] = useState(true);
   // NEW: decoupled background/outline
-  const [backgroundStyle, setBackgroundStyle] = useState<'default' | 'blue' | 'white' | 'pink' | 'gray'>('default');
+  const [backgroundStyle, setBackgroundStyle] = useState<'default' | 'blue' | 'white' | 'pink' | 'gray' | 'camel' | 'mintGreen' | 'orange' | 'raspberry' | 'sageGreen' | 'warmYellow'>('default');
   const [outlineEnabled, setOutlineEnabled] = useState<boolean>(true);
   const [outlineColor, setOutlineColor] = useState<'white' | 'black'>('white');
   // Track if user has interacted with background carousel to enable dynamic suggestions
@@ -71,7 +71,7 @@ const SettingsScreen = ({ navigation }) => {
   // When backgroundStyle changes after user interaction, auto-set recommended fontColor
   useEffect(() => {
     if (!hasSwipedBackground) return;
-    if (backgroundStyle === 'pink' || backgroundStyle === 'white') {
+    if (backgroundStyle === 'pink' || backgroundStyle === 'white' || backgroundStyle === 'camel' || backgroundStyle === 'mintGreen' || backgroundStyle === 'orange' || backgroundStyle === 'raspberry' || backgroundStyle === 'sageGreen' || backgroundStyle === 'warmYellow') {
       setFontColor('black');
     } else {
       setFontColor('white');
@@ -81,8 +81,8 @@ const SettingsScreen = ({ navigation }) => {
   // When backgroundStyle changes after user interaction, auto-set recommended outlineColor if outline is enabled
   useEffect(() => {
     if (!hasSwipedBackground || !outlineEnabled) return;
-    // default=white, white=black, blue=white, pink=black, gray=white
-    if (backgroundStyle === 'white' || backgroundStyle === 'pink') {
+    // All new colors should use black outline for better contrast
+    if (backgroundStyle === 'white' || backgroundStyle === 'pink' || backgroundStyle === 'camel' || backgroundStyle === 'mintGreen' || backgroundStyle === 'orange' || backgroundStyle === 'raspberry' || backgroundStyle === 'sageGreen' || backgroundStyle === 'warmYellow') {
       setOutlineColor('black');
     } else {
       setOutlineColor('white');
@@ -209,8 +209,14 @@ const SettingsScreen = ({ navigation }) => {
       { id: 'default', name: 'Default', color: '#000000', outline: false },
       { id: 'white', name: 'White', color: '#F7F7F7', outline: false },
       { id: 'blue', name: 'Blue', color: '#10243c', outline: false },
-      { id: 'pink', name: 'Pink', color: '#f6ebef', outline: false },
+      { id: 'pink', name: 'Pink', color: '#FFB7D5', outline: false },
       { id: 'gray', name: 'Gray', color: '#242424', outline: false },
+      { id: 'camel', name: 'Camel', color: '#c09a6b', outline: false },
+      { id: 'mintGreen', name: 'Mint Green', color: '#34CEB2', outline: false },
+      { id: 'orange', name: 'Orange', color: '#E1863F', outline: false },
+      { id: 'raspberry', name: 'Raspberry', color: '#E30B5C', outline: false },
+      { id: 'sageGreen', name: 'Sage Green', color: '#B6C5B0', outline: false },
+      { id: 'warmYellow', name: 'Warm Yellow', color: '#FEFACD', outline: false },
     ] as const;
     const currentIndex = Math.max(0, options.findIndex(o => o.id === backgroundStyle));
     return (
@@ -259,6 +265,9 @@ const SettingsScreen = ({ navigation }) => {
               />
             ))}
           </View>
+          <Text style={{ color: '#7A7A7A', fontSize: 12, marginTop: 16, textAlign: 'center' }}>
+            Download matching wallpaper color in <Text style={{ color: '#C8D2E0', textDecorationLine: 'underline' }} onPress={() => navigation.navigate("SetupScreen")}>Guide</Text>
+          </Text>
         </View>
       </View>
     );
@@ -298,7 +307,7 @@ const SettingsScreen = ({ navigation }) => {
           </View>
           {/* Recommendation, gated by interaction like font color */}
           <Text style={{ color: '#7A7A7A', fontSize: 12, marginTop: 8, textAlign: 'center' }}>
-            Recommended for this background: <Text style={{ color: (backgroundStyle === 'white' || backgroundStyle === 'pink') ? '#000000' : '#FFFFFF', fontWeight: 'bold' }}>{(backgroundStyle === 'white' || backgroundStyle === 'pink') ? 'Black' : 'White'}</Text>
+            Recommended for this background: <Text style={{ color: (backgroundStyle === 'white' || backgroundStyle === 'pink' || backgroundStyle === 'camel' || backgroundStyle === 'mintGreen' || backgroundStyle === 'orange' || backgroundStyle === 'raspberry' || backgroundStyle === 'sageGreen' || backgroundStyle === 'warmYellow') ? '#000000' : '#FFFFFF', fontWeight: 'bold' }}>{(backgroundStyle === 'white' || backgroundStyle === 'pink' || backgroundStyle === 'camel' || backgroundStyle === 'mintGreen' || backgroundStyle === 'orange' || backgroundStyle === 'raspberry' || backgroundStyle === 'sageGreen' || backgroundStyle === 'warmYellow') ? 'Black' : 'White'}</Text>
           </Text>
         </View>
       )}
@@ -308,7 +317,7 @@ const SettingsScreen = ({ navigation }) => {
   const renderFontColorSelector = () => {
     // Recommend font color based on backgroundStyle and theme
     let recommendedColor = 'white';
-    if (backgroundStyle === 'pink' || backgroundStyle === 'white') {
+    if (backgroundStyle === 'pink' || backgroundStyle === 'white' || backgroundStyle === 'camel' || backgroundStyle === 'mintGreen' || backgroundStyle === 'orange' || backgroundStyle === 'raspberry' || backgroundStyle === 'sageGreen' || backgroundStyle === 'warmYellow') {
       recommendedColor = 'black';
     } else if (backgroundStyle === 'blue' || backgroundStyle === 'gray' || backgroundStyle === 'default') {
       recommendedColor = 'white';
