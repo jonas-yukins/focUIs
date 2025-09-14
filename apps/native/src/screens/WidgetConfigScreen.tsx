@@ -167,11 +167,24 @@ const WidgetConfigScreen = ({ navigation }) => {
       // Persist any edited display names first
       const nameUpdates = allApps.map(app => ({ appId: app.id, displayName: app.app.displayName }));
       await localStorageService.updateAppDisplayNames(nameUpdates);
-      const appOrders = allApps.map(app => ({
-        appId: app.id,
-        newOrder: app.order,
-      }));
-      await localStorageService.updateAppOrders(appOrders);
+      
+      // Instead of just updating orders, we need to save the complete app data to preserve isSelected state
+      const updatedApps: LocalAppSelection[] = allApps.map(app => {
+        // Find the original app data to preserve isThirdParty and other fields
+        const originalApp = selectedApps.find(orig => orig.appId === app.id);
+        return {
+          appId: app.id,
+          isSelected: true, // All apps in the config screen are selected
+          order: app.order,
+          displayName: app.app.displayName,
+          packageName: app.app.packageName,
+          urlScheme: app.app.urlScheme,
+          appStoreUrl: app.app.appStoreUrl,
+          isThirdParty: originalApp?.isThirdParty ?? true, // Preserve original value
+        };
+      });
+      
+      await localStorageService.saveSelectedApps(updatedApps);
       
       // --- Reorganize widgets after updating app order ---
       // Use the same chunking logic as in HomeScreen
@@ -187,36 +200,6 @@ const WidgetConfigScreen = ({ navigation }) => {
         });
       }
       await localStorageService.reorganizeWidgets(widgets);
-      
-              // Save apps to UserDefaults for widget access
-        try {
-          const widgetApps = allApps.map(app => ({
-            id: app.id,
-            displayName: app.app.displayName,
-            packageName: app.app.packageName || '',
-            urlScheme: app.app.urlScheme || null,
-            appStoreUrl: app.app.appStoreUrl || null
-          }));
-        
-        // Use AsyncStorage to save the apps data
-        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-        await AsyncStorage.setItem('selectedApps', JSON.stringify(widgetApps));
-        
-        // Also save to UserDefaults for iOS widget access using a simpler approach
-        if (Platform.OS === 'ios') {
-          try {
-            const { SharedGroupPreferences } = require('react-native-shared-group-preferences');
-            await SharedGroupPreferences.setItem('selectedApps', JSON.stringify(widgetApps), 'group.com.jonasyukins.focuis');
-            console.log('Widget data saved successfully to SharedGroupPreferences');
-          } catch (sharedGroupError) {
-            console.log('SharedGroupPreferences failed, trying alternative method:', sharedGroupError);
-            // Fallback: try to use a different approach or just log the data
-            console.log('Widget apps data that should be saved:', JSON.stringify(widgetApps, null, 2));
-          }
-        }
-      } catch (error) {
-        console.error('Error saving widget data:', error);
-      }
       
       Alert.alert("Success", "App order saved successfully!");
       navigation.goBack();
