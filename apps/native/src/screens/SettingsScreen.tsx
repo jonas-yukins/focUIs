@@ -389,7 +389,7 @@ const SettingsScreen = ({ navigation }) => {
         {[
           { id: "top", name: "Top", icon: "arrow-up" },
           { id: "middle", name: "Middle", icon: "remove" },
-          { id: "bottom", name: "Bottom", icon: "arrow-down" },
+          { id: "bottom", name: "Down", icon: "arrow-down" },
         ].map((option) => (
           <TouchableOpacity
             key={option.id}
