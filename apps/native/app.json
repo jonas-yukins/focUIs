@@ -8,8 +8,8 @@
     "icon": "./assets/focUIs_logo3.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
+      "image": "./assets/wallpapers/blue_gradient_wallpaper.jpg",
+      "resizeMode": "cover",
       "backgroundColor": "#172F50"
     },
     "assetBundlePatterns": [
@@ -17,6 +17,7 @@
     ],
     "ios": {
       "supportsTablet": true,
+      "icon": "./assets/focUIs_logo3.png",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true

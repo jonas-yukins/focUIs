@@ -85,9 +85,7 @@ struct SectionedProvider: TimelineProvider {
     }
     
     private func getDefaultApps() -> [AppData] {
-        return [
-            AppData(id: "1", displayName: "Messages", packageName: "com.apple.MobileSMS", urlScheme: "sms://", appStoreUrl: nil)
-        ]
+        return []
     }
 
     private func getUserSettingsFromUserDefaults() -> UserSettings {
@@ -433,7 +431,5 @@ struct focUIsSpacerWidget: Widget {
 #Preview(as: .systemLarge) {
     focUIsWidget1()
 } timeline: {
-    SimpleEntry(date: .now, apps: [
-        AppData(id: "1", displayName: "Messages", packageName: "com.apple.MobileSMS", urlScheme: "sms://", appStoreUrl: nil)
-    ], settings: UserSettings.defaults())
+    SimpleEntry(date: .now, apps: [], settings: UserSettings.defaults())
 }
