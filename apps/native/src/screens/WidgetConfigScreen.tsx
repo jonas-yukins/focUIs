@@ -222,8 +222,11 @@ const WidgetConfigScreen = ({ navigation }) => {
     } = props;
     // Determine if this app is selected for move
     const isSelected = moveMode && selectedApp && selectedApp.sectionIndex === sectionIndex && selectedApp.appIndex === appIndex;
-    // Only show swap icon if not in move mode, or if this is the selected app
-    const showSwapIcon = !moveMode || isSelected;
+    // Show swap icon if:
+    // - Not in move mode, OR
+    // - This is the selected app, OR  
+    // - In move mode but this app is on a different page (section) than the selected app
+    const showSwapIcon = !moveMode || isSelected || (moveMode && selectedApp && selectedApp.sectionIndex !== sectionIndex);
     // When in move mode, only allow pressing other apps in other sections
     const isPressableForMove = moveMode && selectedApp && selectedApp.sectionIndex !== sectionIndex;
     return (
@@ -262,50 +265,34 @@ const WidgetConfigScreen = ({ navigation }) => {
                 placeholder="App name"
                 placeholderTextColor="#B3B3B3"
                 autoCorrect={false}
+                editable={!moveMode}
                 autoCapitalize="none"
               />
             </View>
-            {showSwapIcon && (
+            <View pointerEvents={showSwapIcon ? 'auto' : 'none'}>
               <TouchableOpacity
                 onPress={() => handleMoveIconPress(sectionIndex, appIndex)}
-                style={styles.swapIconButton}
+                style={[styles.swapIconButton, { opacity: showSwapIcon ? 1 : 0 }]}
                 disabled={moveMode && !isSelected}
               >
                 <Ionicons name="swap-horizontal" size={22} color="#4A90E2" />
               </TouchableOpacity>
-            )}
-            {/* Always render drag handle visually, but only make it functional when not in move mode */}
-            {moveMode ? (
-              <View style={styles.dragHandle}>
-                <View style={styles.dragIconContainer}>
-                  <View style={styles.dragColumn}>
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                  </View>
-                  <View style={styles.dragColumn}>
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                  </View>
+            </View>
+            {/* Always render drag handle but hide when in move mode */}
+            <SortableItem.Handle style={[styles.dragHandle, { opacity: moveMode ? 0 : 1 }]}>
+              <View style={styles.dragIconContainer}>
+                <View style={styles.dragColumn}>
+                  <View style={styles.dragDot} />
+                  <View style={styles.dragDot} />
+                  <View style={styles.dragDot} />
+                </View>
+                <View style={styles.dragColumn}>
+                  <View style={styles.dragDot} />
+                  <View style={styles.dragDot} />
+                  <View style={styles.dragDot} />
                 </View>
               </View>
-            ) : (
-              <SortableItem.Handle style={styles.dragHandle}>
-                <View style={styles.dragIconContainer}>
-                  <View style={styles.dragColumn}>
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                  </View>
-                  <View style={styles.dragColumn}>
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                  </View>
-                </View>
-              </SortableItem.Handle>
-            )}
+            </SortableItem.Handle>
           </View>
         </TouchableOpacity>
       </SortableItem>
@@ -416,9 +403,31 @@ const WidgetConfigScreen = ({ navigation }) => {
         {selectedApps.length > 0 && (
           <View style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 48, alignItems: 'center' }}>
             <View style={{ backgroundColor: 'rgba(23, 47, 80, 0.92)', borderRadius: 16, padding: 16, width: '100%', maxWidth: 400, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
-              <Text style={{ color: '#F7F7F7', fontSize: 14, textAlign: 'center', lineHeight: 20 }}>
-                Drag the right icon to reorder. Tap the switch to swap. Press ✓ to save.
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 16 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={styles.dragIconContainer}>
+                    <View style={styles.dragColumn}>
+                      <View style={styles.dragDot} />
+                      <View style={styles.dragDot} />
+                      <View style={styles.dragDot} />
+                    </View>
+                    <View style={styles.dragColumn}>
+                      <View style={styles.dragDot} />
+                      <View style={styles.dragDot} />
+                      <View style={styles.dragDot} />
+                    </View>
+                  </View>
+                  <Text style={{ color: '#F7F7F7', fontSize: 14 }}>to reorder</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="swap-horizontal" size={16} color="#4A90E2" />
+                  <Text style={{ color: '#F7F7F7', fontSize: 14 }}>to swap</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="checkmark" size={16} color="#28A745" />
+                  <Text style={{ color: '#F7F7F7', fontSize: 14 }}>to save</Text>
+                </View>
+              </View>
             </View>
           </View>
         )}
