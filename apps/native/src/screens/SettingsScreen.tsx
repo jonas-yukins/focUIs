@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
 import localStorageService, { LocalUserSettings } from '../services/LocalStorageService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import PaginationDot from 'react-native-animated-pagination-dot';
 
 const SettingsScreen = ({ navigation }) => {
   const backgroundUri = useBackgroundAsset();
@@ -255,15 +256,13 @@ const SettingsScreen = ({ navigation }) => {
             ))}
           </PagerView>
           <View style={styles.dotContainer}>
-            {options.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.dot,
-                  index === currentIndex && styles.activeDot
-                ]}
-              />
-            ))}
+            <PaginationDot
+              curPage={currentIndex}
+              maxPage={options.length}
+              activeDotColor="#F7F7F7"
+              inactiveDotColor="#7A7A7A"
+              sizeRatio={1.5}
+            />
           </View>
           <Text style={{ color: '#7A7A7A', fontSize: 12, marginTop: 16, textAlign: 'center' }}>
             Download matching wallpaper color in <Text style={{ color: '#C8D2E0', textDecorationLine: 'underline' }} onPress={() => navigation.navigate("SetupScreen")}>Guide</Text>
@@ -750,21 +749,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 12,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#C8D2E0',
-    marginHorizontal: 4,
-  },
-  activeDot: {
-    backgroundColor: '#F7F7F7',
-  },
   carouselContainer: {
-    height: 120,
+    height: 160,
   },
   backgroundContent: {
-    height: 120,
+    height: 160,
     marginTop: 10,
   },
   carousel: {

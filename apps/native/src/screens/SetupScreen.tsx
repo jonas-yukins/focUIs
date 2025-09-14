@@ -21,6 +21,7 @@ import * as FileSystem from 'expo-file-system';
 import { Asset } from 'expo-asset';
 import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
 import localStorageService from '../services/LocalStorageService';
+import PaginationDot from 'react-native-animated-pagination-dot';
 
 const CollapsibleSection = ({ title, children, defaultOpen = true }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -450,15 +451,13 @@ const SetupScreen = ({ navigation }) => {
             ))}
           </PagerView>
           <View style={styles.dotContainer}>
-            {wallpapers.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.dot,
-                  index === currentWallpaperIndex && styles.activeDot
-                ]}
-              />
-            ))}
+            <PaginationDot
+              curPage={currentWallpaperIndex}
+              maxPage={wallpapers.length}
+              activeDotColor="#F7F7F7"
+              inactiveDotColor="#7A7A7A"
+              sizeRatio={1.5}
+            />
           </View>
         </View>
         <TouchableOpacity 
@@ -934,16 +933,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 12,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#C8D2E0',
-    marginHorizontal: 4,
-  },
-  activeDot: {
-    backgroundColor: '#F7F7F7',
   },
   wallpaperSlide: {
     flex: 1,
