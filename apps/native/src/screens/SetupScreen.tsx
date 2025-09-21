@@ -21,6 +21,7 @@ import * as FileSystem from 'expo-file-system';
 import { Asset } from 'expo-asset';
 import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
 import localStorageService from '../services/LocalStorageService';
+import PaginationDot from 'react-native-animated-pagination-dot';
 
 const CollapsibleSection = ({ title, children, defaultOpen = true }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -81,21 +82,69 @@ const SetupScreen = ({ navigation }) => {
       type: "image",
       image: require('../../assets/wallpapers/dark_gray_wallpaper.jpg')
     },
+    {
+      id: 6,
+      name: "Camel",
+      type: "image",
+      image: require('../../assets/wallpapers/camel_wallpaper.jpeg')
+    },
+    {
+      id: 7,
+      name: "Mint Green",
+      type: "image",
+      image: require('../../assets/wallpapers/mint_green_wallpaper.jpeg')
+    },
+    {
+      id: 8,
+      name: "Orange",
+      type: "image",
+      image: require('../../assets/wallpapers/orange_wallpaper.jpg')
+    },
+    {
+      id: 9,
+      name: "Raspberry",
+      type: "image",
+      image: require('../../assets/wallpapers/raspberry_wallpaper.jpeg')
+    },
+    {
+      id: 10,
+      name: "Sage Green",
+      type: "image",
+      image: require('../../assets/wallpapers/sage_green_wallpaper.jpg')
+    },
+    {
+      id: 11,
+      name: "Warm Yellow",
+      type: "image",
+      image: require('../../assets/wallpapers/warm_yellow_wallpaper.jpg')
+    },
   ];
 
-  const backgroundToWallpaperIndex = (style: 'default' | 'blue' | 'white' | 'pink' | 'gray'): number => {
+  const backgroundToWallpaperIndex = (style: 'default' | 'blue' | 'white' | 'pink' | 'gray' | 'camel' | 'mintGreen' | 'orange' | 'raspberry' | 'sageGreen' | 'warmYellow'): number => {
     // Map to index in wallpapers order above (now aligned with background carousel)
     switch (style) {
       case 'default':
-        return 0; // Default
+        return 0; // Black
       case 'white':
         return 1; // White
       case 'blue':
-        return 2; // Blue
+        return 2; // Blue Gradient
       case 'pink':
         return 3; // Pink
       case 'gray':
         return 4; // Gray
+      case 'camel':
+        return 5; // Camel
+      case 'mintGreen':
+        return 6; // Mint Green
+      case 'orange':
+        return 7; // Orange
+      case 'raspberry':
+        return 8; // Raspberry
+      case 'sageGreen':
+        return 9; // Sage Green
+      case 'warmYellow':
+        return 10; // Warm Yellow
       default:
         return 0;
     }
@@ -402,15 +451,13 @@ const SetupScreen = ({ navigation }) => {
             ))}
           </PagerView>
           <View style={styles.dotContainer}>
-            {wallpapers.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.dot,
-                  index === currentWallpaperIndex && styles.activeDot
-                ]}
-              />
-            ))}
+            <PaginationDot
+              curPage={currentWallpaperIndex}
+              maxPage={wallpapers.length}
+              activeDotColor="#F7F7F7"
+              inactiveDotColor="#7A7A7A"
+              sizeRatio={1.5}
+            />
           </View>
         </View>
         <TouchableOpacity 
@@ -886,16 +933,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 12,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#C8D2E0',
-    marginHorizontal: 4,
-  },
-  activeDot: {
-    backgroundColor: '#F7F7F7',
   },
   wallpaperSlide: {
     flex: 1,

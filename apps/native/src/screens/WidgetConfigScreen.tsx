@@ -167,11 +167,24 @@ const WidgetConfigScreen = ({ navigation }) => {
       // Persist any edited display names first
       const nameUpdates = allApps.map(app => ({ appId: app.id, displayName: app.app.displayName }));
       await localStorageService.updateAppDisplayNames(nameUpdates);
-      const appOrders = allApps.map(app => ({
-        appId: app.id,
-        newOrder: app.order,
-      }));
-      await localStorageService.updateAppOrders(appOrders);
+      
+      // Instead of just updating orders, we need to save the complete app data to preserve isSelected state
+      const updatedApps: LocalAppSelection[] = allApps.map(app => {
+        // Find the original app data to preserve isThirdParty and other fields
+        const originalApp = selectedApps.find(orig => orig.appId === app.id);
+        return {
+          appId: app.id,
+          isSelected: true, // All apps in the config screen are selected
+          order: app.order,
+          displayName: app.app.displayName,
+          packageName: app.app.packageName,
+          urlScheme: app.app.urlScheme,
+          appStoreUrl: app.app.appStoreUrl,
+          isThirdParty: originalApp?.isThirdParty ?? true, // Preserve original value
+        };
+      });
+      
+      await localStorageService.saveSelectedApps(updatedApps);
       
       // --- Reorganize widgets after updating app order ---
       // Use the same chunking logic as in HomeScreen
@@ -187,36 +200,6 @@ const WidgetConfigScreen = ({ navigation }) => {
         });
       }
       await localStorageService.reorganizeWidgets(widgets);
-      
-              // Save apps to UserDefaults for widget access
-        try {
-          const widgetApps = allApps.map(app => ({
-            id: app.id,
-            displayName: app.app.displayName,
-            packageName: app.app.packageName || '',
-            urlScheme: app.app.urlScheme || null,
-            appStoreUrl: app.app.appStoreUrl || null
-          }));
-        
-        // Use AsyncStorage to save the apps data
-        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-        await AsyncStorage.setItem('selectedApps', JSON.stringify(widgetApps));
-        
-        // Also save to UserDefaults for iOS widget access using a simpler approach
-        if (Platform.OS === 'ios') {
-          try {
-            const { SharedGroupPreferences } = require('react-native-shared-group-preferences');
-            await SharedGroupPreferences.setItem('selectedApps', JSON.stringify(widgetApps), 'group.com.jonasyukins.focuis');
-            console.log('Widget data saved successfully to SharedGroupPreferences');
-          } catch (sharedGroupError) {
-            console.log('SharedGroupPreferences failed, trying alternative method:', sharedGroupError);
-            // Fallback: try to use a different approach or just log the data
-            console.log('Widget apps data that should be saved:', JSON.stringify(widgetApps, null, 2));
-          }
-        }
-      } catch (error) {
-        console.error('Error saving widget data:', error);
-      }
       
       Alert.alert("Success", "App order saved successfully!");
       navigation.goBack();
@@ -239,8 +222,11 @@ const WidgetConfigScreen = ({ navigation }) => {
     } = props;
     // Determine if this app is selected for move
     const isSelected = moveMode && selectedApp && selectedApp.sectionIndex === sectionIndex && selectedApp.appIndex === appIndex;
-    // Only show swap icon if not in move mode, or if this is the selected app
-    const showSwapIcon = !moveMode || isSelected;
+    // Show swap icon if:
+    // - Not in move mode, OR
+    // - This is the selected app, OR  
+    // - In move mode but this app is on a different page (section) than the selected app
+    const showSwapIcon = !moveMode || isSelected || (moveMode && selectedApp && selectedApp.sectionIndex !== sectionIndex);
     // When in move mode, only allow pressing other apps in other sections
     const isPressableForMove = moveMode && selectedApp && selectedApp.sectionIndex !== sectionIndex;
     return (
@@ -279,50 +265,34 @@ const WidgetConfigScreen = ({ navigation }) => {
                 placeholder="App name"
                 placeholderTextColor="#B3B3B3"
                 autoCorrect={false}
+                editable={!moveMode}
                 autoCapitalize="none"
               />
             </View>
-            {showSwapIcon && (
+            <View pointerEvents={showSwapIcon ? 'auto' : 'none'}>
               <TouchableOpacity
                 onPress={() => handleMoveIconPress(sectionIndex, appIndex)}
-                style={styles.swapIconButton}
+                style={[styles.swapIconButton, { opacity: showSwapIcon ? 1 : 0 }]}
                 disabled={moveMode && !isSelected}
               >
                 <Ionicons name="swap-horizontal" size={22} color="#4A90E2" />
               </TouchableOpacity>
-            )}
-            {/* Always render drag handle visually, but only make it functional when not in move mode */}
-            {moveMode ? (
-              <View style={styles.dragHandle}>
-                <View style={styles.dragIconContainer}>
-                  <View style={styles.dragColumn}>
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                  </View>
-                  <View style={styles.dragColumn}>
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                  </View>
+            </View>
+            {/* Always render drag handle but hide when in move mode */}
+            <SortableItem.Handle style={[styles.dragHandle, { opacity: moveMode ? 0 : 1 }]}>
+              <View style={styles.dragIconContainer}>
+                <View style={styles.dragColumn}>
+                  <View style={styles.dragDot} />
+                  <View style={styles.dragDot} />
+                  <View style={styles.dragDot} />
+                </View>
+                <View style={styles.dragColumn}>
+                  <View style={styles.dragDot} />
+                  <View style={styles.dragDot} />
+                  <View style={styles.dragDot} />
                 </View>
               </View>
-            ) : (
-              <SortableItem.Handle style={styles.dragHandle}>
-                <View style={styles.dragIconContainer}>
-                  <View style={styles.dragColumn}>
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                  </View>
-                  <View style={styles.dragColumn}>
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                    <View style={styles.dragDot} />
-                  </View>
-                </View>
-              </SortableItem.Handle>
-            )}
+            </SortableItem.Handle>
           </View>
         </TouchableOpacity>
       </SortableItem>
@@ -433,9 +403,31 @@ const WidgetConfigScreen = ({ navigation }) => {
         {selectedApps.length > 0 && (
           <View style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 48, alignItems: 'center' }}>
             <View style={{ backgroundColor: 'rgba(23, 47, 80, 0.92)', borderRadius: 16, padding: 16, width: '100%', maxWidth: 400, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
-              <Text style={{ color: '#F7F7F7', fontSize: 14, textAlign: 'center', lineHeight: 20 }}>
-                Drag the right icon to reorder. Tap the switch to swap. Press ✓ to save.
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 16 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={styles.dragIconContainer}>
+                    <View style={styles.dragColumn}>
+                      <View style={styles.dragDot} />
+                      <View style={styles.dragDot} />
+                      <View style={styles.dragDot} />
+                    </View>
+                    <View style={styles.dragColumn}>
+                      <View style={styles.dragDot} />
+                      <View style={styles.dragDot} />
+                      <View style={styles.dragDot} />
+                    </View>
+                  </View>
+                  <Text style={{ color: '#F7F7F7', fontSize: 14 }}>to reorder</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="swap-horizontal" size={16} color="#4A90E2" />
+                  <Text style={{ color: '#F7F7F7', fontSize: 14 }}>to swap</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="checkmark" size={16} color="#28A745" />
+                  <Text style={{ color: '#F7F7F7', fontSize: 14 }}>to save</Text>
+                </View>
+              </View>
             </View>
           </View>
         )}

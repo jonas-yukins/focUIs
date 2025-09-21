@@ -74,7 +74,7 @@ const getVerticalAlignmentStyles = (verticalAlignment: 'top' | 'middle' | 'botto
 
 // Derive colors from canonical background/outline settings
 const getWidgetColors = (
-  backgroundStyle: 'default' | 'blue' | 'white' | 'pink' | 'gray' = 'default',
+  backgroundStyle: 'default' | 'blue' | 'white' | 'pink' | 'gray' | 'camel' | 'mintGreen' | 'orange' | 'raspberry' | 'sageGreen' | 'warmYellow' = 'default',
   outlineEnabled: boolean = true,
   outlineColor: 'white' | 'black' = 'white'
 ) => {
@@ -85,8 +85,14 @@ const getWidgetColors = (
   const backgroundColor =
     bg === 'blue' ? '#10243c' :
     bg === 'white' ? '#F7F7F7' :
-    bg === 'pink' ? '#f6ebef' :
+    bg === 'pink' ? '#FFB7D5' :
     bg === 'gray' ? '#242424' :
+    bg === 'camel' ? '#c09a6b' :
+    bg === 'mintGreen' ? '#34CEB2' :
+    bg === 'orange' ? '#E1863F' :
+    bg === 'raspberry' ? '#E30B5C' :
+    bg === 'sageGreen' ? '#B6C5B0' :
+    bg === 'warmYellow' ? '#FEFACD' :
     'transparent';
   const borderColor = outlineOn ? (outlineClr === 'black' ? '#000000' : '#FFFFFF') : 'transparent';
   const borderWidth = outlineOn ? 1 : 0;

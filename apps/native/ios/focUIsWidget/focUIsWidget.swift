@@ -85,9 +85,7 @@ struct SectionedProvider: TimelineProvider {
     }
     
     private func getDefaultApps() -> [AppData] {
-        return [
-            AppData(id: "1", displayName: "Messages", packageName: "com.apple.MobileSMS", urlScheme: "sms://", appStoreUrl: nil)
-        ]
+        return []
     }
 
     private func getUserSettingsFromUserDefaults() -> UserSettings {
@@ -143,7 +141,7 @@ struct focUIsWidgetEntryView : View {
             Group {
                 let outlineOn = entry.settings.outlineEnabled ?? (entry.settings.backgroundStyle == "default")
                 if outlineOn {
-                    let outlineColorStr = entry.settings.outlineColor ?? (entry.settings.backgroundStyle == "white" || entry.settings.backgroundStyle == "pink" ? "black" : "white")
+                    let outlineColorStr = entry.settings.outlineColor ?? (entry.settings.backgroundStyle == "white" || entry.settings.backgroundStyle == "pink" || entry.settings.backgroundStyle == "camel" || entry.settings.backgroundStyle == "mintGreen" || entry.settings.backgroundStyle == "orange" || entry.settings.backgroundStyle == "raspberry" || entry.settings.backgroundStyle == "sageGreen" || entry.settings.backgroundStyle == "warmYellow" ? "black" : "white")
                     ContainerRelativeShape()
                         .stroke(colorFromString(outlineColorStr), lineWidth: 1)
                 }
@@ -163,9 +161,21 @@ struct focUIsWidgetEntryView : View {
         case "blue":
             Color(red: 16/255, green: 36/255, blue: 60/255) // #10243c
         case "pink":
-            Color(red: 246/255, green: 235/255, blue: 239/255) // #f6ebef
+            Color(red: 255/255, green: 183/255, blue: 213/255) // #FFB7D5
         case "gray":
             Color(red: 36/255, green: 36/255, blue: 36/255) // #242424
+        case "camel":
+            Color(red: 192/255, green: 154/255, blue: 107/255) // #c09a6b
+        case "mintGreen":
+            Color(red: 52/255, green: 206/255, blue: 178/255) // #34CEB2
+        case "orange":
+            Color(red: 225/255, green: 134/255, blue: 63/255) // #E1863F
+        case "raspberry":
+            Color(red: 227/255, green: 11/255, blue: 92/255) // #E30B5C
+        case "sageGreen":
+            Color(red: 182/255, green: 197/255, blue: 176/255) // #B6C5B0
+        case "warmYellow":
+            Color(red: 254/255, green: 250/255, blue: 205/255) // #FEFACD
         default:
             Color.clear
         }
@@ -405,9 +415,21 @@ struct focUIsSpacerEntryView: View {
         case "blue":
             Color(red: 16/255, green: 36/255, blue: 60/255) // #10243c
         case "pink":
-            Color(red: 246/255, green: 235/255, blue: 239/255) // #f6ebef
+            Color(red: 255/255, green: 183/255, blue: 213/255) // #FFB7D5
         case "gray":
             Color(red: 36/255, green: 36/255, blue: 36/255) // #242424
+        case "camel":
+            Color(red: 192/255, green: 154/255, blue: 107/255) // #c09a6b
+        case "mintGreen":
+            Color(red: 52/255, green: 206/255, blue: 178/255) // #34CEB2
+        case "orange":
+            Color(red: 225/255, green: 134/255, blue: 63/255) // #E1863F
+        case "raspberry":
+            Color(red: 227/255, green: 11/255, blue: 92/255) // #E30B5C
+        case "sageGreen":
+            Color(red: 182/255, green: 197/255, blue: 176/255) // #B6C5B0
+        case "warmYellow":
+            Color(red: 254/255, green: 250/255, blue: 205/255) // #FEFACD
         default:
             Color.clear
         }
@@ -433,7 +455,5 @@ struct focUIsSpacerWidget: Widget {
 #Preview(as: .systemLarge) {
     focUIsWidget1()
 } timeline: {
-    SimpleEntry(date: .now, apps: [
-        AppData(id: "1", displayName: "Messages", packageName: "com.apple.MobileSMS", urlScheme: "sms://", appStoreUrl: nil)
-    ], settings: UserSettings.defaults())
+    SimpleEntry(date: .now, apps: [], settings: UserSettings.defaults())
 }
