@@ -7,17 +7,13 @@
     "orientation": "portrait",
     "icon": "./assets/focUIs_logo3.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/wallpapers/blue_gradient_wallpaper.jpg",
-      "resizeMode": "cover",
-      "backgroundColor": "#172F50"
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": true,
       "icon": "./assets/focUIs_logo3.png",
+      "buildNumber": "3",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
@@ -47,6 +43,18 @@
         "expo-media-library",
         {
           "savePhotosPermission": "Allow focUIs to save wallpapers to your photo library."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#172F50",
+          "image": "./assets/splash.png",
+          "resizeMode": "cover",
+          "imageWidth": 414,
+          "ios": {
+            "enableFullScreenImage_legacy": true
+          }
         }
       ]
     ],
