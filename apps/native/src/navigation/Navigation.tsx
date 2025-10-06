@@ -10,7 +10,11 @@ import WidgetConfigScreen from "../screens/WidgetConfigScreen";
 
 const Stack = createNativeStackNavigator();
 
-const Navigation = () => {
+interface NavigationProps {
+  onHomeScreenReady?: () => void;
+}
+
+const Navigation = ({ onHomeScreenReady }: NavigationProps) => {
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['left', 'right']}>
       <NavigationContainer>
@@ -19,7 +23,9 @@ const Navigation = () => {
           initialRouteName="HomeScreen"
           screenOptions={{ headerShown: false }}
         >
-          <Stack.Screen name="HomeScreen" component={HomeScreen} />
+          <Stack.Screen name="HomeScreen">
+            {(props) => <HomeScreen {...props} onReady={onHomeScreenReady} />}
+          </Stack.Screen>
           <Stack.Screen name="AppSelectionScreen" component={AppSelectionScreen} />
           <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
           <Stack.Screen name="SetupScreen" component={SetupScreen} />

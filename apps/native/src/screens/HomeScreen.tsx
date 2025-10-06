@@ -18,7 +18,12 @@ import localStorageService, { LocalAppSelection, LocalWidgetConfig, LocalUserSet
 
 const { width, height } = Dimensions.get("window");
 
-const HomeScreen = ({ navigation }) => {
+interface HomeScreenProps {
+  navigation: any;
+  onReady?: () => void;
+}
+
+const HomeScreen = ({ navigation, onReady }: HomeScreenProps) => {
   const [selectedApps, setSelectedApps] = useState<LocalAppSelection[]>([]);
   const [userWidgets, setUserWidgets] = useState<LocalWidgetConfig[]>([]);
   const [userSettings, setUserSettings] = useState<LocalUserSettings>({
@@ -31,6 +36,7 @@ const HomeScreen = ({ navigation }) => {
     outlineColor: 'white',
   });
   const [loading, setLoading] = useState(true);
+  const [backgroundImageLoaded, setBackgroundImageLoaded] = useState(false);
 
   const backgroundUri = useBackgroundAsset();
 
@@ -68,6 +74,13 @@ const HomeScreen = ({ navigation }) => {
       loadData();
     }, [])
   );
+
+  // Call onReady when both data is loaded and background image is loaded
+  useEffect(() => {
+    if (!loading && backgroundImageLoaded && onReady) {
+      onReady();
+    }
+  }, [loading, backgroundImageLoaded, onReady]);
 
   // Auto-organize apps into widgets if no widgets exist or if the number of selected apps has changed
   useEffect(() => {
@@ -165,11 +178,17 @@ const HomeScreen = ({ navigation }) => {
 
 
 
+  // Don't render until backgroundUri is available to prevent flash
+  if (!backgroundUri) {
+    return null;
+  }
+
   return (
     <ImageBackground
       source={{ uri: backgroundUri }}
       style={styles.background}
       resizeMode="cover"
+      onLoad={() => setBackgroundImageLoaded(true)}
     >
       <View style={styles.overlay}>
         {/* Header */}
@@ -259,6 +278,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+    backgroundColor: '#000000', // Black background until gradient loads
   },
   overlay: {
     flex: 1,
