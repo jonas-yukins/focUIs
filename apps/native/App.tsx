@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { View, StatusBar, ActivityIndicator } from "react-native";
 import { useFonts } from "expo-font";
 import { LogBox } from "react-native";
+import * as SplashScreen from 'expo-splash-screen';
 
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Navigation from "./src/navigation/Navigation";
@@ -11,6 +12,11 @@ import { BackgroundAssetContext } from "./src/assets/BackgroundAssetContext";
 export default function App() {
   LogBox.ignoreLogs(["Warning: ..."]);
   LogBox.ignoreAllLogs();
+
+  // Prevent the splash screen from auto-hiding
+  useEffect(() => {
+    SplashScreen.preventAutoHideAsync();
+  }, []);
 
   const [loaded] = useFonts({
     Bold: require("./src/assets/fonts/Inter-Bold.ttf"),
@@ -27,6 +33,7 @@ export default function App() {
 
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [backgroundUri, setBackgroundUri] = useState<string | undefined>(undefined);
+  const [homeScreenReady, setHomeScreenReady] = useState(false);
 
   useEffect(() => {
     async function loadAssets() {
@@ -43,12 +50,16 @@ export default function App() {
     loadAssets();
   }, []);
 
+  // Hide splash screen when everything is ready AND HomeScreen has rendered
+  useEffect(() => {
+    if (loaded && assetsLoaded && backgroundUri && homeScreenReady) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, assetsLoaded, backgroundUri, homeScreenReady]);
+
+  // Don't render anything until everything is ready - let splash screen handle the loading
   if (!loaded || !assetsLoaded || !backgroundUri) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#172F50" />
-      </View>
-    );
+    return null;
   }
 
   return (
@@ -59,7 +70,7 @@ export default function App() {
           backgroundColor="#172F50"
           translucent={true}
         />
-        <Navigation />
+        <Navigation onHomeScreenReady={() => setHomeScreenReady(true)} />
       </SafeAreaProvider>
     </BackgroundAssetContext.Provider>
   );
