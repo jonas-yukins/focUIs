@@ -14,7 +14,6 @@ import {
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { Ionicons } from "@expo/vector-icons";
-import { Sortable, SortableItem, SortableRenderItemProps } from "react-native-reanimated-dnd";
 import PagerView from 'react-native-pager-view';
 import { useBackgroundAsset } from '../assets/BackgroundAssetContext';
 import localStorageService, { LocalAppSelection, LocalWidgetConfig } from '../services/LocalStorageService';
@@ -29,7 +28,7 @@ interface App {
   appStoreUrl?: string;
 }
 
-interface DraggableApp {
+interface WidgetApp {
   id: string;
   app: App;
   order: number;
@@ -40,9 +39,7 @@ const WidgetConfigScreen = ({ navigation }) => {
   const [selectedApps, setSelectedApps] = useState<LocalAppSelection[]>([]);
 
 
-  const [sections, setSections] = useState<DraggableApp[][]>([]);
-  const sectionsRef = useRef<DraggableApp[][]>([]);
-  sectionsRef.current = sections;
+  const [sections, setSections] = useState<WidgetApp[][]>([]);
 
 
 
@@ -51,6 +48,10 @@ const WidgetConfigScreen = ({ navigation }) => {
   // --- Move To Section State ---
   const [moveMode, setMoveMode] = useState(false);
   const [selectedApp, setSelectedApp] = useState<{ sectionIndex: number; appIndex: number } | null>(null);
+  
+  // --- Vertical Swap State ---
+  const [verticalSwapMode, setVerticalSwapMode] = useState(false);
+  const [selectedVerticalApp, setSelectedVerticalApp] = useState<{ sectionIndex: number; appIndex: number } | null>(null);
   
   // --- Info Popup State ---
   const [showInfoPopup, setShowInfoPopup] = useState(false);
@@ -72,18 +73,18 @@ const WidgetConfigScreen = ({ navigation }) => {
   // Initialize apps list
   useEffect(() => {
     if (selectedApps && selectedApps.length > 0) {
-              const apps: DraggableApp[] = selectedApps
-          .map((app, index) => ({
-            id: app.appId,
-            app: {
-              _id: app.appId,
-              displayName: app.displayName,
-              packageName: app.packageName,
-              urlScheme: app.urlScheme,
-              appStoreUrl: app.appStoreUrl,
-            },
-            order: app.order || index,
-          }))
+      const apps: WidgetApp[] = selectedApps
+        .map((app, index) => ({
+          id: app.appId,
+          app: {
+            _id: app.appId,
+            displayName: app.displayName,
+            packageName: app.packageName,
+            urlScheme: app.urlScheme,
+            appStoreUrl: app.appStoreUrl,
+          },
+          order: app.order || index,
+        }))
         .sort((a, b) => a.order - b.order);
 
       const chunkedApps = [];
@@ -95,24 +96,50 @@ const WidgetConfigScreen = ({ navigation }) => {
     }
   }, [selectedApps]);
 
-  // Handler to update order only on drop
-  const handleDrop = useCallback((sectionIndex: number, itemId: string, to: number) => {
-    setSections(currentSections => {
-      const newSections = [...currentSections];
-      const section = [...newSections[sectionIndex]];
-      const from = section.findIndex(app => app.id === itemId);
-      if (from === -1 || from === to) return currentSections;
-      const [movedApp] = section.splice(from, 1);
-      section.splice(to, 0, movedApp);
-      newSections[sectionIndex] = section;
-      // Update order for all apps across all sections
-      let order = 0;
-      const updatedSections = newSections.map(sec =>
-        sec.map(app => ({ ...app, order: order++ }))
-      );
-      return updatedSections;
-    });
-  }, []);
+  // --- Vertical Swap Logic ---
+  const handleVerticalSwapIconPress = (sectionIndex: number, appIndex: number) => {
+    // If already in vertical swap mode and this is the selected app, cancel
+    if (verticalSwapMode && selectedVerticalApp && selectedVerticalApp.sectionIndex === sectionIndex && selectedVerticalApp.appIndex === appIndex) {
+      setVerticalSwapMode(false);
+      setSelectedVerticalApp(null);
+      return;
+    }
+    // Cancel horizontal move mode when entering vertical swap mode
+    setMoveMode(false);
+    setSelectedApp(null);
+    setVerticalSwapMode(true);
+    setSelectedVerticalApp({ sectionIndex, appIndex });
+  };
+
+  const handleVerticalSwap = (sectionIndex: number, appIndex: number) => {
+    if (!verticalSwapMode || !selectedVerticalApp) return;
+    // If user taps the selected app again, cancel vertical swap mode
+    if (selectedVerticalApp.sectionIndex === sectionIndex && selectedVerticalApp.appIndex === appIndex) {
+      setVerticalSwapMode(false);
+      setSelectedVerticalApp(null);
+      return;
+    }
+    // Only allow swap within the same section
+    if (selectedVerticalApp.sectionIndex === sectionIndex) {
+      setSections(currentSections => {
+        const newSections = currentSections.map(section => [...section]);
+        const section = newSections[sectionIndex];
+        const fromApp = section[selectedVerticalApp.appIndex];
+        const toApp = section[appIndex];
+        // Swap the apps within the section
+        section[selectedVerticalApp.appIndex] = toApp;
+        section[appIndex] = fromApp;
+        // Update order for all apps across all sections
+        let order = 0;
+        const updatedSections = newSections.map(sec =>
+          sec.map(app => ({ ...app, order: order++ }))
+        );
+        return updatedSections;
+      });
+      setVerticalSwapMode(false);
+      setSelectedVerticalApp(null);
+    }
+  };
 
   // --- Move To Section Logic ---
   const handleMoveIconPress = (sectionIndex: number, appIndex: number) => {
@@ -122,6 +149,9 @@ const WidgetConfigScreen = ({ navigation }) => {
       setSelectedApp(null);
       return;
     }
+    // Cancel vertical swap mode when entering horizontal move mode
+    setVerticalSwapMode(false);
+    setSelectedVerticalApp(null);
     setMoveMode(true);
     setSelectedApp({ sectionIndex, appIndex });
   };
@@ -150,7 +180,7 @@ const WidgetConfigScreen = ({ navigation }) => {
         const allApps = newSections.flat();
         const updatedApps = allApps.map((app, idx) => ({ ...app, order: idx }));
         const chunkSize = 6;
-        const updatedSections: DraggableApp[][] = [];
+        const updatedSections: WidgetApp[][] = [];
         for (let i = 0; i < updatedApps.length; i += chunkSize) {
           updatedSections.push(updatedApps.slice(i, i + chunkSize));
         }
@@ -209,44 +239,45 @@ const WidgetConfigScreen = ({ navigation }) => {
     }
   };
 
-  const renderAppItem = useCallback((sectionIndex: number) => (props: SortableRenderItemProps<DraggableApp>) => {
-    const {
-      item,
-      id,
-      positions,
-      lowerBound,
-      autoScrollDirection,
-      itemsCount,
-      itemHeight,
-      index: appIndex,
-    } = props;
-    // Determine if this app is selected for move
-    const isSelected = moveMode && selectedApp && selectedApp.sectionIndex === sectionIndex && selectedApp.appIndex === appIndex;
-    // Show swap icon if:
-    // - Not in move mode, OR
-    // - This is the selected app, OR  
+  const renderAppItem = useCallback((sectionIndex: number, appIndex: number, item: WidgetApp) => {
+    // Determine if this app is selected for horizontal move (between sections)
+    const isSelectedForMove = moveMode && selectedApp && selectedApp.sectionIndex === sectionIndex && selectedApp.appIndex === appIndex;
+    // Determine if this app is selected for vertical swap (within section)
+    const isSelectedForVerticalSwap = verticalSwapMode && selectedVerticalApp && selectedVerticalApp.sectionIndex === sectionIndex && selectedVerticalApp.appIndex === appIndex;
+    
+    // Show horizontal swap icon if:
+    // - Not in move mode AND not in vertical swap mode, OR
+    // - This is the selected app for move, OR  
     // - In move mode but this app is on a different page (section) than the selected app
-    const showSwapIcon = !moveMode || isSelected || (moveMode && selectedApp && selectedApp.sectionIndex !== sectionIndex);
+    const showHorizontalSwapIcon = (!moveMode && !verticalSwapMode) || isSelectedForMove || (moveMode && selectedApp && selectedApp.sectionIndex !== sectionIndex);
+    
+    // Show vertical swap icon if:
+    // - Not in vertical swap mode AND not in move mode, OR
+    // - This is the selected app for vertical swap, OR
+    // - In vertical swap mode but this app is in the same section as the selected app
+    const showVerticalSwapIcon = (!verticalSwapMode && !moveMode) || isSelectedForVerticalSwap || (verticalSwapMode && selectedVerticalApp && selectedVerticalApp.sectionIndex === sectionIndex);
+    
     // When in move mode, only allow pressing other apps in other sections
     const isPressableForMove = moveMode && selectedApp && selectedApp.sectionIndex !== sectionIndex;
+    // When in vertical swap mode, only allow pressing other apps in the same section
+    const isPressableForVerticalSwap = verticalSwapMode && selectedVerticalApp && selectedVerticalApp.sectionIndex === sectionIndex && selectedVerticalApp.appIndex !== appIndex;
+    
     return (
-      <SortableItem
-        key={id}
-        data={item}
-        id={id}
-        positions={positions}
-        lowerBound={lowerBound}
-        autoScrollDirection={autoScrollDirection}
-        itemsCount={itemsCount}
-        itemHeight={itemHeight}
-        onDrop={(_id, to) => handleDrop(sectionIndex, _id, to)}
-        style={[styles.taskItem, isSelected && styles.selectedTaskItem]}
+      <View
+        key={item.id}
+        style={[styles.taskItem, (isSelectedForMove || isSelectedForVerticalSwap) && styles.selectedTaskItem]}
       >
         <TouchableOpacity
-          activeOpacity={isPressableForMove ? 0.7 : 1}
-          onPress={isPressableForMove ? () => handleAppPressForMove(sectionIndex, appIndex) : undefined}
+          activeOpacity={(isPressableForMove || isPressableForVerticalSwap) ? 0.7 : 1}
+          onPress={() => {
+            if (isPressableForMove) {
+              handleAppPressForMove(sectionIndex, appIndex);
+            } else if (isPressableForVerticalSwap) {
+              handleVerticalSwap(sectionIndex, appIndex);
+            }
+          }}
           style={{ flex: 1 }}
-          disabled={!isPressableForMove}
+          disabled={!isPressableForMove && !isPressableForVerticalSwap}
         >
           <View style={styles.taskContent}>
             <View style={styles.taskInfo}>
@@ -265,39 +296,35 @@ const WidgetConfigScreen = ({ navigation }) => {
                 placeholder="App name"
                 placeholderTextColor="#B3B3B3"
                 autoCorrect={false}
-                editable={!moveMode}
+                editable={!moveMode && !verticalSwapMode}
                 autoCapitalize="none"
               />
             </View>
-            <View pointerEvents={showSwapIcon ? 'auto' : 'none'}>
+            {/* Horizontal swap icon for moving between sections */}
+            <View pointerEvents={showHorizontalSwapIcon ? 'auto' : 'none'}>
               <TouchableOpacity
                 onPress={() => handleMoveIconPress(sectionIndex, appIndex)}
-                style={[styles.swapIconButton, { opacity: showSwapIcon ? 1 : 0 }]}
-                disabled={moveMode && !isSelected}
+                style={[styles.swapIconButton, { opacity: showHorizontalSwapIcon ? 1 : 0 }]}
+                disabled={moveMode && !isSelectedForMove}
               >
                 <Ionicons name="swap-horizontal" size={22} color="#4A90E2" />
               </TouchableOpacity>
             </View>
-            {/* Always render drag handle but hide when in move mode */}
-            <SortableItem.Handle style={[styles.dragHandle, { opacity: moveMode ? 0 : 1 }]}>
-              <View style={styles.dragIconContainer}>
-                <View style={styles.dragColumn}>
-                  <View style={styles.dragDot} />
-                  <View style={styles.dragDot} />
-                  <View style={styles.dragDot} />
-                </View>
-                <View style={styles.dragColumn}>
-                  <View style={styles.dragDot} />
-                  <View style={styles.dragDot} />
-                  <View style={styles.dragDot} />
-                </View>
-              </View>
-            </SortableItem.Handle>
+            {/* Vertical swap icon for reordering within section */}
+            <View pointerEvents={showVerticalSwapIcon ? 'auto' : 'none'}>
+              <TouchableOpacity
+                onPress={() => handleVerticalSwapIconPress(sectionIndex, appIndex)}
+                style={[styles.swapIconButton, { opacity: showVerticalSwapIcon ? 1 : 0 }]}
+                disabled={verticalSwapMode && !isSelectedForVerticalSwap}
+              >
+                <Ionicons name="swap-vertical" size={22} color="#4A90E2" />
+              </TouchableOpacity>
+            </View>
           </View>
         </TouchableOpacity>
-      </SortableItem>
+      </View>
     );
-  }, [handleDrop, moveMode, selectedApp]);
+  }, [moveMode, selectedApp, verticalSwapMode, selectedVerticalApp]);
 
 
 
@@ -370,17 +397,9 @@ const WidgetConfigScreen = ({ navigation }) => {
                         </View>
                       </TouchableOpacity>
                     </View>
-                    <Sortable
-                      data={section}
-                      renderItem={renderAppItem(sectionIndex)}
-                      itemHeight={80}
-                      style={styles.sortableList}
-                      contentContainerStyle={styles.sortableListContent}
-                      itemKeyExtractor={(item) => item.id}
-                    >
-                      {/* In the PagerView section, when rendering each Sortable, pass fontSize={widgetFontSize} to the widget preview component (focUIsWidget or WidgetPreview) if used.
-                      If you use a custom preview, pass fontSize={widgetFontSize} to the Text displaying app names. */}
-                    </Sortable>
+                    <ScrollView style={styles.appListContainer} contentContainerStyle={styles.appListContent}>
+                      {section.map((item, appIndex) => renderAppItem(sectionIndex, appIndex, item))}
+                    </ScrollView>
                   </View>
                 ))}
               </PagerView>
@@ -405,18 +424,7 @@ const WidgetConfigScreen = ({ navigation }) => {
             <View style={{ backgroundColor: 'rgba(23, 47, 80, 0.92)', borderRadius: 16, padding: 16, width: '100%', maxWidth: 400, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 16 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={styles.dragIconContainer}>
-                    <View style={styles.dragColumn}>
-                      <View style={styles.dragDot} />
-                      <View style={styles.dragDot} />
-                      <View style={styles.dragDot} />
-                    </View>
-                    <View style={styles.dragColumn}>
-                      <View style={styles.dragDot} />
-                      <View style={styles.dragDot} />
-                      <View style={styles.dragDot} />
-                    </View>
-                  </View>
+                  <Ionicons name="swap-vertical" size={16} color="#4A90E2" />
                   <Text style={{ color: '#F7F7F7', fontSize: 14 }}>to reorder</Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -531,11 +539,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 1,
   },
-  sortableList: {
+  appListContainer: {
     flex: 1,
     backgroundColor: "transparent",
   },
-  sortableListContent: {
+  appListContent: {
     paddingBottom: 16,
   },
   taskItem: {
@@ -571,26 +579,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 10,
-  },
-  dragHandle: {
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: "transparent",
-  },
-  dragIconContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-  },
-  dragColumn: {
-    flexDirection: "column",
-    gap: 2,
-  },
-  dragDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: "#6D6D70",
   },
   dotsContainer: {
     flexDirection: 'row',
