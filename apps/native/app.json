@@ -13,7 +13,7 @@
     "ios": {
       "supportsTablet": true,
       "icon": "./assets/focUIs_logo3.png",
-      "buildNumber": "6",
+      "buildNumber": "12",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
